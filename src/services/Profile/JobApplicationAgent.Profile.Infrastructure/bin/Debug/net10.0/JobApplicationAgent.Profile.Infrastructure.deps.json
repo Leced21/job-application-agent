@@ -598,7 +598,8 @@
       },
       "JobApplicationAgent.Profile.Application/1.0.0": {
         "dependencies": {
-          "JobApplicationAgent.Profile.Domain": "1.0.0"
+          "JobApplicationAgent.Profile.Domain": "1.0.0",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.12"
         },
         "runtime": {
           "JobApplicationAgent.Profile.Application.dll": {
