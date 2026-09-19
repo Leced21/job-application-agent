@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/gateway/">
+    <Project Path="src/gateway/JobApplicationAgent.Gateway/JobApplicationAgent.Gateway.csproj" />
+  </Folder>
+  <Folder Name="/src/services/" />
+  <Folder Name="/src/services/Profile/">
+    <Project Path="src/services/Profile/JobApplicationAgent.Profile.Api/JobApplicationAgent.Profile.Api.csproj" />
+    <Project Path="src/services/Profile/JobApplicationAgent.Profile.Application/JobApplicationAgent.Profile.Application.csproj" />
+    <Project Path="src/services/Profile/JobApplicationAgent.Profile.Domain/JobApplicationAgent.Profile.Domain.csproj" />
+    <Project Path="src/services/Profile/JobApplicationAgent.Profile.Infrastructure/JobApplicationAgent.Profile.Infrastructure.csproj" />
+  </Folder>
+</Solution>
