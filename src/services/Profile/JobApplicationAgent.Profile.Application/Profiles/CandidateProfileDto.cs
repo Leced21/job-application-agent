@@ -1,10 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace JobApplicationAgent.Profile.Application.Profiles
+﻿namespace JobApplicationAgent.Profile.Application.Profiles
 {
-    internal class CandidateProfileDto
-    {
-    }
+    public sealed record CandidateProfileDto(
+        Guid Id,
+        string FirstName,
+        string LastName,
+        string Email,
+        string? PhoneNumber,
+        string? JobTitle,
+        string? Summary,
+        DateTime CreatedAtUtc,
+        DateTime UpdatedAtUtc
+        
+    );
 }

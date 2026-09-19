@@ -826,7 +826,8 @@
         "type": "project",
         "framework": ".NETCoreApp,Version=v10.0",
         "dependencies": {
-          "JobApplicationAgent.Profile.Domain": "1.0.0"
+          "JobApplicationAgent.Profile.Domain": "1.0.0",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.12"
         },
         "compile": {
           "bin/placeholder/JobApplicationAgent.Profile.Application.dll": {}
