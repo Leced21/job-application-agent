@@ -127,3 +127,5 @@ C:\Users\cedri\Downloads\repo\job-application-agent\src\services\Profile\JobAppl
 C:\Users\cedri\Downloads\repo\job-application-agent\src\services\Profile\JobApplicationAgent.Profile.Api\bin\Debug\net10.0\tr\Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
 C:\Users\cedri\Downloads\repo\job-application-agent\src\services\Profile\JobApplicationAgent.Profile.Api\bin\Debug\net10.0\zh-Hans\Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
 C:\Users\cedri\Downloads\repo\job-application-agent\src\services\Profile\JobApplicationAgent.Profile.Api\bin\Debug\net10.0\zh-Hant\Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
+C:\Users\cedri\Downloads\repo\job-application-agent\src\services\Profile\JobApplicationAgent.Profile.Api\bin\Debug\net10.0\FluentValidation.dll
+C:\Users\cedri\Downloads\repo\job-application-agent\src\services\Profile\JobApplicationAgent.Profile.Api\bin\Debug\net10.0\FluentValidation.DependencyInjectionExtensions.dll

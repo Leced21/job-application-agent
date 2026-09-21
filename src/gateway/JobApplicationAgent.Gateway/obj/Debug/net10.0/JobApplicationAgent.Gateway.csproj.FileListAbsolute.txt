@@ -31,3 +31,4 @@ C:\Users\cedri\Downloads\repo\job-application-agent\src\gateway\JobApplicationAg
 C:\Users\cedri\Downloads\repo\job-application-agent\src\gateway\JobApplicationAgent.Gateway\obj\Debug\net10.0\JobApplicationAgent.Gateway.pdb
 C:\Users\cedri\Downloads\repo\job-application-agent\src\gateway\JobApplicationAgent.Gateway\obj\Debug\net10.0\JobApplicationAgent.Gateway.genruntimeconfig.cache
 C:\Users\cedri\Downloads\repo\job-application-agent\src\gateway\JobApplicationAgent.Gateway\obj\Debug\net10.0\ref\JobApplicationAgent.Gateway.dll
+C:\Users\cedri\Downloads\repo\job-application-agent\src\gateway\JobApplicationAgent.Gateway\obj\Debug\net10.0\staticwebassets.upToDateCheck.txt
