@@ -1,9 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "c9imm8bSOiE=",
+  "dgSpecHash": "T6x21xNMR0w=",
   "success": true,
   "projectFilePath": "C:\\Users\\cedri\\Downloads\\repo\\job-application-agent\\src\\services\\Profile\\JobApplicationAgent.Profile.Application\\JobApplicationAgent.Profile.Application.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\cedri\\.nuget\\packages\\fluentvalidation\\12.1.1\\fluentvalidation.12.1.1.nupkg.sha512",
+    "C:\\Users\\cedri\\.nuget\\packages\\fluentvalidation.dependencyinjectionextensions\\12.1.1\\fluentvalidation.dependencyinjectionextensions.12.1.1.nupkg.sha512",
     "C:\\Users\\cedri\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\10.0.12\\microsoft.extensions.dependencyinjection.abstractions.10.0.12.nupkg.sha512"
   ],
   "logs": []

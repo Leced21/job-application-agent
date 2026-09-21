@@ -1,17 +1,20 @@
+using FluentValidation;
 using JobApplicationAgent.Profile.Application.Abstractions;
+using JobApplicationAgent.Profile.Application.Exceptions;
 using JobApplicationAgent.Profile.Domain.Entities;
 
 namespace JobApplicationAgent.Profile.Application.Profiles.Create;
 
-public sealed class CreateCandidateProfileHandler(ICandidateProfileRepository repository)
+public sealed class CreateCandidateProfileHandler(ICandidateProfileRepository repository, IValidator<CreateCandidateProfileCommand> validator)
 {
     public async Task<CandidateProfileDto> HandleAsync(CreateCandidateProfileCommand command, CancellationToken cancellationToken = default)
     {
+        await validator.ValidateAndThrowAsync(command, cancellationToken);
         var existingProfile = await repository.GetAsync(cancellationToken);
 
         if (existingProfile is not null)
         {
-            throw new InvalidOperationException("A candidate profile already exists.");
+            throw new CandidateProfileAlreadyExistsException();
         }
 
         var profile = new CandidateProfile(

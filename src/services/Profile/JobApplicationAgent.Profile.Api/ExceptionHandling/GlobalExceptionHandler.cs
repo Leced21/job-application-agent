@@ -1,0 +1,56 @@
+﻿using FluentValidation;
+using JobApplicationAgent.Profile.Application.Exceptions;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Mvc;
+
+namespace JobApplicationAgent.Profile.Api.ExceptionHandling
+{
+        public sealed class GlobalExceptionHandler(IProblemDetailsService problemDetailsService): IExceptionHandler
+        {
+            public async ValueTask<bool> TryHandleAsync(HttpContext httpContext,Exception exception,CancellationToken cancellationToken)
+            {
+                var problemDetails = exception switch
+                {
+                    ValidationException validationException => CreateValidationProblem(validationException),
+
+                    CandidateProfileAlreadyExistsException => new ProblemDetails
+                        {
+                            Status = StatusCodes.Status409Conflict,
+                            Title = "Candidate profile already exists",
+                            Detail = exception.Message
+                        },
+                    _ => new ProblemDetails
+                        {
+                            Status = StatusCodes.Status500InternalServerError,
+                            Title = "An unexpected error occurred."
+                        }
+                };
+
+                httpContext.Response.StatusCode = problemDetails.Status ?? StatusCodes.Status500InternalServerError;
+
+                return await problemDetailsService.TryWriteAsync( new ProblemDetailsContext
+                    {
+                        HttpContext = httpContext,
+                        ProblemDetails = problemDetails,
+                        Exception = exception
+                    });
+            }
+
+            private static ProblemDetails CreateValidationProblem(ValidationException exception)
+            {
+                var errors = exception.Errors
+                                .GroupBy(error => error.PropertyName)
+                                .ToDictionary(
+                                    group => group.Key,
+                                    group => group
+                                        .Select(error => error.ErrorMessage)
+                                        .ToArray());
+
+                return new HttpValidationProblemDetails(errors)
+                {
+                    Status = StatusCodes.Status400BadRequest,
+                    Title = "Validation failed"
+                };
+            }
+        }
+    }

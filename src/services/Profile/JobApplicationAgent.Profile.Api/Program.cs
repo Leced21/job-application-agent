@@ -1,3 +1,4 @@
+using JobApplicationAgent.Profile.Api.ExceptionHandling;
 using JobApplicationAgent.Profile.Application;
 using JobApplicationAgent.Profile.Infrastructure;
 var builder = WebApplication.CreateBuilder(args);
@@ -7,6 +8,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
@@ -18,9 +23,12 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+app.UseExceptionHandler();
+
 app.UseHttpsRedirection();
 
 app.MapControllers();
 
 app.Run();
 
+public partial class Program;
