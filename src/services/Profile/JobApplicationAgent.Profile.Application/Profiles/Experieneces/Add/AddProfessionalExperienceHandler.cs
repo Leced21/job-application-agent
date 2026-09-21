@@ -15,8 +15,7 @@ public sealed class AddProfessionalExperienceHandler(ICandidateProfileRepository
             command,
             cancellationToken);
 
-        var profile =
-            await repository.GetForUpdateAsync(cancellationToken);
+        var profile = await repository.GetForUpdateAsync(cancellationToken);
 
         if (profile is null)
         {

@@ -33,6 +33,24 @@ public sealed class ProfessionalExperience
         CreatedAtUtc = DateTime.UtcNow;
         UpdatedAtUtc = DateTime.UtcNow;
     }
+    public void Update(
+    string companyName,
+    string jobTitle,
+    DateOnly startDate,
+    DateOnly? endDate = null,
+    bool isCurrent = false,
+    string? location = null,
+    string? description = null)
+    {
+        CompanyName = companyName;
+        JobTitle = jobTitle;
+        Location = location;
+        StartDate = startDate;
+        EndDate = endDate;
+        IsCurrent = isCurrent;
+        Description = description;
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
 
     public Guid Id { get; private set; }
 
