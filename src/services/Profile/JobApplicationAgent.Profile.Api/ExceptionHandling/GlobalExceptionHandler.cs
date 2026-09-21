@@ -31,11 +31,19 @@ namespace JobApplicationAgent.Profile.Api.ExceptionHandling
                     Title = "Candidate profile not found",
                     Detail = exception.Message
                 },
+                ProfessionalExperienceNotFoundException => new ProblemDetails
+                {
+                    Status = StatusCodes.Status404NotFound,
+                    Title = "Professional experience not found",
+                    Detail = exception.Message
+                },
                 _ => new ProblemDetails
                 {
                     Status = StatusCodes.Status500InternalServerError,
-                    Title = "An unexpected error occurred."
+                    Title = "An unexpected error occurred.",
+                    Detail = "An unexpected error occurred while processing the request."
                 }
+                
             };
 
             httpContext.Response.StatusCode = problemDetails.Status ?? StatusCodes.Status500InternalServerError;

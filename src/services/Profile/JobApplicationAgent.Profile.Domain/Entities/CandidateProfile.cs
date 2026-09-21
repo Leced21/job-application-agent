@@ -96,6 +96,21 @@ namespace JobApplicationAgent.Profile.Domain.Entities
 
             return experience;
         }
+        public bool RemoveProfessionalExperience(Guid experienceId)
+        {
+            var experience = _professionalExperiences
+                .SingleOrDefault(x => x.Id == experienceId);
+
+            if (experience is null)
+            {
+                return false;
+            }
+
+            _professionalExperiences.Remove(experience);
+            UpdatedAtUtc = DateTime.UtcNow;
+
+            return true;
+        }
     }
 }
 

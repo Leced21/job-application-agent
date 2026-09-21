@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("JobApplicationAgent.Profile.Domain")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d6c2a5f31faea81165cf4c8b145f6e85d9d0a0a2")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ce74db54fbed4186e420b09b9d5282ce5a9f1830")]
 [assembly: System.Reflection.AssemblyProductAttribute("JobApplicationAgent.Profile.Domain")]
 [assembly: System.Reflection.AssemblyTitleAttribute("JobApplicationAgent.Profile.Domain")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

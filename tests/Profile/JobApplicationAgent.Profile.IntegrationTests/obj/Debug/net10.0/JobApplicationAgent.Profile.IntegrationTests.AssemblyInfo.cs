@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("JobApplicationAgent.Profile.IntegrationTests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+dbac41398949f1d0e2fb22fab11b0921e1dc7a16")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ce74db54fbed4186e420b09b9d5282ce5a9f1830")]
 [assembly: System.Reflection.AssemblyProductAttribute("JobApplicationAgent.Profile.IntegrationTests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("JobApplicationAgent.Profile.IntegrationTests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

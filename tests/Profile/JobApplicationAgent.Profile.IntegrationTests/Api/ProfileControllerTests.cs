@@ -450,5 +450,363 @@ namespace JobApplicationAgent.Profile.IntegrationTests.Api
                 new DateOnly(2022, 1, 1),
                 experiences[1].StartDate);
         }
+        [Fact]
+        public async Task UpdateExperience_ShouldReturnOk_WhenExperienceExists()
+        {
+            var profileCommand = new
+            {
+                firstName = "Test",
+                lastName = "Candidate",
+                email = "test@example.com",
+                phoneNumber = "0612345678",
+                jobTitle = "Data Engineer",
+                summary = "Integration test profile"
+            };
+
+            var profileResponse =
+                await _client.PostAsJsonAsync(
+                    "/api/v1/profile",
+                    profileCommand);
+
+            Assert.Equal(
+                HttpStatusCode.Created,
+                profileResponse.StatusCode);
+
+            var createExperienceCommand = new
+            {
+                companyName = "Old Company",
+                jobTitle = "Data Engineer",
+                location = "Lyon",
+                startDate = "2022-01-01",
+                endDate = "2023-12-31",
+                isCurrent = false,
+                description = "Old description"
+            };
+
+            var createResponse =
+                await _client.PostAsJsonAsync(
+                    "/api/v1/profile/experiences",
+                    createExperienceCommand);
+
+            Assert.Equal(
+                HttpStatusCode.Created,
+                createResponse.StatusCode);
+
+            var createdExperience =
+                await createResponse.Content
+                    .ReadFromJsonAsync<ProfessionalExperienceDto>();
+
+            Assert.NotNull(createdExperience);
+
+            var updateCommand = new
+            {
+                companyName = "New Company",
+                jobTitle = "Senior Data Engineer",
+                location = "Paris",
+                startDate = "2024-01-01",
+                endDate = (string?)null,
+                isCurrent = true,
+                description = "Updated description"
+            };
+
+            var response =
+                await _client.PutAsJsonAsync(
+                    $"/api/v1/profile/experiences/{createdExperience.Id}",
+                    updateCommand);
+
+            Assert.Equal(
+                HttpStatusCode.OK,
+                response.StatusCode);
+
+            var updatedExperience =
+                await response.Content
+                    .ReadFromJsonAsync<ProfessionalExperienceDto>();
+
+            Assert.NotNull(updatedExperience);
+            Assert.Equal(createdExperience.Id, updatedExperience.Id);
+            Assert.Equal("New Company", updatedExperience.CompanyName);
+            Assert.Equal("Senior Data Engineer", updatedExperience.JobTitle);
+            Assert.Equal("Paris", updatedExperience.Location);
+            Assert.Equal(new DateOnly(2024, 1, 1), updatedExperience.StartDate);
+            Assert.Null(updatedExperience.EndDate);
+            Assert.True(updatedExperience.IsCurrent);
+            Assert.Equal("Updated description", updatedExperience.Description);
+            var getResponse =
+    await _client.GetAsync(
+        "/api/v1/profile/experiences");
+
+            Assert.Equal(
+                HttpStatusCode.OK,
+                getResponse.StatusCode);
+
+            var experiences =
+                await getResponse.Content
+                    .ReadFromJsonAsync<List<ProfessionalExperienceDto>>();
+
+            Assert.NotNull(experiences);
+
+            var persistedExperience =
+                Assert.Single(experiences);
+
+            Assert.Equal(
+                createdExperience.Id,
+                persistedExperience.Id);
+
+            Assert.Equal(
+                "New Company",
+                persistedExperience.CompanyName);
+
+            Assert.Equal(
+                "Senior Data Engineer",
+                persistedExperience.JobTitle);
+
+            Assert.Equal(
+                "Paris",
+                persistedExperience.Location);
+
+            Assert.Equal(
+                new DateOnly(2024, 1, 1),
+                persistedExperience.StartDate);
+
+            Assert.Null(persistedExperience.EndDate);
+            Assert.True(persistedExperience.IsCurrent);
+
+            Assert.Equal(
+                "Updated description",
+                persistedExperience.Description);
+        }
+        [Fact]
+        public async Task UpdateExperience_ShouldReturnNotFound_WhenExperienceDoesNotExist()
+        {
+            var profileCommand = new
+            {
+                firstName = "Test",
+                lastName = "Candidate",
+                email = "test@example.com",
+                phoneNumber = "0612345678",
+                jobTitle = "Data Engineer",
+                summary = "Integration test profile"
+            };
+
+            var profileResponse =
+                await _client.PostAsJsonAsync(
+                    "/api/v1/profile",
+                    profileCommand);
+
+            Assert.Equal(
+                HttpStatusCode.Created,
+                profileResponse.StatusCode);
+
+            var updateCommand = new
+            {
+                companyName = "New Company",
+                jobTitle = "Senior Data Engineer",
+                location = "Paris",
+                startDate = "2024-01-01",
+                endDate = (string?)null,
+                isCurrent = true,
+                description = "Updated description"
+            };
+
+            var response =
+                await _client.PutAsJsonAsync(
+                    $"/api/v1/profile/experiences/{Guid.NewGuid()}",
+                    updateCommand);
+
+            Assert.Equal(
+                HttpStatusCode.NotFound,
+                response.StatusCode);
+
+            var problem =
+                await response.Content
+                    .ReadFromJsonAsync<ProblemDetails>();
+
+            Assert.NotNull(problem);
+            Assert.Equal(404, problem.Status);
+            Assert.Equal(
+                "Professional experience not found",
+                problem.Title);
+        }
+        [Fact]
+        public async Task UpdateExperience_ShouldReturnBadRequest_WhenCurrentExperienceHasEndDate()
+        {
+            var profileCommand = new
+            {
+                firstName = "Test",
+                lastName = "Candidate",
+                email = "test@example.com",
+                phoneNumber = "0612345678",
+                jobTitle = "Data Engineer",
+                summary = "Integration test profile"
+            };
+
+            var profileResponse =
+                await _client.PostAsJsonAsync(
+                    "/api/v1/profile",
+                    profileCommand);
+
+            Assert.Equal(
+                HttpStatusCode.Created,
+                profileResponse.StatusCode);
+
+            var createExperienceCommand = new
+            {
+                companyName = "Test Company",
+                jobTitle = "Data Engineer",
+                location = "Paris",
+                startDate = "2024-01-01",
+                endDate = (string?)null,
+                isCurrent = true,
+                description = "Test experience"
+            };
+
+            var createResponse =
+                await _client.PostAsJsonAsync(
+                    "/api/v1/profile/experiences",
+                    createExperienceCommand);
+
+            var createdExperience =
+                await createResponse.Content
+                    .ReadFromJsonAsync<ProfessionalExperienceDto>();
+
+            Assert.NotNull(createdExperience);
+
+            var invalidUpdateCommand = new
+            {
+                companyName = "Test Company",
+                jobTitle = "Senior Data Engineer",
+                location = "Paris",
+                startDate = "2024-01-01",
+                endDate = "2025-01-01",
+                isCurrent = true,
+                description = "Invalid update"
+            };
+
+            var response =
+                await _client.PutAsJsonAsync(
+                    $"/api/v1/profile/experiences/{createdExperience.Id}",
+                    invalidUpdateCommand);
+
+            Assert.Equal(
+                HttpStatusCode.BadRequest,
+                response.StatusCode);
+        }
+        [Fact]
+        public async Task DeleteExperience_ShouldReturnNoContent_AndRemoveExperience_WhenExperienceExists()
+        {
+            var profileCommand = new
+            {
+                firstName = "Test",
+                lastName = "Candidate",
+                email = "test@example.com",
+                phoneNumber = "0612345678",
+                jobTitle = "Data Engineer",
+                summary = "Integration test profile"
+            };
+
+            var profileResponse =
+                await _client.PostAsJsonAsync(
+                    "/api/v1/profile",
+                    profileCommand);
+
+            Assert.Equal(
+                HttpStatusCode.Created,
+                profileResponse.StatusCode);
+
+            var experienceCommand = new
+            {
+                companyName = "Test Company",
+                jobTitle = "Data Engineer",
+                location = "Paris",
+                startDate = "2024-01-01",
+                endDate = (string?)null,
+                isCurrent = true,
+                description = "Experience to delete"
+            };
+
+            var createResponse =
+                await _client.PostAsJsonAsync(
+                    "/api/v1/profile/experiences",
+                    experienceCommand);
+
+            Assert.Equal(
+                HttpStatusCode.Created,
+                createResponse.StatusCode);
+
+            var createdExperience =
+                await createResponse.Content
+                    .ReadFromJsonAsync<ProfessionalExperienceDto>();
+
+            Assert.NotNull(createdExperience);
+
+            var deleteResponse =
+                await _client.DeleteAsync(
+                    $"/api/v1/profile/experiences/{createdExperience.Id}");
+
+            Assert.Equal(
+                HttpStatusCode.NoContent,
+                deleteResponse.StatusCode);
+
+            var getResponse =
+                await _client.GetAsync(
+                    "/api/v1/profile/experiences");
+
+            Assert.Equal(
+                HttpStatusCode.OK,
+                getResponse.StatusCode);
+
+            var experiences =
+                await getResponse.Content
+                    .ReadFromJsonAsync<List<ProfessionalExperienceDto>>();
+
+            Assert.NotNull(experiences);
+            Assert.Empty(experiences);
+        }
+        [Fact]
+        public async Task DeleteExperience_ShouldReturnNotFound_WhenExperienceDoesNotExist()
+        {
+            var profileCommand = new
+            {
+                firstName = "Test",
+                lastName = "Candidate",
+                email = "test@example.com",
+                phoneNumber = "0612345678",
+                jobTitle = "Data Engineer",
+                summary = "Integration test profile"
+            };
+
+            var profileResponse =
+                await _client.PostAsJsonAsync(
+                    "/api/v1/profile",
+                    profileCommand);
+
+            Assert.Equal(
+                HttpStatusCode.Created,
+                profileResponse.StatusCode);
+
+            var experienceId = Guid.NewGuid();
+
+            var response =
+                await _client.DeleteAsync(
+                    $"/api/v1/profile/experiences/{experienceId}");
+
+            Assert.Equal(
+                HttpStatusCode.NotFound,
+                response.StatusCode);
+
+            var problem =
+                await response.Content
+                    .ReadFromJsonAsync<ProblemDetails>();
+
+            Assert.NotNull(problem);
+            Assert.Equal(404, problem.Status);
+            Assert.Equal(
+                "Professional experience not found",
+                problem.Title);
+
+            Assert.Contains(
+                experienceId.ToString(),
+                problem.Detail);
+        }
     }
 }
