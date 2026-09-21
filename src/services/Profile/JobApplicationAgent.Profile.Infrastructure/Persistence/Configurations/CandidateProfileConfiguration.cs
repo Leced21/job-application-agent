@@ -42,6 +42,12 @@ namespace JobApplicationAgent.Profile.Infrastructure.Persistence.Configurations
 
             builder.HasIndex(x => x.Email)
                 .IsUnique();
+            builder.HasMany(x => x.ProfessionalExperiences)
+                .WithOne()
+                .HasForeignKey(x => x.CandidateProfileId)
+                .OnDelete(DeleteBehavior.Cascade);
+            builder.Navigation(x => x.ProfessionalExperiences)
+                .UsePropertyAccessMode(PropertyAccessMode.Field);
         }
     }
 }

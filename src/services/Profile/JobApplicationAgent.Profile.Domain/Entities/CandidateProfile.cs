@@ -10,6 +10,8 @@ namespace JobApplicationAgent.Profile.Domain.Entities
         {
 
         }
+
+        private readonly List<ProfessionalExperience> _professionalExperiences = [];
         public CandidateProfile(
             string firstName,
             string lastName,
@@ -34,10 +36,36 @@ namespace JobApplicationAgent.Profile.Domain.Entities
         public string Email { get; private set; } = string.Empty;
         public string? PhoneNumber { get; private set; }
         public string? JobTitle { get; private set; }
-        public string Summary { get; private set; }
+        public string? Summary { get; private set; }
         public DateTime CreatedAtUtc { get; private set; }
         public DateTime UpdatedAtUtc { get; private set; }
+        public IReadOnlyCollection<ProfessionalExperience> ProfessionalExperiences => _professionalExperiences;
+        public ProfessionalExperience AddProfessionalExperience(
+            string companyName,
+            string jobTitle,
+            DateOnly startDate,
+            DateOnly? endDate = null,
+            bool isCurrent = false,
+            string? location = null,
+            string? description = null)
+        {
+            var experience = new ProfessionalExperience(
+                Id,
+                companyName,
+                jobTitle,
+                startDate,
+                endDate,
+                isCurrent,
+                location,
+                description);
 
+            _professionalExperiences.Add(experience);
 
+            UpdatedAtUtc = DateTime.UtcNow;
+
+            return experience;
+        }
     }
 }
+
+

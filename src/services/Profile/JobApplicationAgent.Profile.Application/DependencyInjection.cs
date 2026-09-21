@@ -2,6 +2,7 @@
 using JobApplicationAgent.Profile.Application.Profiles.Create;
 using JobApplicationAgent.Profile.Application.Profiles.Get;
 using Microsoft.Extensions.DependencyInjection;
+using JobApplicationAgent.Profile.Application.Profiles.Experiences.Add;
 
 namespace JobApplicationAgent.Profile.Application
 {
@@ -12,7 +13,7 @@ namespace JobApplicationAgent.Profile.Application
             services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
             services.AddScoped<CreateCandidateProfileHandler>();
             services.AddScoped<GetCandidateProfileHandler>();
-
+            services.AddScoped<AddProfessionalExperienceHandler>();
             return services;
         }
     }
