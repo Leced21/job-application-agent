@@ -29,5 +29,12 @@ namespace JobApplicationAgent.Profile.Infrastructure.Repositories
                             .Include(x => x.ProfessionalExperiences)
                             .SingleOrDefaultAsync(cancellationToken);
         }
+        public Task<CandidateProfile?> GetWithProfessionalExperiencesAsync(CancellationToken cancellationToken = default)
+        {
+            return dbContext.CandidateProfiles
+                            .AsNoTracking()
+                            .Include(x => x.ProfessionalExperiences)
+                            .SingleOrDefaultAsync(cancellationToken);
+        }
     }
 }

@@ -2,12 +2,16 @@
 using JobApplicationAgent.Profile.Application.Profiles.Get;
 using Microsoft.AspNetCore.Mvc;
 using JobApplicationAgent.Profile.Application.Profiles.Experiences.Add;
+using JobApplicationAgent.Profile.Application.Profiles.Experiences.Get;
 
 namespace JobApplicationAgent.Profile.Api.Controllers
 {
     [ApiController]
     [Route("api/v1/profile")]
-    public sealed class ProfileController(CreateCandidateProfileHandler createHandler, GetCandidateProfileHandler getHandler, AddProfessionalExperienceHandler addExperienceHandler) : ControllerBase
+    public sealed class ProfileController(CreateCandidateProfileHandler createHandler,
+                                            GetCandidateProfileHandler getHandler,
+                                            AddProfessionalExperienceHandler addExperienceHandler,
+                                            GetProfessionalExperiencesHandler getExperiencesHandler) : ControllerBase
     {
         [HttpGet]
         public async Task<IActionResult> Get(CancellationToken cancellationToken)
@@ -26,12 +30,17 @@ namespace JobApplicationAgent.Profile.Api.Controllers
             return CreatedAtAction(nameof(Get), profile);
         }
         [HttpPost("experiences")]
-        public async Task<IActionResult> AddExperience(AddProfessionalExperienceCommand command,CancellationToken cancellationToken)
+        public async Task<IActionResult> AddExperience(AddProfessionalExperienceCommand command, CancellationToken cancellationToken)
         {
-            var experience = await addExperienceHandler.HandleAsync(command,cancellationToken);
+            var experience = await addExperienceHandler.HandleAsync(command, cancellationToken);
 
             return Created($"/api/v1/profile/experiences/{experience.Id}", experience);
         }
-
+        [HttpGet("experiences")]
+        public async Task<IActionResult> GetExperiences(CancellationToken cancellationToken)
+        {
+            var experiences = await getExperiencesHandler.HandleAsync(cancellationToken);
+            return Ok(experiences);
+        }
     }
 }

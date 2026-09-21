@@ -65,6 +65,37 @@ namespace JobApplicationAgent.Profile.Domain.Entities
 
             return experience;
         }
+        public ProfessionalExperience? UpdateProfessionalExperience(
+            Guid experienceId,
+            string companyName,
+            string jobTitle,
+            DateOnly startDate,
+            DateOnly? endDate = null,
+            bool isCurrent = false,
+            string? location = null,
+            string? description = null)
+        {
+            var experience = _professionalExperiences
+                .SingleOrDefault(x => x.Id == experienceId);
+
+            if (experience is null)
+            {
+                return null;
+            }
+
+            experience.Update(
+                companyName,
+                jobTitle,
+                startDate,
+                endDate,
+                isCurrent,
+                location,
+                description);
+
+            UpdatedAtUtc = DateTime.UtcNow;
+
+            return experience;
+        }
     }
 }
 
