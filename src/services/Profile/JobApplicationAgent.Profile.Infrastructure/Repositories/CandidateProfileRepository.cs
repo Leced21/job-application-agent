@@ -23,5 +23,11 @@ namespace JobApplicationAgent.Profile.Infrastructure.Repositories
         {
             await dbContext.SaveChangesAsync(cancellationToken);
         }
+        public Task<CandidateProfile?> GetForUpdateAsync(CancellationToken cancellationToken = default)
+        {
+            return dbContext.CandidateProfiles
+                            .Include(x => x.ProfessionalExperiences)
+                            .SingleOrDefaultAsync(cancellationToken);
+        }
     }
 }

@@ -5,52 +5,64 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace JobApplicationAgent.Profile.Api.ExceptionHandling
 {
-        public sealed class GlobalExceptionHandler(IProblemDetailsService problemDetailsService): IExceptionHandler
+    public sealed class GlobalExceptionHandler(IProblemDetailsService problemDetailsService, ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
+    {
+        public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
         {
-            public async ValueTask<bool> TryHandleAsync(HttpContext httpContext,Exception exception,CancellationToken cancellationToken)
+            logger.LogError(
+                exception,
+                "Unhandled exception while processing {Method} {Path}",
+                httpContext.Request.Method,
+                httpContext.Request.Path
+            );
+            var problemDetails = exception switch
             {
-                var problemDetails = exception switch
+                ValidationException validationException => CreateValidationProblem(validationException),
+
+                CandidateProfileAlreadyExistsException => new ProblemDetails
                 {
-                    ValidationException validationException => CreateValidationProblem(validationException),
+                    Status = StatusCodes.Status409Conflict,
+                    Title = "Candidate profile already exists",
+                    Detail = exception.Message
+                },
+                CandidateProfileNotFoundException => new ProblemDetails
+                {
+                    Status = StatusCodes.Status404NotFound,
+                    Title = "Candidate profile not found",
+                    Detail = exception.Message
+                },
+                _ => new ProblemDetails
+                {
+                    Status = StatusCodes.Status500InternalServerError,
+                    Title = "An unexpected error occurred."
+                }
+            };
 
-                    CandidateProfileAlreadyExistsException => new ProblemDetails
-                        {
-                            Status = StatusCodes.Status409Conflict,
-                            Title = "Candidate profile already exists",
-                            Detail = exception.Message
-                        },
-                    _ => new ProblemDetails
-                        {
-                            Status = StatusCodes.Status500InternalServerError,
-                            Title = "An unexpected error occurred."
-                        }
-                };
+            httpContext.Response.StatusCode = problemDetails.Status ?? StatusCodes.Status500InternalServerError;
 
-                httpContext.Response.StatusCode = problemDetails.Status ?? StatusCodes.Status500InternalServerError;
-
-                return await problemDetailsService.TryWriteAsync( new ProblemDetailsContext
-                    {
-                        HttpContext = httpContext,
-                        ProblemDetails = problemDetails,
-                        Exception = exception
-                    });
-            }
-
-            private static ProblemDetails CreateValidationProblem(ValidationException exception)
+            return await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
             {
-                var errors = exception.Errors
-                                .GroupBy(error => error.PropertyName)
-                                .ToDictionary(
-                                    group => group.Key,
-                                    group => group
-                                        .Select(error => error.ErrorMessage)
-                                        .ToArray());
+                HttpContext = httpContext,
+                ProblemDetails = problemDetails,
+                Exception = exception
+            });
+        }
 
-                return new HttpValidationProblemDetails(errors)
-                {
-                    Status = StatusCodes.Status400BadRequest,
-                    Title = "Validation failed"
-                };
-            }
+        private static ProblemDetails CreateValidationProblem(ValidationException exception)
+        {
+            var errors = exception.Errors
+                            .GroupBy(error => error.PropertyName)
+                            .ToDictionary(
+                                group => group.Key,
+                                group => group
+                                    .Select(error => error.ErrorMessage)
+                                    .ToArray());
+
+            return new HttpValidationProblemDetails(errors)
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title = "Validation failed"
+            };
         }
     }
+}
