@@ -5,6 +5,7 @@ using JobApplicationAgent.Profile.IntegrationTests.Fixtures;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using JobApplicationAgent.Profile.Application.Profiles.Experiences;
+using JobApplicationAgent.Profile.Application.Profiles.Educations;
 
 namespace JobApplicationAgent.Profile.IntegrationTests.Api
 {
@@ -807,6 +808,495 @@ namespace JobApplicationAgent.Profile.IntegrationTests.Api
             Assert.Contains(
                 experienceId.ToString(),
                 problem.Detail);
+        }
+        [Fact]
+        public async Task PostEducation_ShouldReturnCreated_WhenEducationIsValid()
+        {
+            await _factory.ResetDatabaseAsync();
+
+            var profileResponse = await _client.PostAsJsonAsync(
+                "/api/v1/profile",
+                new
+                {
+                    firstName = "Test",
+                    lastName = "Candidate",
+                    email = "education@example.com",
+                    phoneNumber = (string?)null,
+                    jobTitle = "Data Engineer",
+                    summary = "Integration test profile"
+                });
+
+            Assert.Equal(
+                HttpStatusCode.Created,
+                profileResponse.StatusCode);
+
+            var command = new
+            {
+                institutionName = "Université Paris-Saclay",
+                degree = "Master",
+                fieldOfStudy = "Data Science",
+                location = "Paris",
+                startDate = "2022-09-01",
+                endDate = "2024-06-30",
+                isCurrent = false,
+                description = "Master spécialisé en Data Science."
+            };
+
+            var response = await _client.PostAsJsonAsync(
+                "/api/v1/profile/educations",
+                command);
+
+            Assert.Equal(
+                HttpStatusCode.Created,
+                response.StatusCode);
+
+            var education =
+                await response.Content.ReadFromJsonAsync<EducationDto>();
+
+            Assert.NotNull(education);
+            Assert.NotEqual(Guid.Empty, education.Id);
+            Assert.Equal(
+                "Université Paris-Saclay",
+                education.InstitutionName);
+            Assert.Equal("Master", education.Degree);
+            Assert.Equal("Data Science", education.FieldOfStudy);
+            Assert.Equal("Paris", education.Location);
+            Assert.Equal(
+                new DateOnly(2022, 9, 1),
+                education.StartDate);
+            Assert.Equal(
+                new DateOnly(2024, 6, 30),
+                education.EndDate);
+            Assert.False(education.IsCurrent);
+            var persistedEducation = await _factory.GetEducationAsync(education.Id);
+
+            Assert.NotNull(persistedEducation);
+
+            Assert.Equal(
+                education.Id,
+                persistedEducation.Id);
+
+            Assert.Equal(
+                "Université Paris-Saclay",
+                persistedEducation.InstitutionName);
+
+            Assert.Equal(
+                "Master",
+                persistedEducation.Degree);
+
+            Assert.Equal(
+                "Data Science",
+                persistedEducation.FieldOfStudy);
+
+            Assert.Equal(
+                new DateOnly(2022, 9, 1),
+                persistedEducation.StartDate);
+
+            Assert.Equal(
+                new DateOnly(2024, 6, 30),
+                persistedEducation.EndDate);
+        }
+        [Fact]
+        public async Task GetEducations_ShouldReturnPersistedEducations()
+        {
+            await _factory.ResetDatabaseAsync();
+
+            var profileResponse = await _client.PostAsJsonAsync(
+                "/api/v1/profile",
+                new
+                {
+                    firstName = "Test",
+                    lastName = "Candidate",
+                    email = "education-get@example.com",
+                    phoneNumber = (string?)null,
+                    jobTitle = "Data Engineer",
+                    summary = "Integration test profile"
+                });
+
+            Assert.Equal(
+                HttpStatusCode.Created,
+                profileResponse.StatusCode);
+
+            var educationResponse = await _client.PostAsJsonAsync(
+                "/api/v1/profile/educations",
+                new
+                {
+                    institutionName = "Université Paris-Saclay",
+                    degree = "Master",
+                    fieldOfStudy = "Data Science",
+                    location = "Paris",
+                    startDate = "2022-09-01",
+                    endDate = "2024-06-30",
+                    isCurrent = false,
+                    description = "Master spécialisé en Data Science."
+                });
+
+            Assert.Equal(
+                HttpStatusCode.Created,
+                educationResponse.StatusCode);
+
+            var response = await _client.GetAsync(
+                "/api/v1/profile/educations");
+
+            Assert.Equal(
+                HttpStatusCode.OK,
+                response.StatusCode);
+
+            var educations = await response.Content.ReadFromJsonAsync<List<EducationDto>>();
+
+            Assert.NotNull(educations);
+
+            var education = Assert.Single(educations);
+
+            Assert.NotEqual(Guid.Empty, education.Id);
+            Assert.Equal(
+                "Université Paris-Saclay",
+                education.InstitutionName);
+            Assert.Equal("Master", education.Degree);
+            Assert.Equal(
+                "Data Science",
+                education.FieldOfStudy);
+            Assert.Equal("Paris", education.Location);
+            Assert.Equal(
+                new DateOnly(2022, 9, 1),
+                education.StartDate);
+            Assert.Equal(
+                new DateOnly(2024, 6, 30),
+                education.EndDate);
+            Assert.False(education.IsCurrent);
+            Assert.Equal(
+                "Master spécialisé en Data Science.",
+                education.Description);
+        }
+        [Fact]
+        public async Task UpdateEducation_ShouldUpdateAndPersistEducation()
+        {
+            await _factory.ResetDatabaseAsync();
+
+            var profileCommand = new
+            {
+                firstName = "Test",
+                lastName = "Candidate",
+                email = "test@example.com",
+                phoneNumber = (string?)null,
+                jobTitle = "Data Engineer",
+                summary = "Integration test profile"
+            };
+
+            var profileResponse = await _client.PostAsJsonAsync(
+                "/api/v1/profile",
+                profileCommand);
+
+            profileResponse.EnsureSuccessStatusCode();
+
+            var createCommand = new
+            {
+                institutionName = "Université A",
+                degree = "Licence",
+                fieldOfStudy = "Informatique",
+                location = "Paris",
+                startDate = "2018-09-01",
+                endDate = "2021-06-30",
+                isCurrent = false,
+                description = "Formation initiale"
+            };
+
+            var createResponse = await _client.PostAsJsonAsync(
+                "/api/v1/profile/educations",
+                createCommand);
+
+            createResponse.EnsureSuccessStatusCode();
+
+            var createdEducation =
+                await createResponse.Content.ReadFromJsonAsync<EducationDto>();
+
+            Assert.NotNull(createdEducation);
+
+            var updateCommand = new
+            {
+                institutionName = "Université Paris-Saclay",
+                degree = "Master",
+                fieldOfStudy = "Data Science",
+                location = "Paris",
+                startDate = "2022-09-01",
+                endDate = "2024-06-30",
+                isCurrent = false,
+                description = "Formation mise à jour"
+            };
+
+            var updateResponse = await _client.PutAsJsonAsync(
+                $"/api/v1/profile/educations/{createdEducation.Id}",
+                updateCommand);
+
+            Assert.Equal(
+                HttpStatusCode.OK,
+                updateResponse.StatusCode);
+
+            var updatedEducation =
+                await updateResponse.Content.ReadFromJsonAsync<EducationDto>();
+
+            Assert.NotNull(updatedEducation);
+
+            Assert.Equal(
+                createdEducation.Id,
+                updatedEducation.Id);
+
+            Assert.Equal(
+                "Université Paris-Saclay",
+                updatedEducation.InstitutionName);
+
+            Assert.Equal(
+                "Master",
+                updatedEducation.Degree);
+
+            Assert.Equal(
+                "Data Science",
+                updatedEducation.FieldOfStudy);
+
+            Assert.Equal(
+                new DateOnly(2022, 9, 1),
+                updatedEducation.StartDate);
+
+            Assert.Equal(
+                new DateOnly(2024, 6, 30),
+                updatedEducation.EndDate);
+
+            // Vérification de la persistance via GET
+            var getResponse = await _client.GetAsync(
+                "/api/v1/profile/educations");
+
+            getResponse.EnsureSuccessStatusCode();
+
+            var educations =
+                await getResponse.Content
+                    .ReadFromJsonAsync<List<EducationDto>>();
+
+            Assert.NotNull(educations);
+
+            var persistedEducation =
+                Assert.Single(educations);
+
+            Assert.Equal(
+                createdEducation.Id,
+                persistedEducation.Id);
+
+            Assert.Equal(
+                "Université Paris-Saclay",
+                persistedEducation.InstitutionName);
+
+            Assert.Equal(
+                "Master",
+                persistedEducation.Degree);
+
+            Assert.Equal(
+                "Data Science",
+                persistedEducation.FieldOfStudy);
+
+            Assert.Equal(
+                "Formation mise à jour",
+                persistedEducation.Description);
+        }
+
+        [Fact]
+        public async Task UpdateEducation_ShouldReturnNotFound_WhenEducationDoesNotExist()
+        {
+            await _factory.ResetDatabaseAsync();
+
+            var profileCommand = new
+            {
+                firstName = "Test",
+                lastName = "Candidate",
+                email = "test@example.com",
+                phoneNumber = (string?)null,
+                jobTitle = "Data Engineer",
+                summary = "Integration test profile"
+            };
+
+            var profileResponse = await _client.PostAsJsonAsync(
+                "/api/v1/profile",
+                profileCommand);
+
+            profileResponse.EnsureSuccessStatusCode();
+
+            var command = new
+            {
+                institutionName = "Université Paris-Saclay",
+                degree = "Master",
+                fieldOfStudy = "Data Science",
+                location = "Paris",
+                startDate = "2022-09-01",
+                endDate = "2024-06-30",
+                isCurrent = false,
+                description = "Formation"
+            };
+
+            var response = await _client.PutAsJsonAsync(
+                $"/api/v1/profile/educations/{Guid.NewGuid()}",
+                command);
+
+            Assert.Equal(
+                HttpStatusCode.NotFound,
+                response.StatusCode);
+        }
+
+        [Fact]
+        public async Task UpdateEducation_ShouldReturnBadRequest_WhenCurrentEducationHasEndDate()
+        {
+            await _factory.ResetDatabaseAsync();
+
+            var profileCommand = new
+            {
+                firstName = "Test",
+                lastName = "Candidate",
+                email = "test@example.com",
+                phoneNumber = (string?)null,
+                jobTitle = "Data Engineer",
+                summary = "Integration test profile"
+            };
+
+            var profileResponse = await _client.PostAsJsonAsync(
+                "/api/v1/profile",
+                profileCommand);
+
+            profileResponse.EnsureSuccessStatusCode();
+
+            var createCommand = new
+            {
+                institutionName = "Université A",
+                degree = "Licence",
+                fieldOfStudy = "Informatique",
+                location = "Paris",
+                startDate = "2018-09-01",
+                endDate = "2021-06-30",
+                isCurrent = false,
+                description = "Formation initiale"
+            };
+
+            var createResponse = await _client.PostAsJsonAsync(
+                "/api/v1/profile/educations",
+                createCommand);
+
+            createResponse.EnsureSuccessStatusCode();
+
+            var education =
+                await createResponse.Content.ReadFromJsonAsync<EducationDto>();
+
+            Assert.NotNull(education);
+
+            var invalidCommand = new
+            {
+                institutionName = "Université Paris-Saclay",
+                degree = "Master",
+                fieldOfStudy = "Data Science",
+                location = "Paris",
+                startDate = "2024-09-01",
+                endDate = "2026-06-30",
+                isCurrent = true,
+                description = "Formation en cours"
+            };
+
+            var response = await _client.PutAsJsonAsync(
+                $"/api/v1/profile/educations/{education.Id}",
+                invalidCommand);
+
+            Assert.Equal(
+                HttpStatusCode.BadRequest,
+                response.StatusCode);
+        }
+        [Fact]
+        public async Task DeleteEducation_ShouldDeleteAndPersistEducation()
+        {
+            await _factory.ResetDatabaseAsync();
+
+            var profileCommand = new
+            {
+                firstName = "Test",
+                lastName = "Candidate",
+                email = "test@example.com",
+                phoneNumber = (string?)null,
+                jobTitle = "Data Engineer",
+                summary = "Integration test profile"
+            };
+
+            var profileResponse = await _client.PostAsJsonAsync(
+                "/api/v1/profile",
+                profileCommand);
+
+            profileResponse.EnsureSuccessStatusCode();
+
+            var createCommand = new
+            {
+                institutionName = "Université Paris-Saclay",
+                degree = "Master",
+                fieldOfStudy = "Data Science",
+                location = "Paris",
+                startDate = "2022-09-01",
+                endDate = "2024-06-30",
+                isCurrent = false,
+                description = "Formation à supprimer"
+            };
+
+            var createResponse = await _client.PostAsJsonAsync(
+                "/api/v1/profile/educations",
+                createCommand);
+
+            createResponse.EnsureSuccessStatusCode();
+
+            var education =
+                await createResponse.Content.ReadFromJsonAsync<EducationDto>();
+
+            Assert.NotNull(education);
+
+            var deleteResponse = await _client.DeleteAsync(
+                $"/api/v1/profile/educations/{education.Id}");
+
+            Assert.Equal(
+                HttpStatusCode.NoContent,
+                deleteResponse.StatusCode);
+
+            // Vérification de la persistance de la suppression
+            var getResponse = await _client.GetAsync(
+                "/api/v1/profile/educations");
+
+            getResponse.EnsureSuccessStatusCode();
+
+            var educations =
+                await getResponse.Content
+                    .ReadFromJsonAsync<List<EducationDto>>();
+
+            Assert.NotNull(educations);
+            Assert.Empty(educations);
+        }
+
+        [Fact]
+        public async Task DeleteEducation_ShouldReturnNotFound_WhenEducationDoesNotExist()
+        {
+            await _factory.ResetDatabaseAsync();
+
+            var profileCommand = new
+            {
+                firstName = "Test",
+                lastName = "Candidate",
+                email = "test@example.com",
+                phoneNumber = (string?)null,
+                jobTitle = "Data Engineer",
+                summary = "Integration test profile"
+            };
+
+            var profileResponse = await _client.PostAsJsonAsync(
+                "/api/v1/profile",
+                profileCommand);
+
+            profileResponse.EnsureSuccessStatusCode();
+
+            var educationId = Guid.NewGuid();
+
+            var response = await _client.DeleteAsync(
+                $"/api/v1/profile/educations/{educationId}");
+
+            Assert.Equal(
+                HttpStatusCode.NotFound,
+                response.StatusCode);
         }
     }
 }

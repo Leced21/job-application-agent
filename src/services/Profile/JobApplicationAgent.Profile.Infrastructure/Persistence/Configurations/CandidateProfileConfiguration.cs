@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace JobApplicationAgent.Profile.Infrastructure.Persistence.Configurations
 {
-    public sealed class CandidateProfileConfiguration:IEntityTypeConfiguration<CandidateProfile>
+    public sealed class CandidateProfileConfiguration : IEntityTypeConfiguration<CandidateProfile>
     {
         public void Configure(EntityTypeBuilder<CandidateProfile> builder)
         {
@@ -48,6 +48,11 @@ namespace JobApplicationAgent.Profile.Infrastructure.Persistence.Configurations
                 .OnDelete(DeleteBehavior.Cascade);
             builder.Navigation(x => x.ProfessionalExperiences)
                 .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+            builder.HasMany(x => x.Educations)
+                .WithOne()
+                .HasForeignKey(x => x.CandidateProfileId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

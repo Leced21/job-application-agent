@@ -12,6 +12,7 @@ namespace JobApplicationAgent.Profile.Domain.Entities
         }
 
         private readonly List<ProfessionalExperience> _professionalExperiences = [];
+        private readonly List<Education> _educations = [];
         public CandidateProfile(
             string firstName,
             string lastName,
@@ -40,6 +41,7 @@ namespace JobApplicationAgent.Profile.Domain.Entities
         public DateTime CreatedAtUtc { get; private set; }
         public DateTime UpdatedAtUtc { get; private set; }
         public IReadOnlyCollection<ProfessionalExperience> ProfessionalExperiences => _professionalExperiences;
+        public IReadOnlyCollection<Education> Educations => _educations;
         public ProfessionalExperience AddProfessionalExperience(
             string companyName,
             string jobTitle,
@@ -107,6 +109,82 @@ namespace JobApplicationAgent.Profile.Domain.Entities
             }
 
             _professionalExperiences.Remove(experience);
+            UpdatedAtUtc = DateTime.UtcNow;
+
+            return true;
+        }
+        public Education AddEducation(
+    string institutionName,
+    string degree,
+    DateOnly startDate,
+    DateOnly? endDate = null,
+    bool isCurrent = false,
+    string? fieldOfStudy = null,
+    string? location = null,
+    string? description = null)
+        {
+            var education = new Education(
+                Id,
+                institutionName,
+                degree,
+                startDate,
+                endDate,
+                isCurrent,
+                fieldOfStudy,
+                location,
+                description);
+
+            _educations.Add(education);
+
+            UpdatedAtUtc = DateTime.UtcNow;
+
+            return education;
+        }
+        public Education? UpdateEducation(
+    Guid educationId,
+    string institutionName,
+    string degree,
+    DateOnly startDate,
+    DateOnly? endDate = null,
+    bool isCurrent = false,
+    string? fieldOfStudy = null,
+    string? location = null,
+    string? description = null)
+        {
+            var education = _educations
+                .SingleOrDefault(x => x.Id == educationId);
+
+            if (education is null)
+            {
+                return null;
+            }
+
+            education.Update(
+                institutionName,
+                degree,
+                startDate,
+                endDate,
+                isCurrent,
+                fieldOfStudy,
+                location,
+                description);
+
+            UpdatedAtUtc = DateTime.UtcNow;
+
+            return education;
+        }
+        public bool RemoveEducation(Guid educationId)
+        {
+            var education = _educations
+                .SingleOrDefault(x => x.Id == educationId);
+
+            if (education is null)
+            {
+                return false;
+            }
+
+            _educations.Remove(education);
+
             UpdatedAtUtc = DateTime.UtcNow;
 
             return true;

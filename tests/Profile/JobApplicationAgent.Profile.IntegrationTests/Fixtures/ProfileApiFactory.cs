@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.PostgreSql;
+using JobApplicationAgent.Profile.Domain.Entities;
 
 namespace JobApplicationAgent.Profile.IntegrationTests.Fixtures
 {
@@ -56,6 +57,19 @@ namespace JobApplicationAgent.Profile.IntegrationTests.Fixtures
 
             await dbContext.CandidateProfiles.ExecuteDeleteAsync();
         }
+        public async Task<Education?> GetEducationAsync(Guid educationId)
+        {
+            using var scope = Services.CreateScope();
+
+            var dbContext =
+                scope.ServiceProvider.GetRequiredService<ProfileDbContext>();
+
+            return await dbContext.Educations
+                .AsNoTracking()
+                .SingleOrDefaultAsync(
+                    x => x.Id == educationId);
+        }
+       
     }
 }
 

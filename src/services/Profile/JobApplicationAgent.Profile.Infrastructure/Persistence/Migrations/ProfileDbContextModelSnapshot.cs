@@ -69,10 +69,61 @@ namespace JobApplicationAgent.Profile.Infrastructure.Persistence.Migrations
                     b.ToTable("candidate_profiles", (string)null);
                 });
 
+            modelBuilder.Entity("JobApplicationAgent.Profile.Domain.Entities.Education", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CandidateProfileId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Degree")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<DateOnly?>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("FieldOfStudy")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("InstitutionName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<bool>("IsCurrent")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CandidateProfileId");
+
+                    b.ToTable("educations", (string)null);
+                });
+
             modelBuilder.Entity("JobApplicationAgent.Profile.Domain.Entities.ProfessionalExperience", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("CandidateProfileId")
@@ -118,6 +169,15 @@ namespace JobApplicationAgent.Profile.Infrastructure.Persistence.Migrations
                     b.ToTable("professional_experiences", (string)null);
                 });
 
+            modelBuilder.Entity("JobApplicationAgent.Profile.Domain.Entities.Education", b =>
+                {
+                    b.HasOne("JobApplicationAgent.Profile.Domain.Entities.CandidateProfile", null)
+                        .WithMany("Educations")
+                        .HasForeignKey("CandidateProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("JobApplicationAgent.Profile.Domain.Entities.ProfessionalExperience", b =>
                 {
                     b.HasOne("JobApplicationAgent.Profile.Domain.Entities.CandidateProfile", null)
@@ -129,6 +189,8 @@ namespace JobApplicationAgent.Profile.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("JobApplicationAgent.Profile.Domain.Entities.CandidateProfile", b =>
                 {
+                    b.Navigation("Educations");
+
                     b.Navigation("ProfessionalExperiences");
                 });
 #pragma warning restore 612, 618
