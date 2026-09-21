@@ -10,8 +10,7 @@ namespace JobApplicationAgent.Profile.Api.ExceptionHandling
         public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
         {
             logger.LogError(
-                exception,
-                "Unhandled exception while processing {Method} {Path}",
+                exception, "Unhandled exception while processing {Method} {Path}",
                 httpContext.Request.Method,
                 httpContext.Request.Path
             );
@@ -37,13 +36,19 @@ namespace JobApplicationAgent.Profile.Api.ExceptionHandling
                     Title = "Professional experience not found",
                     Detail = exception.Message
                 },
+                EducationNotFoundException => new ProblemDetails
+                {
+                    Status = StatusCodes.Status404NotFound,
+                    Title = "Education not found",
+                    Detail = exception.Message
+                },
                 _ => new ProblemDetails
                 {
                     Status = StatusCodes.Status500InternalServerError,
                     Title = "An unexpected error occurred.",
                     Detail = "An unexpected error occurred while processing the request."
                 }
-                
+
             };
 
             httpContext.Response.StatusCode = problemDetails.Status ?? StatusCodes.Status500InternalServerError;

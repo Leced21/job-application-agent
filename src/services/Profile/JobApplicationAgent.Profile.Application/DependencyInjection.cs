@@ -6,6 +6,10 @@ using JobApplicationAgent.Profile.Application.Profiles.Experiences.Add;
 using JobApplicationAgent.Profile.Application.Profiles.Experiences.Get;
 using JobApplicationAgent.Profile.Application.Profiles.Experiences.Update;
 using JobApplicationAgent.Profile.Application.Profiles.Experiences.Delete;
+using JobApplicationAgent.Profile.Application.Profiles.Educations.Add;
+using JobApplicationAgent.Profile.Application.Profiles.Educations.Get;
+using JobApplicationAgent.Profile.Application.Profiles.Educations.Update;
+using JobApplicationAgent.Profile.Application.Profiles.Educations.Delete;
 
 namespace JobApplicationAgent.Profile.Application
 {
@@ -20,6 +24,10 @@ namespace JobApplicationAgent.Profile.Application
             services.AddScoped<GetProfessionalExperiencesHandler>();
             services.AddScoped<UpdateProfessionalExperienceHandler>();
             services.AddScoped<DeleteProfessionalExperienceHandler>();
+            services.AddScoped<AddEducationHandler>();
+            services.AddScoped<GetEducationsHandler>();
+            services.AddScoped<UpdateEducationHandler>();
+            services.AddScoped<DeleteEducationHandler>();
             return services;
         }
     }

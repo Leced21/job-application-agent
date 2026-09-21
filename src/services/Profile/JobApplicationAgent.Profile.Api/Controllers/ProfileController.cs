@@ -5,6 +5,10 @@ using JobApplicationAgent.Profile.Application.Profiles.Experiences.Add;
 using JobApplicationAgent.Profile.Application.Profiles.Experiences.Get;
 using JobApplicationAgent.Profile.Application.Profiles.Experiences.Update;
 using JobApplicationAgent.Profile.Application.Profiles.Experiences.Delete;
+using JobApplicationAgent.Profile.Application.Profiles.Educations.Add;
+using JobApplicationAgent.Profile.Application.Profiles.Educations.Get;
+using JobApplicationAgent.Profile.Application.Profiles.Educations.Update;
+using JobApplicationAgent.Profile.Application.Profiles.Educations.Delete;
 
 
 namespace JobApplicationAgent.Profile.Api.Controllers
@@ -16,7 +20,11 @@ namespace JobApplicationAgent.Profile.Api.Controllers
                                             AddProfessionalExperienceHandler addExperienceHandler,
                                             GetProfessionalExperiencesHandler getExperiencesHandler,
                                             UpdateProfessionalExperienceHandler updateExperienceHandler,
-                                            DeleteProfessionalExperienceHandler deleteExperienceHandler
+                                            DeleteProfessionalExperienceHandler deleteExperienceHandler,
+                                            AddEducationHandler addEducationHandler,
+                                            GetEducationsHandler getEducationsHandler,
+                                            UpdateEducationHandler updateEducationHandler,
+                                            DeleteEducationHandler deleteEducationHandler
                                             ) : ControllerBase
     {
         [HttpGet]
@@ -59,11 +67,47 @@ namespace JobApplicationAgent.Profile.Api.Controllers
 
             return Ok(experience);
         }
-        
+
         [HttpDelete("experiences/{id:guid}")]
-        public async Task<IActionResult> DeleteExperience(Guid id,CancellationToken cancellationToken)
+        public async Task<IActionResult> DeleteExperience(Guid id, CancellationToken cancellationToken)
         {
             await deleteExperienceHandler.HandleAsync(
+                id,
+                cancellationToken);
+
+            return NoContent();
+        }
+        [HttpPost("educations")]
+        public async Task<IActionResult> AddEducation(AddEducationCommand command, CancellationToken cancellationToken)
+        {
+            var education = await addEducationHandler.HandleAsync(command, cancellationToken);
+
+            return StatusCode(
+                StatusCodes.Status201Created,
+                education);
+        }
+        [HttpGet("educations")]
+        public async Task<IActionResult> GetEducations(CancellationToken cancellationToken)
+        {
+            var educations = await getEducationsHandler.HandleAsync(cancellationToken);
+
+            return Ok(educations);
+        }
+        [HttpPut("educations/{id:guid}")]
+        public async Task<IActionResult> UpdateEducation(Guid id, UpdateEducationCommand command, CancellationToken cancellationToken)
+        {
+            var education =
+                await updateEducationHandler.HandleAsync(
+                    id,
+                    command,
+                    cancellationToken);
+
+            return Ok(education);
+        }
+        [HttpDelete("educations/{id:guid}")]
+        public async Task<IActionResult> DeleteEducation(Guid id,CancellationToken cancellationToken)
+        {
+            await deleteEducationHandler.HandleAsync(
                 id,
                 cancellationToken);
 
