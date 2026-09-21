@@ -4,6 +4,7 @@ using JobApplicationAgent.Profile.Application.Profiles.Get;
 using Microsoft.Extensions.DependencyInjection;
 using JobApplicationAgent.Profile.Application.Profiles.Experiences.Add;
 using JobApplicationAgent.Profile.Application.Profiles.Experiences.Get;
+using JobApplicationAgent.Profile.Application.Profiles.Experiences.Update;
 
 namespace JobApplicationAgent.Profile.Application
 {
@@ -16,6 +17,7 @@ namespace JobApplicationAgent.Profile.Application
             services.AddScoped<GetCandidateProfileHandler>();
             services.AddScoped<AddProfessionalExperienceHandler>();
             services.AddScoped<GetProfessionalExperiencesHandler>();
+            services.AddScoped<UpdateProfessionalExperienceHandler>();
             return services;
         }
     }
