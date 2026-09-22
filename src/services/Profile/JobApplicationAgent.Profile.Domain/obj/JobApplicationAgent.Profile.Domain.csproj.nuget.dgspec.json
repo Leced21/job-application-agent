@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\cedri\\Downloads\\repo\\job-application-agent\\src\\services\\Profile\\JobApplicationAgent.Profile.Domain\\JobApplicationAgent.Profile.Domain.csproj": {}
+    "c:\\Users\\cedri\\Downloads\\repo\\job-application-agent\\src\\services\\Profile\\JobApplicationAgent.Profile.Domain\\JobApplicationAgent.Profile.Domain.csproj": {}
   },
   "projects": {
-    "C:\\Users\\cedri\\Downloads\\repo\\job-application-agent\\src\\services\\Profile\\JobApplicationAgent.Profile.Domain\\JobApplicationAgent.Profile.Domain.csproj": {
+    "c:\\Users\\cedri\\Downloads\\repo\\job-application-agent\\src\\services\\Profile\\JobApplicationAgent.Profile.Domain\\JobApplicationAgent.Profile.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\cedri\\Downloads\\repo\\job-application-agent\\src\\services\\Profile\\JobApplicationAgent.Profile.Domain\\JobApplicationAgent.Profile.Domain.csproj",
+        "projectUniqueName": "c:\\Users\\cedri\\Downloads\\repo\\job-application-agent\\src\\services\\Profile\\JobApplicationAgent.Profile.Domain\\JobApplicationAgent.Profile.Domain.csproj",
         "projectName": "JobApplicationAgent.Profile.Domain",
-        "projectPath": "C:\\Users\\cedri\\Downloads\\repo\\job-application-agent\\src\\services\\Profile\\JobApplicationAgent.Profile.Domain\\JobApplicationAgent.Profile.Domain.csproj",
+        "projectPath": "c:\\Users\\cedri\\Downloads\\repo\\job-application-agent\\src\\services\\Profile\\JobApplicationAgent.Profile.Domain\\JobApplicationAgent.Profile.Domain.csproj",
         "packagesPath": "C:\\Users\\cedri\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\cedri\\Downloads\\repo\\job-application-agent\\src\\services\\Profile\\JobApplicationAgent.Profile.Domain\\obj\\",
+        "outputPath": "c:\\Users\\cedri\\Downloads\\repo\\job-application-agent\\src\\services\\Profile\\JobApplicationAgent.Profile.Domain\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

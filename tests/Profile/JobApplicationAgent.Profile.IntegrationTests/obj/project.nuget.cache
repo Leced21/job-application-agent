@@ -1,11 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "JBNsRKNom1c=",
+  "dgSpecHash": "yRgLFLWvSSk=",
   "success": true,
-  "projectFilePath": "C:\\Users\\cedri\\Downloads\\repo\\job-application-agent\\tests\\Profile\\JobApplicationAgent.Profile.IntegrationTests\\JobApplicationAgent.Profile.IntegrationTests.csproj",
+  "projectFilePath": "c:\\Users\\cedri\\Downloads\\repo\\job-application-agent\\tests\\Profile\\JobApplicationAgent.Profile.IntegrationTests\\JobApplicationAgent.Profile.IntegrationTests.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\cedri\\.nuget\\packages\\bouncycastle.cryptography\\2.7.0\\bouncycastle.cryptography.2.7.0.nupkg.sha512",
-    "C:\\Users\\cedri\\.nuget\\packages\\coverlet.collector\\6.0.4\\coverlet.collector.6.0.4.nupkg.sha512",
+    "C:\\Users\\cedri\\.nuget\\packages\\coverlet.collector\\10.0.1\\coverlet.collector.10.0.1.nupkg.sha512",
     "C:\\Users\\cedri\\.nuget\\packages\\docker.dotnet.enhanced\\4.3.3\\docker.dotnet.enhanced.4.3.3.nupkg.sha512",
     "C:\\Users\\cedri\\.nuget\\packages\\docker.dotnet.enhanced.handler.abstractions\\4.3.3\\docker.dotnet.enhanced.handler.abstractions.4.3.3.nupkg.sha512",
     "C:\\Users\\cedri\\.nuget\\packages\\docker.dotnet.enhanced.legacyhttp\\4.3.3\\docker.dotnet.enhanced.legacyhttp.4.3.3.nupkg.sha512",

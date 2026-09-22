@@ -2755,11 +2755,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\cedri\\Downloads\\repo\\job-application-agent\\src\\services\\Profile\\JobApplicationAgent.Profile.Infrastructure\\JobApplicationAgent.Profile.Infrastructure.csproj",
+      "projectUniqueName": "c:\\Users\\cedri\\Downloads\\repo\\job-application-agent\\src\\services\\Profile\\JobApplicationAgent.Profile.Infrastructure\\JobApplicationAgent.Profile.Infrastructure.csproj",
       "projectName": "JobApplicationAgent.Profile.Infrastructure",
-      "projectPath": "C:\\Users\\cedri\\Downloads\\repo\\job-application-agent\\src\\services\\Profile\\JobApplicationAgent.Profile.Infrastructure\\JobApplicationAgent.Profile.Infrastructure.csproj",
+      "projectPath": "c:\\Users\\cedri\\Downloads\\repo\\job-application-agent\\src\\services\\Profile\\JobApplicationAgent.Profile.Infrastructure\\JobApplicationAgent.Profile.Infrastructure.csproj",
       "packagesPath": "C:\\Users\\cedri\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\cedri\\Downloads\\repo\\job-application-agent\\src\\services\\Profile\\JobApplicationAgent.Profile.Infrastructure\\obj\\",
+      "outputPath": "c:\\Users\\cedri\\Downloads\\repo\\job-application-agent\\src\\services\\Profile\\JobApplicationAgent.Profile.Infrastructure\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -2781,11 +2781,11 @@
           "framework": "net10.0",
           "targetAlias": "net10.0",
           "projectReferences": {
-            "C:\\Users\\cedri\\Downloads\\repo\\job-application-agent\\src\\services\\Profile\\JobApplicationAgent.Profile.Application\\JobApplicationAgent.Profile.Application.csproj": {
-              "projectPath": "C:\\Users\\cedri\\Downloads\\repo\\job-application-agent\\src\\services\\Profile\\JobApplicationAgent.Profile.Application\\JobApplicationAgent.Profile.Application.csproj"
+            "c:\\Users\\cedri\\Downloads\\repo\\job-application-agent\\src\\services\\Profile\\JobApplicationAgent.Profile.Application\\JobApplicationAgent.Profile.Application.csproj": {
+              "projectPath": "c:\\Users\\cedri\\Downloads\\repo\\job-application-agent\\src\\services\\Profile\\JobApplicationAgent.Profile.Application\\JobApplicationAgent.Profile.Application.csproj"
             },
-            "C:\\Users\\cedri\\Downloads\\repo\\job-application-agent\\src\\services\\Profile\\JobApplicationAgent.Profile.Domain\\JobApplicationAgent.Profile.Domain.csproj": {
-              "projectPath": "C:\\Users\\cedri\\Downloads\\repo\\job-application-agent\\src\\services\\Profile\\JobApplicationAgent.Profile.Domain\\JobApplicationAgent.Profile.Domain.csproj"
+            "c:\\Users\\cedri\\Downloads\\repo\\job-application-agent\\src\\services\\Profile\\JobApplicationAgent.Profile.Domain\\JobApplicationAgent.Profile.Domain.csproj": {
+              "projectPath": "c:\\Users\\cedri\\Downloads\\repo\\job-application-agent\\src\\services\\Profile\\JobApplicationAgent.Profile.Domain\\JobApplicationAgent.Profile.Domain.csproj"
             }
           }
         }
