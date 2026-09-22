@@ -42,6 +42,12 @@ namespace JobApplicationAgent.Profile.Api.ExceptionHandling
                     Title = "Education not found",
                     Detail = exception.Message
                 },
+                SkillNotFoundException => new ProblemDetails
+                {
+                    Status = StatusCodes.Status404NotFound,
+                    Title = "Skill not found",
+                    Detail = exception.Message
+                },
                 _ => new ProblemDetails
                 {
                     Status = StatusCodes.Status500InternalServerError,

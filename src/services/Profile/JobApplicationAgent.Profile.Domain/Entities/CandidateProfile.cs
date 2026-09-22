@@ -13,6 +13,8 @@ namespace JobApplicationAgent.Profile.Domain.Entities
 
         private readonly List<ProfessionalExperience> _professionalExperiences = [];
         private readonly List<Education> _educations = [];
+        private readonly List<Skill> _skills = [];
+
         public CandidateProfile(
             string firstName,
             string lastName,
@@ -42,6 +44,7 @@ namespace JobApplicationAgent.Profile.Domain.Entities
         public DateTime UpdatedAtUtc { get; private set; }
         public IReadOnlyCollection<ProfessionalExperience> ProfessionalExperiences => _professionalExperiences;
         public IReadOnlyCollection<Education> Educations => _educations;
+        public IReadOnlyCollection<Skill> Skills => _skills;
         public ProfessionalExperience AddProfessionalExperience(
             string companyName,
             string jobTitle,
@@ -114,14 +117,14 @@ namespace JobApplicationAgent.Profile.Domain.Entities
             return true;
         }
         public Education AddEducation(
-    string institutionName,
-    string degree,
-    DateOnly startDate,
-    DateOnly? endDate = null,
-    bool isCurrent = false,
-    string? fieldOfStudy = null,
-    string? location = null,
-    string? description = null)
+            string institutionName,
+            string degree,
+            DateOnly startDate,
+            DateOnly? endDate = null,
+            bool isCurrent = false,
+            string? fieldOfStudy = null,
+            string? location = null,
+            string? description = null)
         {
             var education = new Education(
                 Id,
@@ -141,15 +144,15 @@ namespace JobApplicationAgent.Profile.Domain.Entities
             return education;
         }
         public Education? UpdateEducation(
-    Guid educationId,
-    string institutionName,
-    string degree,
-    DateOnly startDate,
-    DateOnly? endDate = null,
-    bool isCurrent = false,
-    string? fieldOfStudy = null,
-    string? location = null,
-    string? description = null)
+            Guid educationId,
+            string institutionName,
+            string degree,
+            DateOnly startDate,
+            DateOnly? endDate = null,
+            bool isCurrent = false,
+            string? fieldOfStudy = null,
+            string? location = null,
+            string? description = null)
         {
             var education = _educations
                 .SingleOrDefault(x => x.Id == educationId);
@@ -189,7 +192,63 @@ namespace JobApplicationAgent.Profile.Domain.Entities
 
             return true;
         }
+        public Skill AddSkill(
+            string name,
+            string? category = null,
+            string? level = null,
+            int? yearsOfExperience = null)
+        {
+            var skill = new Skill(
+                Id,
+                name,
+                category,
+                level,
+                yearsOfExperience);
+
+            _skills.Add(skill);
+
+            UpdatedAtUtc = DateTime.UtcNow;
+
+            return skill;
+        }
+        public Skill? UpdateSkill(
+            Guid skillId,
+            string name,
+            string? category = null,
+            string? level = null,
+            int? yearsOfExperience = null)
+        {
+            var skill = _skills
+                .SingleOrDefault(x => x.Id == skillId);
+
+            if (skill is null)
+            {
+                return null;
+            }
+
+            skill.Update(
+                name,
+                category,
+                level,
+                yearsOfExperience);
+
+            UpdatedAtUtc = DateTime.UtcNow;
+
+            return skill;
+        }
+        public bool RemoveSkill(Guid skillId)
+        {
+            var skill = _skills.SingleOrDefault(x => x.Id == skillId);
+
+            if (skill is null)
+            {
+                return false;
+            }
+
+            _skills.Remove(skill);
+            UpdatedAtUtc = DateTime.UtcNow;
+
+            return true;
+        }
     }
 }
-
-

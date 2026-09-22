@@ -9,6 +9,10 @@ using JobApplicationAgent.Profile.Application.Profiles.Educations.Add;
 using JobApplicationAgent.Profile.Application.Profiles.Educations.Get;
 using JobApplicationAgent.Profile.Application.Profiles.Educations.Update;
 using JobApplicationAgent.Profile.Application.Profiles.Educations.Delete;
+using JobApplicationAgent.Profile.Application.Profiles.Skills.Add;
+using JobApplicationAgent.Profile.Application.Profiles.Skills.Get;
+using JobApplicationAgent.Profile.Application.Profiles.Skills.Update;
+using JobApplicationAgent.Profile.Application.Profiles.Skills.Delete;
 
 
 namespace JobApplicationAgent.Profile.Api.Controllers
@@ -24,7 +28,11 @@ namespace JobApplicationAgent.Profile.Api.Controllers
                                             AddEducationHandler addEducationHandler,
                                             GetEducationsHandler getEducationsHandler,
                                             UpdateEducationHandler updateEducationHandler,
-                                            DeleteEducationHandler deleteEducationHandler
+                                            DeleteEducationHandler deleteEducationHandler,
+                                            AddSkillHandler addSkillHandler,
+                                            GetSkillsHandler getSkillsHandler,
+                                            UpdateSkillHandler updateSkillHandler,
+                                            DeleteSkillHandler deleteSkillHandler
                                             ) : ControllerBase
     {
         [HttpGet]
@@ -104,12 +112,44 @@ namespace JobApplicationAgent.Profile.Api.Controllers
 
             return Ok(education);
         }
+
         [HttpDelete("educations/{id:guid}")]
-        public async Task<IActionResult> DeleteEducation(Guid id,CancellationToken cancellationToken)
+        public async Task<IActionResult> DeleteEducation(Guid id, CancellationToken cancellationToken)
         {
             await deleteEducationHandler.HandleAsync(
                 id,
                 cancellationToken);
+
+            return NoContent();
+        }
+
+        [HttpPost("skills")]
+        public async Task<IActionResult> AddSkill(AddSkillCommand command, CancellationToken cancellationToken)
+        {
+            var skill = await addSkillHandler.HandleAsync(command, cancellationToken);
+
+            return StatusCode(StatusCodes.Status201Created, skill);
+        }
+        [HttpGet("skills")]
+        public async Task<IActionResult> GetSkills(CancellationToken cancellationToken)
+        {
+            var skills =
+                await getSkillsHandler.HandleAsync(
+                    cancellationToken);
+
+            return Ok(skills);
+        }
+        [HttpPut("skills/{skillId:guid}")]
+        public async Task<IActionResult> UpdateSkill(Guid skillId, UpdateSkillCommand command, CancellationToken cancellationToken)
+        {
+            var skill =
+                await updateSkillHandler.HandleAsync(skillId, command, cancellationToken);
+            return Ok(skill);
+        }
+        [HttpDelete("skills/{skillId:guid}")]
+        public async Task<IActionResult> DeleteSkill(Guid skillId, CancellationToken cancellationToken)
+        {
+            await deleteSkillHandler.HandleAsync(skillId, cancellationToken);
 
             return NoContent();
         }

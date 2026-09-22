@@ -15,5 +15,6 @@ namespace JobApplicationAgent.Profile.Application.Abstractions
         Task<CandidateProfile?> GetForUpdateAsync(CancellationToken cancellationToken = default);
         Task<CandidateProfile?> GetWithProfessionalExperiencesAsync(CancellationToken cancellationToken = default);
         Task<CandidateProfile?> GetWithEducationsAsync(CancellationToken cancellationToken = default);
+        Task<CandidateProfile?> GetWithSkillsAsync(CancellationToken cancellationToken = default);
     }
 }

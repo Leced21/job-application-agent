@@ -11,9 +11,14 @@ namespace JobApplicationAgent.Profile.Infrastructure
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
-            var connectionString = configuration.GetConnectionString("ProfileDatabase") ?? throw new InvalidOperationException("Connection string 'ProfileDatabase' was not found.");
+            services.AddDbContext<ProfileDbContext>(options =>
+            {
+                // Read after the host has applied all configuration sources.
+                var connectionString = configuration.GetConnectionString("ProfileDatabase")
+                    ?? throw new InvalidOperationException("Connection string 'ProfileDatabase' was not found.");
 
-            services.AddDbContext<ProfileDbContext>(options => options.UseNpgsql(connectionString));
+                options.UseNpgsql(connectionString);
+            });
 
             services.AddScoped<ICandidateProfileRepository, CandidateProfileRepository>();
 
