@@ -22,6 +22,49 @@ namespace JobApplicationAgent.Profile.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("JobApplicationAgent.Profile.Domain.Entities.CandidatePreferences", b =>
+                {
+                    b.Property<Guid>("CandidateProfileId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly?>("AvailableFrom")
+                        .HasColumnType("date");
+
+                    b.PrimitiveCollection<string[]>("ContractTypes")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.PrimitiveCollection<string[]>("DesiredJobTitles")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<decimal?>("MinimumAnnualGrossSalary")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.PrimitiveCollection<string[]>("PreferredLocations")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<string>("SalaryCurrency")
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.PrimitiveCollection<string[]>("WorkModes")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.HasKey("CandidateProfileId");
+
+                    b.ToTable("candidate_preferences", (string)null);
+                });
+
             modelBuilder.Entity("JobApplicationAgent.Profile.Domain.Entities.CandidateProfile", b =>
                 {
                     b.Property<Guid>("Id")
@@ -67,6 +110,51 @@ namespace JobApplicationAgent.Profile.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("candidate_profiles", (string)null);
+                });
+
+            modelBuilder.Entity("JobApplicationAgent.Profile.Domain.Entities.Certification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CandidateProfileId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CredentialId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("CredentialUrl")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateOnly?>("ExpirationDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("IssueDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("IssuingOrganization")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CandidateProfileId");
+
+                    b.ToTable("certifications", (string)null);
                 });
 
             modelBuilder.Entity("JobApplicationAgent.Profile.Domain.Entities.Education", b =>
@@ -150,6 +238,37 @@ namespace JobApplicationAgent.Profile.Infrastructure.Persistence.Migrations
                     b.HasIndex("CandidateProfileId");
 
                     b.ToTable("languages", (string)null);
+                });
+
+            modelBuilder.Entity("JobApplicationAgent.Profile.Domain.Entities.Link", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CandidateProfileId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CandidateProfileId");
+
+                    b.ToTable("links", (string)null);
                 });
 
             modelBuilder.Entity("JobApplicationAgent.Profile.Domain.Entities.ProfessionalExperience", b =>
@@ -237,6 +356,24 @@ namespace JobApplicationAgent.Profile.Infrastructure.Persistence.Migrations
                     b.ToTable("skills", (string)null);
                 });
 
+            modelBuilder.Entity("JobApplicationAgent.Profile.Domain.Entities.CandidatePreferences", b =>
+                {
+                    b.HasOne("JobApplicationAgent.Profile.Domain.Entities.CandidateProfile", null)
+                        .WithOne("Preferences")
+                        .HasForeignKey("JobApplicationAgent.Profile.Domain.Entities.CandidatePreferences", "CandidateProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("JobApplicationAgent.Profile.Domain.Entities.Certification", b =>
+                {
+                    b.HasOne("JobApplicationAgent.Profile.Domain.Entities.CandidateProfile", null)
+                        .WithMany("Certifications")
+                        .HasForeignKey("CandidateProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("JobApplicationAgent.Profile.Domain.Entities.Education", b =>
                 {
                     b.HasOne("JobApplicationAgent.Profile.Domain.Entities.CandidateProfile", null)
@@ -250,6 +387,15 @@ namespace JobApplicationAgent.Profile.Infrastructure.Persistence.Migrations
                 {
                     b.HasOne("JobApplicationAgent.Profile.Domain.Entities.CandidateProfile", null)
                         .WithMany("Languages")
+                        .HasForeignKey("CandidateProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("JobApplicationAgent.Profile.Domain.Entities.Link", b =>
+                {
+                    b.HasOne("JobApplicationAgent.Profile.Domain.Entities.CandidateProfile", null)
+                        .WithMany("Links")
                         .HasForeignKey("CandidateProfileId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -275,9 +421,15 @@ namespace JobApplicationAgent.Profile.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("JobApplicationAgent.Profile.Domain.Entities.CandidateProfile", b =>
                 {
+                    b.Navigation("Certifications");
+
                     b.Navigation("Educations");
 
                     b.Navigation("Languages");
+
+                    b.Navigation("Links");
+
+                    b.Navigation("Preferences");
 
                     b.Navigation("ProfessionalExperiences");
 

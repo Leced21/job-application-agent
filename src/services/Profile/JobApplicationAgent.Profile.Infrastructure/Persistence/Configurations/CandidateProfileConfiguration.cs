@@ -1,4 +1,4 @@
-﻿using JobApplicationAgent.Profile.Domain.Entities;
+using JobApplicationAgent.Profile.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -12,6 +12,10 @@ namespace JobApplicationAgent.Profile.Infrastructure.Persistence.Configurations
             builder.ToTable("candidate_profiles");
 
             builder.HasKey(x => x.Id);
+            builder.HasOne(x => x.Preferences)
+                .WithOne()
+                .HasForeignKey<CandidatePreferences>(x => x.CandidateProfileId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             builder.Property(x => x.FirstName)
                 .HasMaxLength(100)
@@ -58,6 +62,14 @@ namespace JobApplicationAgent.Profile.Infrastructure.Persistence.Configurations
                 .HasForeignKey(x => x.CandidateProfileId)
                 .OnDelete(DeleteBehavior.Cascade);
             builder.HasMany(x => x.Languages)
+                .WithOne()
+                .HasForeignKey(x => x.CandidateProfileId)
+                .OnDelete(DeleteBehavior.Cascade);
+            builder.HasMany(x => x.Links)
+                .WithOne()
+                .HasForeignKey(x => x.CandidateProfileId)
+                .OnDelete(DeleteBehavior.Cascade);
+            builder.HasMany(x => x.Certifications)
                 .WithOne()
                 .HasForeignKey(x => x.CandidateProfileId)
                 .OnDelete(DeleteBehavior.Cascade);
