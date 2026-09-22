@@ -9,6 +9,7 @@ namespace JobApplicationAgent.Profile.Infrastructure.Persistence
         public DbSet<ProfessionalExperience> ProfessionalExperiences =>Set<ProfessionalExperience>();
         public DbSet<Education> Educations => Set<Education>();
         public DbSet<Skill> Skills => Set<Skill>();
+        public DbSet<Language> Languages => Set<Language>();
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(ProfileDbContext).Assembly);

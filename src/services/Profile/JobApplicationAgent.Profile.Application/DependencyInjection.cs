@@ -14,6 +14,11 @@ using JobApplicationAgent.Profile.Application.Profiles.Skills.Add;
 using JobApplicationAgent.Profile.Application.Profiles.Skills.Get;
 using JobApplicationAgent.Profile.Application.Profiles.Skills.Update;
 using JobApplicationAgent.Profile.Application.Profiles.Skills.Delete;
+using JobApplicationAgent.Profile.Application.Profiles.Languages.Add;
+using JobApplicationAgent.Profile.Application.Profiles.Languages.Get;
+using JobApplicationAgent.Profile.Application.Profiles.Languages.Update;
+using JobApplicationAgent.Profile.Application.Profiles.Languages.Delete;
+
 
 namespace JobApplicationAgent.Profile.Application
 {
@@ -36,6 +41,10 @@ namespace JobApplicationAgent.Profile.Application
             services.AddScoped<GetSkillsHandler>();
             services.AddScoped<UpdateSkillHandler>();
             services.AddScoped<DeleteSkillHandler>();
+            services.AddScoped<AddLanguageHandler>();
+            services.AddScoped<GetLanguagesHandler>();
+            services.AddScoped<UpdateLanguageHandler>();
+            services.AddScoped<DeleteLanguageHandler>();
             return services;
         }
     }

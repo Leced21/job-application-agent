@@ -48,6 +48,12 @@ namespace JobApplicationAgent.Profile.Api.ExceptionHandling
                     Title = "Skill not found",
                     Detail = exception.Message
                 },
+                LanguageNotFoundException => new ProblemDetails
+                {
+                    Status = StatusCodes.Status404NotFound,
+                    Title = "Language not found",
+                    Detail = exception.Message
+                },
                 _ => new ProblemDetails
                 {
                     Status = StatusCodes.Status500InternalServerError,
