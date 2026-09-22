@@ -98,4 +98,17 @@ public sealed class ProfileApiFactory :
 
         await _postgres.DisposeAsync();
     }
+    public async Task<Language?> GetLanguageAsync(Guid languageId)
+    {
+        using var scope = Services.CreateScope();
+
+        var dbContext =
+            scope.ServiceProvider
+                .GetRequiredService<ProfileDbContext>();
+
+        return await dbContext.Languages
+            .AsNoTracking()
+            .SingleOrDefaultAsync(
+                x => x.Id == languageId);
+    }
 }

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using JobApplicationAgent.Profile.Application.Profiles.Experiences;
 using JobApplicationAgent.Profile.Application.Profiles.Educations;
 using JobApplicationAgent.Profile.Application.Profiles.Skills;
+using JobApplicationAgent.Profile.Application.Profiles.Languages;
 
 namespace JobApplicationAgent.Profile.IntegrationTests.Api
 {
@@ -1646,6 +1647,401 @@ namespace JobApplicationAgent.Profile.IntegrationTests.Api
 
             var response = await _client.DeleteAsync(
                 $"/api/v1/profile/skills/{unknownSkillId}");
+
+            Assert.Equal(
+                HttpStatusCode.NotFound,
+                response.StatusCode);
+        }
+        [Fact]
+        public async Task PostLanguage_ShouldCreateLanguage()
+        {
+            await _factory.ResetDatabaseAsync();
+
+            var profileResponse = await _client.PostAsJsonAsync(
+                "/api/v1/profile",
+                new
+                {
+                    firstName = "Test",
+                    lastName = "Candidate",
+                    email = "test@example.com"
+                });
+
+            Assert.Equal(HttpStatusCode.Created, profileResponse.StatusCode);
+
+            var response = await _client.PostAsJsonAsync(
+                "/api/v1/profile/languages",
+                new
+                {
+                    name = "French",
+                    proficiencyLevel = "Native"
+                });
+
+            Assert.Equal(
+                HttpStatusCode.Created,
+                response.StatusCode);
+
+            var language =
+                await response.Content
+                    .ReadFromJsonAsync<LanguageDto>();
+
+            Assert.NotNull(language);
+            Assert.NotEqual(Guid.Empty, language.Id);
+            Assert.Equal("French", language.Name);
+            Assert.Equal(
+                "Native",
+                language.ProficiencyLevel);
+
+            var persistedLanguage =
+                await _factory.GetLanguageAsync(language.Id);
+
+            Assert.NotNull(persistedLanguage);
+            Assert.Equal(
+                "French",
+                persistedLanguage.Name);
+            Assert.Equal(
+                "Native",
+                persistedLanguage.ProficiencyLevel);
+        }
+        [Fact]
+        public async Task PostLanguage_ShouldReturnCreated_WhenLanguageIsValid()
+        {
+            await _factory.ResetDatabaseAsync();
+
+            var profileCommand = new
+            {
+                firstName = "Test",
+                lastName = "Candidate",
+                email = "test@example.com",
+                phoneNumber = (string?)null,
+                jobTitle = "Data Engineer",
+                summary = "Integration test profile"
+            };
+
+            var profileResponse = await _client.PostAsJsonAsync(
+                "/api/v1/profile",
+                profileCommand);
+
+            profileResponse.EnsureSuccessStatusCode();
+
+            var command = new
+            {
+                name = "French",
+                proficiencyLevel = "Native"
+            };
+
+            var response = await _client.PostAsJsonAsync(
+                "/api/v1/profile/languages",
+                command);
+
+            Assert.Equal(
+                HttpStatusCode.Created,
+                response.StatusCode);
+
+            var language =
+                await response.Content.ReadFromJsonAsync<LanguageDto>();
+
+            Assert.NotNull(language);
+
+            Assert.NotEqual(Guid.Empty, language.Id);
+            Assert.Equal("French", language.Name);
+            Assert.Equal(
+                "Native",
+                language.ProficiencyLevel);
+
+            var persistedLanguage =
+                await _factory.GetLanguageAsync(language.Id);
+
+            Assert.NotNull(persistedLanguage);
+
+            Assert.Equal(language.Id, persistedLanguage.Id);
+            Assert.Equal("French", persistedLanguage.Name);
+            Assert.Equal(
+                "Native",
+                persistedLanguage.ProficiencyLevel);
+        }
+        [Fact]
+        public async Task GetLanguages_ShouldReturnPersistedLanguagesOrderedByName()
+        {
+            await _factory.ResetDatabaseAsync();
+
+            var profileCommand = new
+            {
+                firstName = "Test",
+                lastName = "Candidate",
+                email = "test@example.com",
+                phoneNumber = (string?)null,
+                jobTitle = "Data Engineer",
+                summary = "Integration test profile"
+            };
+
+            var profileResponse = await _client.PostAsJsonAsync(
+                "/api/v1/profile",
+                profileCommand);
+
+            profileResponse.EnsureSuccessStatusCode();
+
+            var languages = new[]
+            {
+        new
+        {
+            name = "Spanish",
+            proficiencyLevel = "Intermediate"
+        },
+        new
+        {
+            name = "English",
+            proficiencyLevel = "Fluent"
+        },
+        new
+        {
+            name = "French",
+            proficiencyLevel = "Native"
+        }
+    };
+
+            foreach (var language in languages)
+            {
+                var response = await _client.PostAsJsonAsync(
+                    "/api/v1/profile/languages",
+                    language);
+
+                Assert.Equal(
+                    HttpStatusCode.Created,
+                    response.StatusCode);
+            }
+
+            var getResponse = await _client.GetAsync(
+                "/api/v1/profile/languages");
+
+            Assert.Equal(
+                HttpStatusCode.OK,
+                getResponse.StatusCode);
+
+            var result =
+                await getResponse.Content
+                    .ReadFromJsonAsync<List<LanguageDto>>();
+
+            Assert.NotNull(result);
+            Assert.Equal(3, result.Count);
+
+            Assert.Equal("English", result[0].Name);
+            Assert.Equal("Fluent", result[0].ProficiencyLevel);
+
+            Assert.Equal("French", result[1].Name);
+            Assert.Equal("Native", result[1].ProficiencyLevel);
+
+            Assert.Equal("Spanish", result[2].Name);
+            Assert.Equal(
+                "Intermediate",
+                result[2].ProficiencyLevel);
+        }
+        [Fact]
+        public async Task PutLanguage_ShouldUpdatePersistedLanguage()
+        {
+            await _factory.ResetDatabaseAsync();
+
+            var profileCommand = new
+            {
+                firstName = "Test",
+                lastName = "Candidate",
+                email = "test@example.com",
+                phoneNumber = (string?)null,
+                jobTitle = "Data Engineer",
+                summary = "Integration test profile"
+            };
+
+            var profileResponse = await _client.PostAsJsonAsync(
+                "/api/v1/profile",
+                profileCommand);
+
+            profileResponse.EnsureSuccessStatusCode();
+
+            var createCommand = new
+            {
+                name = "French",
+                proficiencyLevel = "Intermediate"
+            };
+
+            var createResponse = await _client.PostAsJsonAsync(
+                "/api/v1/profile/languages",
+                createCommand);
+
+            Assert.Equal(
+                HttpStatusCode.Created,
+                createResponse.StatusCode);
+
+            var createdLanguage =
+                await createResponse.Content
+                    .ReadFromJsonAsync<LanguageDto>();
+
+            Assert.NotNull(createdLanguage);
+
+            var updateCommand = new
+            {
+                name = "French",
+                proficiencyLevel = "Native"
+            };
+
+            var updateResponse = await _client.PutAsJsonAsync(
+                $"/api/v1/profile/languages/{createdLanguage.Id}",
+                updateCommand);
+
+            Assert.Equal(
+                HttpStatusCode.OK,
+                updateResponse.StatusCode);
+
+            var updatedLanguage =
+                await updateResponse.Content
+                    .ReadFromJsonAsync<LanguageDto>();
+
+            Assert.NotNull(updatedLanguage);
+
+            Assert.Equal(
+                createdLanguage.Id,
+                updatedLanguage.Id);
+
+            Assert.Equal(
+                "French",
+                updatedLanguage.Name);
+
+            Assert.Equal(
+                "Native",
+                updatedLanguage.ProficiencyLevel);
+
+            var persistedLanguage =
+                await _factory.GetLanguageAsync(
+                    createdLanguage.Id);
+
+            Assert.NotNull(persistedLanguage);
+
+            Assert.Equal(
+                createdLanguage.Id,
+                persistedLanguage.Id);
+
+            Assert.Equal(
+                "French",
+                persistedLanguage.Name);
+
+            Assert.Equal(
+                "Native",
+                persistedLanguage.ProficiencyLevel);
+        }
+        [Fact]
+        public async Task PutLanguage_ShouldReturnNotFound_WhenLanguageDoesNotExist()
+        {
+            await _factory.ResetDatabaseAsync();
+
+            var profileCommand = new
+            {
+                firstName = "Test",
+                lastName = "Candidate",
+                email = "test@example.com",
+                phoneNumber = (string?)null,
+                jobTitle = "Data Engineer",
+                summary = "Integration test profile"
+            };
+
+            var profileResponse = await _client.PostAsJsonAsync(
+                "/api/v1/profile",
+                profileCommand);
+
+            profileResponse.EnsureSuccessStatusCode();
+
+            var unknownLanguageId = Guid.NewGuid();
+
+            var command = new
+            {
+                name = "French",
+                proficiencyLevel = "Native"
+            };
+
+            var response = await _client.PutAsJsonAsync(
+                $"/api/v1/profile/languages/{unknownLanguageId}",
+                command);
+
+            Assert.Equal(
+                HttpStatusCode.NotFound,
+                response.StatusCode);
+        }
+        [Fact]
+        public async Task DeleteLanguage_ShouldDeletePersistedLanguage()
+        {
+            await _factory.ResetDatabaseAsync();
+
+            var profileCommand = new
+            {
+                firstName = "Test",
+                lastName = "Candidate",
+                email = "test@example.com",
+                phoneNumber = (string?)null,
+                jobTitle = "Data Engineer",
+                summary = "Integration test profile"
+            };
+
+            var profileResponse = await _client.PostAsJsonAsync(
+                "/api/v1/profile",
+                profileCommand);
+
+            profileResponse.EnsureSuccessStatusCode();
+
+            var createCommand = new
+            {
+                name = "French",
+                proficiencyLevel = "Native"
+            };
+
+            var createResponse = await _client.PostAsJsonAsync(
+                "/api/v1/profile/languages",
+                createCommand);
+
+            Assert.Equal(
+                HttpStatusCode.Created,
+                createResponse.StatusCode);
+
+            var createdLanguage =
+                await createResponse.Content
+                    .ReadFromJsonAsync<LanguageDto>();
+
+            Assert.NotNull(createdLanguage);
+
+            var deleteResponse = await _client.DeleteAsync(
+                $"/api/v1/profile/languages/{createdLanguage.Id}");
+
+            Assert.Equal(
+                HttpStatusCode.NoContent,
+                deleteResponse.StatusCode);
+
+            var persistedLanguage =
+                await _factory.GetLanguageAsync(
+                    createdLanguage.Id);
+
+            Assert.Null(persistedLanguage);
+        }
+        [Fact]
+        public async Task DeleteLanguage_ShouldReturnNotFound_WhenLanguageDoesNotExist()
+        {
+            await _factory.ResetDatabaseAsync();
+
+            var profileCommand = new
+            {
+                firstName = "Test",
+                lastName = "Candidate",
+                email = "test@example.com",
+                phoneNumber = (string?)null,
+                jobTitle = "Data Engineer",
+                summary = "Integration test profile"
+            };
+
+            var profileResponse = await _client.PostAsJsonAsync(
+                "/api/v1/profile",
+                profileCommand);
+
+            profileResponse.EnsureSuccessStatusCode();
+
+            var unknownLanguageId = Guid.NewGuid();
+
+            var response = await _client.DeleteAsync(
+                $"/api/v1/profile/languages/{unknownLanguageId}");
 
             Assert.Equal(
                 HttpStatusCode.NotFound,
