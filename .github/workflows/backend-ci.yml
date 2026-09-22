@@ -60,7 +60,7 @@ jobs:
           --configuration Release
           --no-restore
           --verbosity normal
-          
+
       - name: Run Profile integration tests
         run: >
           dotnet test
@@ -68,3 +68,30 @@ jobs:
           --configuration Release
           --no-restore
           --verbosity normal
+
+      - name: Run Profile unit tests
+        run: >
+          dotnet test
+          tests/Profile/JobApplicationAgent.Profile.UnitTests/JobApplicationAgent.Profile.UnitTests.csproj
+          --configuration Release
+          --no-restore
+          --collect:"XPlat Code Coverage"
+          --results-directory ./TestResults/Unit
+
+      - name: Run Profile integration tests
+        run: >
+          dotnet test
+          tests/Profile/JobApplicationAgent.Profile.IntegrationTests/JobApplicationAgent.Profile.IntegrationTests.csproj
+          --configuration Release
+          --no-restore
+          --collect:"XPlat Code Coverage"
+          --results-directory ./TestResults/Integration
+      - name: Upload code coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: profile-code-coverage
+          path: |
+            TestResults/Unit/**/coverage.cobertura.xml
+            TestResults/Integration/**/coverage.cobertura.xml
+          if-no-files-found: error
