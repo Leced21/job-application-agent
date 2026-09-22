@@ -95,3 +95,10 @@ jobs:
             TestResults/Unit/**/coverage.cobertura.xml
             TestResults/Integration/**/coverage.cobertura.xml
           if-no-files-found: error
+          
+      - name: Build Profile Docker image
+        run: >
+          docker build
+          --file src/services/Profile/Dockerfile
+          --tag job-application-agent/profile-api:${{ github.sha }}
+          .
