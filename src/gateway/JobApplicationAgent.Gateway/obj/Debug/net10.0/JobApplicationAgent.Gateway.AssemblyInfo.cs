@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("JobApplicationAgent.Gateway")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2924ada91a46212cd7869e347b19cd0766068c01")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+cb284f10f27a96f8aeb6a528e1335fef25461e94")]
 [assembly: System.Reflection.AssemblyProductAttribute("JobApplicationAgent.Gateway")]
 [assembly: System.Reflection.AssemblyTitleAttribute("JobApplicationAgent.Gateway")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
