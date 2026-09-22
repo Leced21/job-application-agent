@@ -1,3 +1,9 @@
+using JobApplicationAgent.Profile.Application.Profiles.Preferences;
+using JobApplicationAgent.Profile.Application.Profiles.Preferences.Update;
+using JobApplicationAgent.Profile.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using JobApplicationAgent.Profile.Application.Profiles.Links;
 using System.Net;
 using System.Net.Http.Json;
 using JobApplicationAgent.Profile.Application.Profiles;
@@ -2046,6 +2052,208 @@ namespace JobApplicationAgent.Profile.IntegrationTests.Api
             Assert.Equal(
                 HttpStatusCode.NotFound,
                 response.StatusCode);
+        }
+
+        private async Task CreateProfileForLinksAsync()
+        {
+            var response = await _client.PostAsJsonAsync("/api/v1/profile",
+                new { firstName = "Test", lastName = "Candidate", email = "links@example.com" });
+            Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task Links_ShouldPersistCreateUpdateAndDelete()
+        {
+            await CreateProfileForLinksAsync();
+            const string route = "/api/v1/profile/links";
+            Assert.Empty((await _client.GetFromJsonAsync<List<LinkDto>>(route))!);
+            var response = await _client.PostAsJsonAsync(route,
+                new { name = "Portfolio", url = "https://example.com/portfolio" });
+            Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+            var created = await response.Content.ReadFromJsonAsync<LinkDto>();
+            Assert.NotNull(created);
+            Assert.NotEqual(Guid.Empty, created.Id);
+            var persisted = Assert.Single((await _client.GetFromJsonAsync<List<LinkDto>>(route))!);
+            Assert.Equal(created.Id, persisted.Id);
+            Assert.Equal("Portfolio", persisted.Name);
+            Assert.Equal("https://example.com/portfolio", persisted.Url);
+
+            var updated = await _client.PutAsJsonAsync($"{route}/{created.Id}",
+                new { name = "GitHub", url = "https://github.com/example" });
+            Assert.Equal(HttpStatusCode.OK, updated.StatusCode);
+            persisted = Assert.Single((await _client.GetFromJsonAsync<List<LinkDto>>(route))!);
+            Assert.Equal(created.Id, persisted.Id);
+            Assert.Equal("GitHub", persisted.Name);
+            Assert.Equal("https://github.com/example", persisted.Url);
+
+            Assert.Equal(HttpStatusCode.NoContent,
+                (await _client.DeleteAsync($"{route}/{created.Id}")).StatusCode);
+            Assert.Empty((await _client.GetFromJsonAsync<List<LinkDto>>(route))!);
+        }
+
+        [Fact]
+        public async Task Links_ShouldReturnNotFound_WhenProfileIsMissing()
+        {
+            const string route = "/api/v1/profile/links";
+            var command = new { name = "Portfolio", url = "https://example.com" };
+            Assert.Equal(HttpStatusCode.NotFound, (await _client.GetAsync(route)).StatusCode);
+            Assert.Equal(HttpStatusCode.NotFound, (await _client.PostAsJsonAsync(route, command)).StatusCode);
+            Assert.Equal(HttpStatusCode.NotFound, (await _client.PutAsJsonAsync($"{route}/{Guid.NewGuid()}", command)).StatusCode);
+            Assert.Equal(HttpStatusCode.NotFound, (await _client.DeleteAsync($"{route}/{Guid.NewGuid()}")).StatusCode);
+        }
+
+        [Fact]
+        public async Task Links_ShouldReturnNotFound_WhenLinkIsMissing()
+        {
+            await CreateProfileForLinksAsync();
+            var route = $"/api/v1/profile/links/{Guid.NewGuid()}";
+            Assert.Equal(HttpStatusCode.NotFound,
+                (await _client.PutAsJsonAsync(route, new { name = "Portfolio", url = "https://example.com" })).StatusCode);
+            Assert.Equal(HttpStatusCode.NotFound, (await _client.DeleteAsync(route)).StatusCode);
+        }
+
+        [Theory]
+        [InlineData("", "https://example.com")]
+        [InlineData("Portfolio", "")]
+        [InlineData("Portfolio", "/relative")]
+        [InlineData("Portfolio", "javascript:alert(1)")]
+        [InlineData("Portfolio", "ftp://example.com")]
+        public async Task Links_ShouldRejectInvalidCommands_WithoutChangingPersistedLink(string name, string url)
+        {
+            await CreateProfileForLinksAsync();
+            const string route = "/api/v1/profile/links";
+            var response = await _client.PostAsJsonAsync(route,
+                new { name = "Portfolio", url = "https://example.com" });
+            Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+            var created = await response.Content.ReadFromJsonAsync<LinkDto>();
+            var before = Assert.Single((await _client.GetFromJsonAsync<List<LinkDto>>(route))!);
+            Assert.Equal(HttpStatusCode.BadRequest, (await _client.PostAsJsonAsync(route, new { name, url })).StatusCode);
+            Assert.Equal(HttpStatusCode.BadRequest, (await _client.PutAsJsonAsync($"{route}/{created!.Id}", new { name, url })).StatusCode);
+            Assert.Equal(before, Assert.Single((await _client.GetFromJsonAsync<List<LinkDto>>(route))!));
+        }
+
+        private static UpdatePreferencesCommand ValidPreferencesCommand() =>
+            new(["Backend Developer", "Data Engineer"], ["Paris", "Lyon"], ["CDI", "Freelance"],
+                ["Hybrid", "Remote"], 55000.25m, "EUR", new DateOnly(2027, 1, 1));
+
+        private async Task CreateProfileForPreferencesAsync()
+        {
+            var response = await _client.PostAsJsonAsync("/api/v1/profile",
+                new { firstName = "Test", lastName = "Candidate", email = "preferences@example.com" });
+            Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task Preferences_ShouldPersistCreateUpdateDeleteAndRecreate()
+        {
+            await CreateProfileForPreferencesAsync();
+            const string route = "/api/v1/profile/preferences";
+            Assert.Equal(HttpStatusCode.NotFound, (await _client.GetAsync(route)).StatusCode);
+            var command = ValidPreferencesCommand();
+            var response = await _client.PutAsJsonAsync(route, command);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            var initial = await _client.GetFromJsonAsync<PreferencesDto>(route);
+            Assert.NotNull(initial);
+            Assert.Equal(command.DesiredJobTitles, initial.DesiredJobTitles);
+            Assert.Equal(command.PreferredLocations, initial.PreferredLocations);
+            Assert.Equal(command.ContractTypes, initial.ContractTypes);
+            Assert.Equal(command.WorkModes, initial.WorkModes);
+            Assert.Equal(command.MinimumAnnualGrossSalary, initial.MinimumAnnualGrossSalary);
+            Assert.Equal("EUR", initial.SalaryCurrency);
+            Assert.Equal(command.AvailableFrom, initial.AvailableFrom);
+
+            var replacement = new UpdatePreferencesCommand(["Architect"], [], [], ["OnSite"], null, null, null);
+            response = await _client.PutAsJsonAsync(route, replacement);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            var updated = await _client.GetFromJsonAsync<PreferencesDto>(route);
+            Assert.NotNull(updated);
+            Assert.Equal(initial.CandidateProfileId, updated.CandidateProfileId);
+            Assert.Equal(initial.CreatedAtUtc, updated.CreatedAtUtc);
+            Assert.Equal(replacement.DesiredJobTitles, updated.DesiredJobTitles);
+            Assert.Empty(updated.PreferredLocations);
+            Assert.Empty(updated.ContractTypes);
+            Assert.Equal(replacement.WorkModes, updated.WorkModes);
+            Assert.Null(updated.MinimumAnnualGrossSalary);
+            Assert.Null(updated.SalaryCurrency);
+            Assert.Null(updated.AvailableFrom);
+            using (var scope = _factory.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<ProfileDbContext>();
+                Assert.Equal(1, await db.Preferences.CountAsync());
+            }
+
+            Assert.Equal(HttpStatusCode.NoContent, (await _client.DeleteAsync(route)).StatusCode);
+            Assert.Equal(HttpStatusCode.NotFound, (await _client.GetAsync(route)).StatusCode);
+            Assert.Equal(HttpStatusCode.NotFound, (await _client.DeleteAsync(route)).StatusCode);
+            using (var scope = _factory.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<ProfileDbContext>();
+                Assert.Equal(0, await db.Preferences.CountAsync());
+                Assert.Equal(1, await db.CandidateProfiles.CountAsync());
+            }
+            Assert.Equal(HttpStatusCode.OK, (await _client.PutAsJsonAsync(route, command)).StatusCode);
+            Assert.Equal(command.DesiredJobTitles,
+                (await _client.GetFromJsonAsync<PreferencesDto>(route))!.DesiredJobTitles);
+
+            // Deleting the parent must also remove its preferences.
+            await _factory.ResetDatabaseAsync();
+            using var finalScope = _factory.Services.CreateScope();
+            Assert.Equal(0, await finalScope.ServiceProvider.GetRequiredService<ProfileDbContext>().Preferences.CountAsync());
+        }
+
+        [Fact]
+        public async Task Preferences_ShouldReturnNotFound_WhenProfileIsMissing()
+        {
+            const string route = "/api/v1/profile/preferences";
+            Assert.Equal(HttpStatusCode.NotFound, (await _client.GetAsync(route)).StatusCode);
+            Assert.Equal(HttpStatusCode.NotFound, (await _client.PutAsJsonAsync(route, ValidPreferencesCommand())).StatusCode);
+            Assert.Equal(HttpStatusCode.NotFound, (await _client.DeleteAsync(route)).StatusCode);
+        }
+
+        [Fact]
+        public async Task Preferences_ShouldAcceptEmptyCriteria()
+        {
+            await CreateProfileForPreferencesAsync();
+            const string route = "/api/v1/profile/preferences";
+            var response = await _client.PutAsJsonAsync(route,
+                new UpdatePreferencesCommand([], [], [], [], null, null, null));
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            var dto = await _client.GetFromJsonAsync<PreferencesDto>(route);
+            Assert.NotNull(dto);
+            Assert.Empty(dto.DesiredJobTitles);
+            Assert.Empty(dto.PreferredLocations);
+            Assert.Empty(dto.ContractTypes);
+            Assert.Empty(dto.WorkModes);
+            Assert.Null(dto.MinimumAnnualGrossSalary);
+            Assert.Null(dto.SalaryCurrency);
+            Assert.Null(dto.AvailableFrom);
+        }
+
+        [Theory]
+        [InlineData("titles")]
+        [InlineData("nullList")]
+        [InlineData("mode")]
+        [InlineData("salary")]
+        [InlineData("precision")]
+        [InlineData("currency")]
+        public async Task Preferences_ShouldRejectInvalidCriteriaWithoutChangingStoredPreferences(string scenario)
+        {
+            await CreateProfileForPreferencesAsync();
+            const string route = "/api/v1/profile/preferences";
+            var valid = ValidPreferencesCommand();
+            Assert.Equal(HttpStatusCode.OK, (await _client.PutAsJsonAsync(route, valid)).StatusCode);
+            var before = await _client.GetStringAsync(route);
+            var invalid = scenario switch
+            {
+                "titles" => valid with { DesiredJobTitles = [""] },
+                "nullList" => valid with { PreferredLocations = null! },
+                "mode" => valid with { WorkModes = ["invalid"] },
+                "salary" => valid with { MinimumAnnualGrossSalary = -1 },
+                "precision" => valid with { MinimumAnnualGrossSalary = 12.345m },
+                _ => valid with { SalaryCurrency = null }
+            };
+            Assert.Equal(HttpStatusCode.BadRequest, (await _client.PutAsJsonAsync(route, invalid)).StatusCode);
+            Assert.Equal(before, await _client.GetStringAsync(route));
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using JobApplicationAgent.Profile.Domain.Entities;
+using JobApplicationAgent.Profile.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace JobApplicationAgent.Profile.Infrastructure.Persistence
@@ -10,6 +10,10 @@ namespace JobApplicationAgent.Profile.Infrastructure.Persistence
         public DbSet<Education> Educations => Set<Education>();
         public DbSet<Skill> Skills => Set<Skill>();
         public DbSet<Language> Languages => Set<Language>();
+        public DbSet<Link> Links => Set<Link>();
+        public DbSet<Certification> Certifications => Set<Certification>();
+        public DbSet<CandidatePreferences> Preferences => Set<CandidatePreferences>();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(ProfileDbContext).Assembly);

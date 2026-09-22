@@ -1,4 +1,4 @@
-﻿using JobApplicationAgent.Profile.Domain.Entities;
+using JobApplicationAgent.Profile.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -7,6 +7,8 @@ namespace JobApplicationAgent.Profile.Application.Abstractions
 {
     public interface ICandidateProfileRepository
     {
+        Task<CandidateProfile?> GetWithPreferencesAsync(CancellationToken cancellationToken = default);
+
         Task<CandidateProfile?> GetAsync(CancellationToken cancellationToken = default);
 
         Task AddAsync(CandidateProfile profile, CancellationToken cancellationToken = default);
@@ -17,5 +19,7 @@ namespace JobApplicationAgent.Profile.Application.Abstractions
         Task<CandidateProfile?> GetWithEducationsAsync(CancellationToken cancellationToken = default);
         Task<CandidateProfile?> GetWithSkillsAsync(CancellationToken cancellationToken = default);
         Task<CandidateProfile?> GetWithLanguagesAsync(CancellationToken cancellationToken = default);
+        Task<CandidateProfile?> GetWithLinksAsync(CancellationToken cancellationToken = default);
+        Task<CandidateProfile?> GetWithCertificationsAsync(CancellationToken cancellationToken = default);
     }
 }
