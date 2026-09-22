@@ -36,9 +36,22 @@ jobs:
           dotnet restore
           src/services/Profile/JobApplicationAgent.Profile.Api/JobApplicationAgent.Profile.Api.csproj
 
+      - name: Restore Profile unit tests
+        run: >
+          dotnet restore
+          tests/Profile/JobApplicationAgent.Profile.UnitTests/JobApplicationAgent.Profile.UnitTests.csproj
+
       - name: Build Profile API
         run: >
           dotnet build
           src/services/Profile/JobApplicationAgent.Profile.Api/JobApplicationAgent.Profile.Api.csproj
           --configuration Release
           --no-restore
+
+      - name: Run Profile unit tests
+        run: >
+          dotnet test
+          tests/Profile/JobApplicationAgent.Profile.UnitTests/JobApplicationAgent.Profile.UnitTests.csproj
+          --configuration Release
+          --no-restore
+          --verbosity normal
