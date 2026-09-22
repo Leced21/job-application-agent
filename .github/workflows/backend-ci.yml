@@ -41,6 +41,11 @@ jobs:
           dotnet restore
           tests/Profile/JobApplicationAgent.Profile.UnitTests/JobApplicationAgent.Profile.UnitTests.csproj
 
+      - name: Restore Profile integration tests
+        run: >
+          dotnet restore
+          tests/Profile/JobApplicationAgent.Profile.IntegrationTests/JobApplicationAgent.Profile.IntegrationTests.csproj
+      
       - name: Build Profile API
         run: >
           dotnet build
@@ -52,6 +57,14 @@ jobs:
         run: >
           dotnet test
           tests/Profile/JobApplicationAgent.Profile.UnitTests/JobApplicationAgent.Profile.UnitTests.csproj
+          --configuration Release
+          --no-restore
+          --verbosity normal
+          
+      - name: Run Profile integration tests
+        run: >
+          dotnet test
+          tests/Profile/JobApplicationAgent.Profile.IntegrationTests/JobApplicationAgent.Profile.IntegrationTests.csproj
           --configuration Release
           --no-restore
           --verbosity normal
