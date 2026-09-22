@@ -1,75 +1,101 @@
+using JobApplicationAgent.Profile.Domain.Entities;
 using JobApplicationAgent.Profile.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.PostgreSql;
-using JobApplicationAgent.Profile.Domain.Entities;
 
-namespace JobApplicationAgent.Profile.IntegrationTests.Fixtures
-{
-    public sealed class ProfileApiFactory :
+namespace JobApplicationAgent.Profile.IntegrationTests.Fixtures;
+
+public sealed class ProfileApiFactory :
     WebApplicationFactory<Program>,
     IAsyncLifetime
+{
+    private readonly PostgreSqlContainer _postgres =
+        new PostgreSqlBuilder("postgres:17")
+            .WithDatabase("profile_test_db")
+            .WithUsername("jobagent")
+            .WithPassword("jobagent_test")
+            .Build();
+
+    protected override void ConfigureWebHost(
+        IWebHostBuilder builder)
     {
-        private readonly PostgreSqlContainer _postgres =
-            new PostgreSqlBuilder("postgres:17")
-                .WithDatabase("profile_test_db")
-                .WithUsername("jobagent")
-                .WithPassword("jobagent_test")
-                .Build();
+        builder.UseEnvironment("Testing");
 
-        public async Task InitializeAsync()
-        {
-            // 1. Démarrage du PostgreSQL de test
-            await _postgres.StartAsync();
+        builder.ConfigureAppConfiguration(
+            (_, configurationBuilder) =>
+            {
+                configurationBuilder.AddInMemoryCollection(
+                    new Dictionary<string, string?>
+                    {
+                        ["ConnectionStrings:ProfileDatabase"] =
+                            _postgres.GetConnectionString()
+                    });
+            });
+    }
 
-            // 2. Injection AVANT le démarrage de Profile.Api
-            Environment.SetEnvironmentVariable(
-                "ConnectionStrings__ProfileDatabase",
-                _postgres.GetConnectionString());
+    public async Task InitializeAsync()
+    {
+        await _postgres.StartAsync();
 
-            // 3. Le premier accès à Services démarre réellement l'API
-            using var scope = Services.CreateScope();
+        using var scope = Services.CreateScope();
 
-            var dbContext =
-                scope.ServiceProvider.GetRequiredService<ProfileDbContext>();
+        var dbContext =
+            scope.ServiceProvider
+                .GetRequiredService<ProfileDbContext>();
 
-            // 4. Application des migrations sur la DB temporaire
-            await dbContext.Database.MigrateAsync();
-        }
+        await dbContext.Database.MigrateAsync();
+    }
 
-        public new async Task DisposeAsync()
-        {
-            Environment.SetEnvironmentVariable(
-                "ConnectionStrings__ProfileDatabase",
-                null);
+    public async Task ResetDatabaseAsync()
+    {
+        using var scope = Services.CreateScope();
 
-            await _postgres.DisposeAsync();
+        var dbContext =
+            scope.ServiceProvider
+                .GetRequiredService<ProfileDbContext>();
 
-            await base.DisposeAsync();
-        }
-        public async Task ResetDatabaseAsync()
-        {
-            using var scope = Services.CreateScope();
+        await dbContext.CandidateProfiles
+            .ExecuteDeleteAsync();
+    }
 
-            var dbContext =
-                scope.ServiceProvider.GetRequiredService<ProfileDbContext>();
+    public async Task<Education?> GetEducationAsync(
+        Guid educationId)
+    {
+        using var scope = Services.CreateScope();
 
-            await dbContext.CandidateProfiles.ExecuteDeleteAsync();
-        }
-        public async Task<Education?> GetEducationAsync(Guid educationId)
-        {
-            using var scope = Services.CreateScope();
+        var dbContext =
+            scope.ServiceProvider
+                .GetRequiredService<ProfileDbContext>();
 
-            var dbContext =
-                scope.ServiceProvider.GetRequiredService<ProfileDbContext>();
+        return await dbContext.Educations
+            .AsNoTracking()
+            .SingleOrDefaultAsync(
+                x => x.Id == educationId);
+    }
 
-            return await dbContext.Educations
-                .AsNoTracking()
-                .SingleOrDefaultAsync(
-                    x => x.Id == educationId);
-        }
-       
+    public async Task<Skill?> GetSkillAsync(
+        Guid skillId)
+    {
+        using var scope = Services.CreateScope();
+
+        var dbContext =
+            scope.ServiceProvider
+                .GetRequiredService<ProfileDbContext>();
+
+        return await dbContext.Skills
+            .AsNoTracking()
+            .SingleOrDefaultAsync(
+                x => x.Id == skillId);
+    }
+
+    public new async Task DisposeAsync()
+    {
+        await base.DisposeAsync();
+
+        await _postgres.DisposeAsync();
     }
 }
-

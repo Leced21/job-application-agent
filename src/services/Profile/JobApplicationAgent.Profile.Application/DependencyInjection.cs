@@ -10,6 +10,10 @@ using JobApplicationAgent.Profile.Application.Profiles.Educations.Add;
 using JobApplicationAgent.Profile.Application.Profiles.Educations.Get;
 using JobApplicationAgent.Profile.Application.Profiles.Educations.Update;
 using JobApplicationAgent.Profile.Application.Profiles.Educations.Delete;
+using JobApplicationAgent.Profile.Application.Profiles.Skills.Add;
+using JobApplicationAgent.Profile.Application.Profiles.Skills.Get;
+using JobApplicationAgent.Profile.Application.Profiles.Skills.Update;
+using JobApplicationAgent.Profile.Application.Profiles.Skills.Delete;
 
 namespace JobApplicationAgent.Profile.Application
 {
@@ -28,6 +32,10 @@ namespace JobApplicationAgent.Profile.Application
             services.AddScoped<GetEducationsHandler>();
             services.AddScoped<UpdateEducationHandler>();
             services.AddScoped<DeleteEducationHandler>();
+            services.AddScoped<AddSkillHandler>();
+            services.AddScoped<GetSkillsHandler>();
+            services.AddScoped<UpdateSkillHandler>();
+            services.AddScoped<DeleteSkillHandler>();
             return services;
         }
     }

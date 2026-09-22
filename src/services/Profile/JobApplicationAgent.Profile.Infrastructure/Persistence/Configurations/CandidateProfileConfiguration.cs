@@ -53,6 +53,10 @@ namespace JobApplicationAgent.Profile.Infrastructure.Persistence.Configurations
                 .WithOne()
                 .HasForeignKey(x => x.CandidateProfileId)
                 .OnDelete(DeleteBehavior.Cascade);
+            builder.HasMany(x => x.Skills)
+                .WithOne()
+                .HasForeignKey(x => x.CandidateProfileId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

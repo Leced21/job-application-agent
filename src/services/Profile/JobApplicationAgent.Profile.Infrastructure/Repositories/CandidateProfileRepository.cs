@@ -28,6 +28,7 @@ namespace JobApplicationAgent.Profile.Infrastructure.Repositories
             return dbContext.CandidateProfiles
                             .Include(x => x.ProfessionalExperiences)
                             .Include(x => x.Educations)
+                            .Include(x => x.Skills)
                             .SingleOrDefaultAsync(cancellationToken);
         }
         public Task<CandidateProfile?> GetWithProfessionalExperiencesAsync(CancellationToken cancellationToken = default)
@@ -43,6 +44,13 @@ namespace JobApplicationAgent.Profile.Infrastructure.Repositories
                             .AsNoTracking()
                             .Include(x => x.Educations)
                             .SingleOrDefaultAsync(cancellationToken);
+        }
+        public Task<CandidateProfile?> GetWithSkillsAsync(CancellationToken cancellationToken = default)
+        {
+            return dbContext.CandidateProfiles
+                .AsNoTracking()
+                .Include(x => x.Skills)
+                .SingleOrDefaultAsync(cancellationToken);
         }
     }
 }

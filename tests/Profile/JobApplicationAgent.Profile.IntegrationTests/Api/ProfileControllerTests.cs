@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using JobApplicationAgent.Profile.Application.Profiles.Experiences;
 using JobApplicationAgent.Profile.Application.Profiles.Educations;
+using JobApplicationAgent.Profile.Application.Profiles.Skills;
 
 namespace JobApplicationAgent.Profile.IntegrationTests.Api
 {
@@ -1293,6 +1294,358 @@ namespace JobApplicationAgent.Profile.IntegrationTests.Api
 
             var response = await _client.DeleteAsync(
                 $"/api/v1/profile/educations/{educationId}");
+
+            Assert.Equal(
+                HttpStatusCode.NotFound,
+                response.StatusCode);
+        }
+        [Fact]
+        public async Task PostSkill_ShouldReturnCreated_WhenSkillIsValid()
+        {
+            await _factory.ResetDatabaseAsync();
+
+            var profileCommand = new
+            {
+                firstName = "Test",
+                lastName = "Candidate",
+                email = "test@example.com",
+                phoneNumber = (string?)null,
+                jobTitle = "Data Engineer",
+                summary = "Integration test profile"
+            };
+
+            var profileResponse = await _client.PostAsJsonAsync(
+                "/api/v1/profile",
+                profileCommand);
+
+            profileResponse.EnsureSuccessStatusCode();
+
+            var command = new
+            {
+                name = "Databricks",
+                category = "Data Engineering",
+                level = "Advanced",
+                yearsOfExperience = 4
+            };
+
+            var response = await _client.PostAsJsonAsync(
+                "/api/v1/profile/skills",
+                command);
+
+            Assert.Equal(
+                HttpStatusCode.Created,
+                response.StatusCode);
+
+            var skill =
+                await response.Content.ReadFromJsonAsync<SkillDto>();
+
+            Assert.NotNull(skill);
+
+            Assert.NotEqual(Guid.Empty, skill.Id);
+            Assert.Equal("Databricks", skill.Name);
+            Assert.Equal("Data Engineering", skill.Category);
+            Assert.Equal("Advanced", skill.Level);
+            Assert.Equal(4, skill.YearsOfExperience);
+
+            var persistedSkill =
+                await _factory.GetSkillAsync(skill.Id);
+
+            Assert.NotNull(persistedSkill);
+
+            Assert.Equal(skill.Id, persistedSkill.Id);
+            Assert.Equal("Databricks", persistedSkill.Name);
+            Assert.Equal(
+                "Data Engineering",
+                persistedSkill.Category);
+            Assert.Equal("Advanced", persistedSkill.Level);
+            Assert.Equal(4, persistedSkill.YearsOfExperience);
+        }
+        [Fact]
+        public async Task GetSkills_ShouldReturnPersistedSkillsOrderedByName()
+        {
+            await _factory.ResetDatabaseAsync();
+
+            var profileCommand = new
+            {
+                firstName = "Test",
+                lastName = "Candidate",
+                email = "test@example.com",
+                phoneNumber = (string?)null,
+                jobTitle = "Data Engineer",
+                summary = "Integration test profile"
+            };
+
+            var profileResponse = await _client.PostAsJsonAsync(
+                "/api/v1/profile",
+                profileCommand);
+
+            profileResponse.EnsureSuccessStatusCode();
+
+            var skills = new[]
+            {
+                new
+                {
+                    name = "Python",
+                    category = "Programming",
+                    level = "Advanced",
+                    yearsOfExperience = 5
+                },
+                new
+                {
+                    name = "Azure",
+                    category = "Cloud",
+                    level = "Intermediate",
+                    yearsOfExperience = 3
+                },
+                new
+                {
+                    name = "Databricks",
+                    category = "Data Engineering",
+                    level = "Advanced",
+                    yearsOfExperience = 4
+                }
+            };
+
+            foreach (var skill in skills)
+            {
+                var createResponse = await _client.PostAsJsonAsync(
+                    "/api/v1/profile/skills",
+                    skill);
+
+                Assert.Equal(
+                    HttpStatusCode.Created,
+                    createResponse.StatusCode);
+            }
+
+            var response = await _client.GetAsync(
+                "/api/v1/profile/skills");
+
+            Assert.Equal(
+                HttpStatusCode.OK,
+                response.StatusCode);
+
+            var result =
+                await response.Content
+                    .ReadFromJsonAsync<List<SkillDto>>();
+
+            Assert.NotNull(result);
+            Assert.Equal(3, result.Count);
+
+            Assert.Equal(
+                new[] { "Azure", "Databricks", "Python" },
+                result.Select(x => x.Name));
+
+            Assert.Equal("Cloud", result[0].Category);
+            Assert.Equal("Data Engineering", result[1].Category);
+            Assert.Equal("Programming", result[2].Category);
+        }
+        [Fact]
+        public async Task UpdateSkill_ShouldUpdateAndPersistSkill()
+        {
+            await _factory.ResetDatabaseAsync();
+
+            var profileCommand = new
+            {
+                firstName = "Test",
+                lastName = "Candidate",
+                email = "test@example.com",
+                phoneNumber = (string?)null,
+                jobTitle = "Data Engineer",
+                summary = "Integration test profile"
+            };
+
+            var profileResponse = await _client.PostAsJsonAsync(
+                "/api/v1/profile",
+                profileCommand);
+
+            profileResponse.EnsureSuccessStatusCode();
+
+            var createCommand = new
+            {
+                name = "Databricks",
+                category = "Data Engineering",
+                level = "Intermediate",
+                yearsOfExperience = 2
+            };
+
+            var createResponse = await _client.PostAsJsonAsync(
+                "/api/v1/profile/skills",
+                createCommand);
+
+            Assert.Equal(
+                HttpStatusCode.Created,
+                createResponse.StatusCode);
+
+            var createdSkill =
+                await createResponse.Content.ReadFromJsonAsync<SkillDto>();
+
+            Assert.NotNull(createdSkill);
+
+            var updateCommand = new
+            {
+                name = "Databricks",
+                category = "Data Platform",
+                level = "Advanced",
+                yearsOfExperience = 4
+            };
+
+            var updateResponse = await _client.PutAsJsonAsync(
+                $"/api/v1/profile/skills/{createdSkill.Id}",
+                updateCommand);
+
+            Assert.Equal(
+                HttpStatusCode.OK,
+                updateResponse.StatusCode);
+
+            var updatedSkill =
+                await updateResponse.Content.ReadFromJsonAsync<SkillDto>();
+
+            Assert.NotNull(updatedSkill);
+
+            Assert.Equal(createdSkill.Id, updatedSkill.Id);
+            Assert.Equal("Databricks", updatedSkill.Name);
+            Assert.Equal("Data Platform", updatedSkill.Category);
+            Assert.Equal("Advanced", updatedSkill.Level);
+            Assert.Equal(4, updatedSkill.YearsOfExperience);
+
+            var persistedSkill =
+                await _factory.GetSkillAsync(createdSkill.Id);
+
+            Assert.NotNull(persistedSkill);
+
+            Assert.Equal(createdSkill.Id, persistedSkill.Id);
+            Assert.Equal("Databricks", persistedSkill.Name);
+            Assert.Equal("Data Platform", persistedSkill.Category);
+            Assert.Equal("Advanced", persistedSkill.Level);
+            Assert.Equal(4, persistedSkill.YearsOfExperience);
+        }
+        [Fact]
+        public async Task UpdateSkill_ShouldReturnNotFound_WhenSkillDoesNotExist()
+        {
+            await _factory.ResetDatabaseAsync();
+
+            var profileCommand = new
+            {
+                firstName = "Test",
+                lastName = "Candidate",
+                email = "test@example.com",
+                phoneNumber = (string?)null,
+                jobTitle = "Data Engineer",
+                summary = "Integration test profile"
+            };
+
+            var profileResponse = await _client.PostAsJsonAsync(
+                "/api/v1/profile",
+                profileCommand);
+
+            profileResponse.EnsureSuccessStatusCode();
+
+            var unknownSkillId = Guid.NewGuid();
+
+            var command = new
+            {
+                name = "Databricks",
+                category = "Data Engineering",
+                level = "Advanced",
+                yearsOfExperience = 4
+            };
+
+            var response = await _client.PutAsJsonAsync(
+                $"/api/v1/profile/skills/{unknownSkillId}",
+                command);
+
+            Assert.Equal(
+                HttpStatusCode.NotFound,
+                response.StatusCode);
+        }
+        [Fact]
+        public async Task DeleteSkill_ShouldDeleteAndPersistSkill()
+        {
+            await _factory.ResetDatabaseAsync();
+
+            var profileCommand = new
+            {
+                firstName = "Test",
+                lastName = "Candidate",
+                email = "test@example.com",
+                phoneNumber = (string?)null,
+                jobTitle = "Data Engineer",
+                summary = "Integration test profile"
+            };
+
+            var profileResponse = await _client.PostAsJsonAsync(
+                "/api/v1/profile",
+                profileCommand);
+
+            profileResponse.EnsureSuccessStatusCode();
+
+            var skillCommand = new
+            {
+                name = "Databricks",
+                category = "Data Engineering",
+                level = "Advanced",
+                yearsOfExperience = 4
+            };
+
+            var createResponse = await _client.PostAsJsonAsync(
+                "/api/v1/profile/skills",
+                skillCommand);
+
+            Assert.Equal(
+                HttpStatusCode.Created,
+                createResponse.StatusCode);
+
+            var createdSkill =
+                await createResponse.Content.ReadFromJsonAsync<SkillDto>();
+
+            Assert.NotNull(createdSkill);
+
+            var deleteResponse = await _client.DeleteAsync(
+                $"/api/v1/profile/skills/{createdSkill.Id}");
+
+            Assert.Equal(
+                HttpStatusCode.NoContent,
+                deleteResponse.StatusCode);
+
+            var persistedSkill =
+                await _factory.GetSkillAsync(createdSkill.Id);
+
+            Assert.Null(persistedSkill);
+
+            var getResponse = await _client.GetAsync("/api/v1/profile/skills");
+
+            Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+
+            var skills = await getResponse.Content.ReadFromJsonAsync<List<SkillDto>>();
+
+            Assert.NotNull(skills);
+            Assert.Empty(skills);
+        }
+        [Fact]
+        public async Task DeleteSkill_ShouldReturnNotFound_WhenSkillDoesNotExist()
+        {
+            await _factory.ResetDatabaseAsync();
+
+            var profileCommand = new
+            {
+                firstName = "Test",
+                lastName = "Candidate",
+                email = "test@example.com",
+                phoneNumber = (string?)null,
+                jobTitle = "Data Engineer",
+                summary = "Integration test profile"
+            };
+
+            var profileResponse = await _client.PostAsJsonAsync(
+                "/api/v1/profile",
+                profileCommand);
+
+            profileResponse.EnsureSuccessStatusCode();
+
+            var unknownSkillId = Guid.NewGuid();
+
+            var response = await _client.DeleteAsync(
+                $"/api/v1/profile/skills/{unknownSkillId}");
 
             Assert.Equal(
                 HttpStatusCode.NotFound,

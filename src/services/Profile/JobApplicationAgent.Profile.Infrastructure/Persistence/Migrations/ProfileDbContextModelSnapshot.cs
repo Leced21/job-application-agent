@@ -169,6 +169,43 @@ namespace JobApplicationAgent.Profile.Infrastructure.Persistence.Migrations
                     b.ToTable("professional_experiences", (string)null);
                 });
 
+            modelBuilder.Entity("JobApplicationAgent.Profile.Domain.Entities.Skill", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CandidateProfileId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Category")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Level")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("YearsOfExperience")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CandidateProfileId");
+
+                    b.ToTable("skills", (string)null);
+                });
+
             modelBuilder.Entity("JobApplicationAgent.Profile.Domain.Entities.Education", b =>
                 {
                     b.HasOne("JobApplicationAgent.Profile.Domain.Entities.CandidateProfile", null)
@@ -187,11 +224,22 @@ namespace JobApplicationAgent.Profile.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("JobApplicationAgent.Profile.Domain.Entities.Skill", b =>
+                {
+                    b.HasOne("JobApplicationAgent.Profile.Domain.Entities.CandidateProfile", null)
+                        .WithMany("Skills")
+                        .HasForeignKey("CandidateProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("JobApplicationAgent.Profile.Domain.Entities.CandidateProfile", b =>
                 {
                     b.Navigation("Educations");
 
                     b.Navigation("ProfessionalExperiences");
+
+                    b.Navigation("Skills");
                 });
 #pragma warning restore 612, 618
         }
