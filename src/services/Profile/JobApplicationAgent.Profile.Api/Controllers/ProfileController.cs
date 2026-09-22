@@ -13,6 +13,10 @@ using JobApplicationAgent.Profile.Application.Profiles.Skills.Add;
 using JobApplicationAgent.Profile.Application.Profiles.Skills.Get;
 using JobApplicationAgent.Profile.Application.Profiles.Skills.Update;
 using JobApplicationAgent.Profile.Application.Profiles.Skills.Delete;
+using JobApplicationAgent.Profile.Application.Profiles.Languages.Add;
+using JobApplicationAgent.Profile.Application.Profiles.Languages.Get;
+using JobApplicationAgent.Profile.Application.Profiles.Languages.Update;
+using JobApplicationAgent.Profile.Application.Profiles.Languages.Delete;
 
 
 namespace JobApplicationAgent.Profile.Api.Controllers
@@ -32,7 +36,11 @@ namespace JobApplicationAgent.Profile.Api.Controllers
                                             AddSkillHandler addSkillHandler,
                                             GetSkillsHandler getSkillsHandler,
                                             UpdateSkillHandler updateSkillHandler,
-                                            DeleteSkillHandler deleteSkillHandler
+                                            DeleteSkillHandler deleteSkillHandler,
+                                            AddLanguageHandler addLanguageHandler,
+                                            GetLanguagesHandler getLanguagesHandler,
+                                            UpdateLanguageHandler updateLanguageHandler,
+                                            DeleteLanguageHandler deleteLanguageHandler
                                             ) : ControllerBase
     {
         [HttpGet]
@@ -150,6 +158,44 @@ namespace JobApplicationAgent.Profile.Api.Controllers
         public async Task<IActionResult> DeleteSkill(Guid skillId, CancellationToken cancellationToken)
         {
             await deleteSkillHandler.HandleAsync(skillId, cancellationToken);
+
+            return NoContent();
+        }
+        [HttpPost("languages")]
+        public async Task<IActionResult> AddLanguage(AddLanguageCommand command, CancellationToken cancellationToken)
+        {
+            var language = await addLanguageHandler.HandleAsync(
+                command,
+                cancellationToken);
+
+            return StatusCode(
+                StatusCodes.Status201Created,
+                language);
+        }
+        [HttpGet("languages")]
+        public async Task<IActionResult> GetLanguages(CancellationToken cancellationToken)
+        {
+            var languages = await getLanguagesHandler.HandleAsync(cancellationToken);
+
+            return Ok(languages);
+        }
+        [HttpPut("languages/{languageId:guid}")]
+        public async Task<IActionResult> UpdateLanguage(Guid languageId, UpdateLanguageCommand command, CancellationToken cancellationToken)
+        {
+            var language =
+                await updateLanguageHandler.HandleAsync(
+                    languageId,
+                    command,
+                    cancellationToken);
+
+            return Ok(language);
+        }
+        [HttpDelete("languages/{languageId:guid}")]
+        public async Task<IActionResult> DeleteLanguage(Guid languageId, CancellationToken cancellationToken)
+        {
+            await deleteLanguageHandler.HandleAsync(
+                languageId,
+                cancellationToken);
 
             return NoContent();
         }

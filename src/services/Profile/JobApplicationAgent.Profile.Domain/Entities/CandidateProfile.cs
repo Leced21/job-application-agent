@@ -14,6 +14,7 @@ namespace JobApplicationAgent.Profile.Domain.Entities
         private readonly List<ProfessionalExperience> _professionalExperiences = [];
         private readonly List<Education> _educations = [];
         private readonly List<Skill> _skills = [];
+        private readonly List<Language> _languages = [];
 
         public CandidateProfile(
             string firstName,
@@ -45,6 +46,7 @@ namespace JobApplicationAgent.Profile.Domain.Entities
         public IReadOnlyCollection<ProfessionalExperience> ProfessionalExperiences => _professionalExperiences;
         public IReadOnlyCollection<Education> Educations => _educations;
         public IReadOnlyCollection<Skill> Skills => _skills;
+        public IReadOnlyCollection<Language> Languages => _languages;
         public ProfessionalExperience AddProfessionalExperience(
             string companyName,
             string jobTitle,
@@ -246,6 +248,54 @@ namespace JobApplicationAgent.Profile.Domain.Entities
             }
 
             _skills.Remove(skill);
+            UpdatedAtUtc = DateTime.UtcNow;
+
+            return true;
+        }
+        public Language AddLanguage(
+    string name,
+    string proficiencyLevel)
+        {
+            var language = new Language(
+                Id,
+                name,
+                proficiencyLevel);
+
+            _languages.Add(language);
+            UpdatedAtUtc = DateTime.UtcNow;
+
+            return language;
+        }
+
+        public Language? UpdateLanguage(
+            Guid languageId,
+            string name,
+            string proficiencyLevel)
+        {
+            var language =
+                _languages.SingleOrDefault(x => x.Id == languageId);
+
+            if (language is null)
+                return null;
+
+            language.Update(
+                name,
+                proficiencyLevel);
+
+            UpdatedAtUtc = DateTime.UtcNow;
+
+            return language;
+        }
+
+        public bool RemoveLanguage(Guid languageId)
+        {
+            var language =
+                _languages.SingleOrDefault(x => x.Id == languageId);
+
+            if (language is null)
+                return false;
+
+            _languages.Remove(language);
             UpdatedAtUtc = DateTime.UtcNow;
 
             return true;
