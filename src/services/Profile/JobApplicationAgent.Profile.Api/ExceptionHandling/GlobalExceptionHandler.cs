@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using JobApplicationAgent.Profile.Application.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
@@ -52,6 +52,30 @@ namespace JobApplicationAgent.Profile.Api.ExceptionHandling
                 {
                     Status = StatusCodes.Status404NotFound,
                     Title = "Language not found",
+                    Detail = exception.Message
+                },
+                LinkNotFoundException => new ProblemDetails
+                {
+                    Status = StatusCodes.Status404NotFound,
+                    Title = "Link not found",
+                    Detail = exception.Message
+                },
+                CertificationNotFoundException => new ProblemDetails
+                {
+                    Status = StatusCodes.Status404NotFound,
+                    Title = "Certification not found",
+                    Detail = exception.Message
+                },
+                PreferencesAlreadyExistsException => new ProblemDetails
+                {
+                    Status = StatusCodes.Status409Conflict,
+                    Title = "Candidate preferences already exist",
+                    Detail = exception.Message
+                },
+                PreferencesNotFoundException => new ProblemDetails
+                {
+                    Status = StatusCodes.Status404NotFound,
+                    Title = "Candidate preferences not found",
                     Detail = exception.Message
                 },
                 _ => new ProblemDetails

@@ -1,0 +1,266 @@
+<section class="experiences-card">
+    <div class="card-header">
+        <div>
+            <h2>Expériences professionnelles</h2>
+            <p>
+                Les expériences utilisées pour enrichir votre profil et vos
+                candidatures.
+            </p>
+        </div>
+
+        <button class="add-button" type="button" (click)="startAdding()">
+            + Ajouter
+        </button>
+    </div>
+    @if (adding() || editingId()) {
+    <form
+        class="experience-form"
+        [formGroup]="form"
+        (ngSubmit)="saveExperience()">
+        <div class="form-title">
+            <h3>
+                @if (editingId()) {
+                Modifier l’expérience
+                } @else {
+                Nouvelle expérience
+                }
+            </h3>
+        </div>
+        <div class="form-grid">
+
+            <div class="form-field">
+                <label for="experienceJobTitle">Poste *</label>
+
+                <input
+                    id="experienceJobTitle"
+                    type="text"
+                    formControlName="jobTitle" />
+
+                @if (
+                form.controls.jobTitle.touched &&
+                form.controls.jobTitle.invalid
+                ) {
+                <span class="field-error">
+                    Le poste est obligatoire.
+                </span>
+                }
+            </div>
+
+            <div class="form-field">
+                <label for="companyName">Entreprise *</label>
+
+                <input
+                    id="companyName"
+                    type="text"
+                    formControlName="companyName" />
+
+                @if (
+                form.controls.companyName.touched &&
+                form.controls.companyName.invalid
+                ) {
+                <span class="field-error">
+                    L’entreprise est obligatoire.
+                </span>
+                }
+            </div>
+
+            <div class="form-field form-field--wide">
+                <label for="experienceLocation">Localisation</label>
+
+                <input
+                    id="experienceLocation"
+                    type="text"
+                    formControlName="location"
+                    placeholder="Paris, France" />
+            </div>
+
+            <div class="form-field">
+                <label for="startDate">Date de début *</label>
+
+                <input
+                    id="startDate"
+                    type="date"
+                    formControlName="startDate" />
+            </div>
+
+            <div class="form-field">
+                <label for="endDate">Date de fin</label>
+
+                <input
+                    id="endDate"
+                    type="date"
+                    formControlName="endDate" />
+            </div>
+
+            <label class="current-field form-field--wide">
+                <input
+                    type="checkbox"
+                    formControlName="isCurrent" />
+
+                <span>J’occupe actuellement ce poste</span>
+            </label>
+
+            <div class="form-field form-field--wide">
+                <label for="experienceDescription">
+                    Description
+                </label>
+
+                <textarea
+                    id="experienceDescription"
+                    rows="5"
+                    maxlength="4000"
+                    formControlName="description"
+                    placeholder="Décrivez vos principales missions et réalisations..."></textarea>
+            </div>
+
+        </div>
+
+        @if (saveError()) {
+        <p class="save-error">
+            {{ saveError() }}
+        </p>
+        }
+
+        <div class="form-actions">
+            <button
+                class="cancel-button"
+                type="button"
+                [disabled]="saving()"
+                (click)="cancelForm()">
+                Annuler
+            </button>
+
+            <button
+                class="save-button"
+                type="submit"
+                [disabled]="saving()">
+                @if (saving()) {
+                Enregistrement...
+                } @else if (editingId()) {
+                Enregistrer les modifications
+                } @else {
+                Ajouter l’expérience
+                }
+            </button>
+        </div>
+    </form>
+    }
+
+    @if (loading()) {
+    <div class="state">
+        Chargement des expériences...
+    </div>
+    }
+
+    @else if (error()) {
+    <div class="state state--error">
+        {{ error() }}
+    </div>
+    }
+
+    @else if (experiences().length === 0) {
+    <div class="empty-state">
+        <div class="empty-icon">+</div>
+
+        <div>
+            <h3>Aucune expérience</h3>
+            <p>
+                Ajoutez votre première expérience professionnelle.
+            </p>
+        </div>
+    </div>
+    }
+
+    @else {
+    <div class="experience-list">
+        @for (experience of experiences(); track experience.id) {
+        <article class="experience">
+            <div class="timeline">
+                <span class="timeline-dot"></span>
+                <span class="timeline-line"></span>
+            </div>
+
+            <div class="experience-content">
+                <div class="experience-header">
+                    @if (deletingId() === experience.id) {
+                    <div class="delete-confirmation">
+                        <div class="delete-confirmation__content">
+                            <strong>Supprimer cette expérience ?</strong>
+
+                            <span>
+                                Cette action supprimera
+                                « {{ experience.jobTitle }} chez {{
+                                experience.companyName }} ».
+                            </span>
+                        </div>
+
+                        <div class="delete-confirmation__actions">
+                            <button
+                                class="delete-cancel-button"
+                                type="button"
+                                (click)="cancelDelete()">
+                                Annuler
+                            </button>
+
+                            <button
+                                class="delete-confirm-button"
+                                type="button"
+                                (click)="deleteExperience(experience.id)">
+                                Confirmer
+                            </button>
+                        </div>
+                    </div>
+                    }
+                    <div>
+                        <h3>{{ experience.jobTitle }}</h3>
+
+                        <p class="company">
+                            {{ experience.companyName }}
+
+                            @if (experience.location) {
+                            <span>• {{ experience.location }}</span>
+                            }
+                        </p>
+                    </div>
+
+                    <div class="experience-actions">
+                        <button type="button"
+                            (click)="startEditing(experience)">
+                            Modifier
+                        </button>
+
+                        <button
+                            class="delete-button"
+                            type="button"
+                            (click)="requestDelete(experience.id)">
+                            Supprimer
+                        </button>
+                    </div>
+                </div>
+
+                <div class="period">
+                    {{ formatDate(experience.startDate) }}
+                    —
+                    @if (experience.isCurrent) {
+                    <span class="current">Aujourd’hui</span>
+                    } @else {
+                    {{ formatDate(experience.endDate) }}
+                    }
+                </div>
+
+                @if (experience.description) {
+                <p class="description">
+                    {{ experience.description }}
+                </p>
+                }
+            </div>
+        </article>
+        }
+    </div>
+    @if (deleteError()) {
+    <div class="state state--error">
+        {{ deleteError() }}
+    </div>
+    }
+    }
+</section>

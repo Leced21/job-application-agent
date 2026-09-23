@@ -1,3 +1,10 @@
+using JobApplicationAgent.Profile.Application.Profiles.Update;
+using JobApplicationAgent.Profile.Application.Profiles.Preferences;
+using JobApplicationAgent.Profile.Application.Profiles.Preferences.Update;
+using JobApplicationAgent.Profile.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using JobApplicationAgent.Profile.Application.Profiles.Links;
 using System.Net;
 using System.Net.Http.Json;
 using JobApplicationAgent.Profile.Application.Profiles;
@@ -31,6 +38,43 @@ namespace JobApplicationAgent.Profile.IntegrationTests.Api
         public Task DisposeAsync()
         {
             return _factory.ResetDatabaseAsync();
+        }
+
+        [Fact]
+        public async Task Navigations_ShouldLoadBothDirectionsWithoutChangingDatabaseSchema()
+        {
+            using var scope = _factory.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<ProfileDbContext>();
+            Assert.False(db.Database.HasPendingModelChanges());
+            var profile = new JobApplicationAgent.Profile.Domain.Entities.CandidateProfile("Test", "Candidate", "navigations@example.com");
+            profile.AddPreferences([], [], [], []);
+            profile.AddCertification("Certification", "Issuer", new DateOnly(2025, 1, 1));
+            profile.AddEducation("University", "Degree", new DateOnly(2020, 1, 1));
+            profile.AddLanguage("French", "Native");
+            profile.AddLink("Portfolio", "https://example.com");
+            profile.AddProfessionalExperience("Company", "Developer", new DateOnly(2022, 1, 1));
+            profile.AddSkill("C#");
+            db.CandidateProfiles.Add(profile);
+            await db.SaveChangesAsync();
+            db.ChangeTracker.Clear();
+
+            var loaded = await db.CandidateProfiles
+                .Include(x => x.Preferences).Include(x => x.Certifications)
+                .Include(x => x.Educations).Include(x => x.Languages)
+                .Include(x => x.Links).Include(x => x.ProfessionalExperiences)
+                .Include(x => x.Skills).AsSplitQuery().SingleAsync();
+            Assert.Same(loaded, loaded.Preferences!.CandidateProfile);
+            Assert.Same(loaded, Assert.Single(loaded.Certifications).CandidateProfile);
+            Assert.Same(loaded, Assert.Single(loaded.Educations).CandidateProfile);
+            Assert.Same(loaded, Assert.Single(loaded.Languages).CandidateProfile);
+            Assert.Same(loaded, Assert.Single(loaded.Links).CandidateProfile);
+            Assert.Same(loaded, Assert.Single(loaded.ProfessionalExperiences).CandidateProfile);
+            Assert.Same(loaded, Assert.Single(loaded.Skills).CandidateProfile);
+
+            db.ChangeTracker.Clear();
+            var preferences = await db.Preferences.Include(x => x.CandidateProfile).SingleAsync();
+            Assert.Equal(profile.Id, preferences.CandidateProfile.Id);
+            Assert.Same(preferences, preferences.CandidateProfile.Preferences);
         }
 
         [Fact]
@@ -266,7 +310,7 @@ namespace JobApplicationAgent.Profile.IntegrationTests.Api
                 startDate = "2024-01-01",
                 endDate = (string?)null,
                 isCurrent = true,
-                description = "Développement de pipelines de données."
+                description = "DÃ©veloppement de pipelines de donnÃ©es."
             };
 
             var response =
@@ -286,7 +330,7 @@ namespace JobApplicationAgent.Profile.IntegrationTests.Api
             Assert.Equal(new DateOnly(2024, 1, 1), experience.StartDate);
             Assert.Null(experience.EndDate);
             Assert.True(experience.IsCurrent);
-            Assert.Equal("Développement de pipelines de données.", experience.Description);
+            Assert.Equal("DÃ©veloppement de pipelines de donnÃ©es.", experience.Description);
         }
         [Fact]
         public async Task AddExperience_ShouldReturnNotFound_WhenProfileDoesNotExist()
@@ -299,7 +343,7 @@ namespace JobApplicationAgent.Profile.IntegrationTests.Api
                 startDate = "2024-01-01",
                 endDate = (string?)null,
                 isCurrent = true,
-                description = "Développement de pipelines de données."
+                description = "DÃ©veloppement de pipelines de donnÃ©es."
             };
 
             var response =
@@ -351,7 +395,7 @@ namespace JobApplicationAgent.Profile.IntegrationTests.Api
                 startDate = "2024-01-01",
                 endDate = "2025-01-01",
                 isCurrent = true,
-                description = "Développement de pipelines de données."
+                description = "DÃ©veloppement de pipelines de donnÃ©es."
             };
 
             var response =
@@ -404,7 +448,7 @@ namespace JobApplicationAgent.Profile.IntegrationTests.Api
                 startDate = "2022-01-01",
                 endDate = "2023-12-31",
                 isCurrent = false,
-                description = "Première expérience."
+                description = "PremiÃ¨re expÃ©rience."
             };
 
             var secondExperience = new
@@ -415,7 +459,7 @@ namespace JobApplicationAgent.Profile.IntegrationTests.Api
                 startDate = "2024-01-01",
                 endDate = (string?)null,
                 isCurrent = true,
-                description = "Expérience actuelle."
+                description = "ExpÃ©rience actuelle."
             };
 
             var firstResponse =
@@ -834,14 +878,14 @@ namespace JobApplicationAgent.Profile.IntegrationTests.Api
 
             var command = new
             {
-                institutionName = "Université Paris-Saclay",
+                institutionName = "UniversitÃ© Paris-Saclay",
                 degree = "Master",
                 fieldOfStudy = "Data Science",
                 location = "Paris",
                 startDate = "2022-09-01",
                 endDate = "2024-06-30",
                 isCurrent = false,
-                description = "Master spécialisé en Data Science."
+                description = "Master spÃ©cialisÃ© en Data Science."
             };
 
             var response = await _client.PostAsJsonAsync(
@@ -858,7 +902,7 @@ namespace JobApplicationAgent.Profile.IntegrationTests.Api
             Assert.NotNull(education);
             Assert.NotEqual(Guid.Empty, education.Id);
             Assert.Equal(
-                "Université Paris-Saclay",
+                "UniversitÃ© Paris-Saclay",
                 education.InstitutionName);
             Assert.Equal("Master", education.Degree);
             Assert.Equal("Data Science", education.FieldOfStudy);
@@ -879,7 +923,7 @@ namespace JobApplicationAgent.Profile.IntegrationTests.Api
                 persistedEducation.Id);
 
             Assert.Equal(
-                "Université Paris-Saclay",
+                "UniversitÃ© Paris-Saclay",
                 persistedEducation.InstitutionName);
 
             Assert.Equal(
@@ -923,14 +967,14 @@ namespace JobApplicationAgent.Profile.IntegrationTests.Api
                 "/api/v1/profile/educations",
                 new
                 {
-                    institutionName = "Université Paris-Saclay",
+                    institutionName = "UniversitÃ© Paris-Saclay",
                     degree = "Master",
                     fieldOfStudy = "Data Science",
                     location = "Paris",
                     startDate = "2022-09-01",
                     endDate = "2024-06-30",
                     isCurrent = false,
-                    description = "Master spécialisé en Data Science."
+                    description = "Master spÃ©cialisÃ© en Data Science."
                 });
 
             Assert.Equal(
@@ -952,7 +996,7 @@ namespace JobApplicationAgent.Profile.IntegrationTests.Api
 
             Assert.NotEqual(Guid.Empty, education.Id);
             Assert.Equal(
-                "Université Paris-Saclay",
+                "UniversitÃ© Paris-Saclay",
                 education.InstitutionName);
             Assert.Equal("Master", education.Degree);
             Assert.Equal(
@@ -967,7 +1011,7 @@ namespace JobApplicationAgent.Profile.IntegrationTests.Api
                 education.EndDate);
             Assert.False(education.IsCurrent);
             Assert.Equal(
-                "Master spécialisé en Data Science.",
+                "Master spÃ©cialisÃ© en Data Science.",
                 education.Description);
         }
         [Fact]
@@ -993,7 +1037,7 @@ namespace JobApplicationAgent.Profile.IntegrationTests.Api
 
             var createCommand = new
             {
-                institutionName = "Université A",
+                institutionName = "UniversitÃ© A",
                 degree = "Licence",
                 fieldOfStudy = "Informatique",
                 location = "Paris",
@@ -1016,14 +1060,14 @@ namespace JobApplicationAgent.Profile.IntegrationTests.Api
 
             var updateCommand = new
             {
-                institutionName = "Université Paris-Saclay",
+                institutionName = "UniversitÃ© Paris-Saclay",
                 degree = "Master",
                 fieldOfStudy = "Data Science",
                 location = "Paris",
                 startDate = "2022-09-01",
                 endDate = "2024-06-30",
                 isCurrent = false,
-                description = "Formation mise à jour"
+                description = "Formation mise Ã  jour"
             };
 
             var updateResponse = await _client.PutAsJsonAsync(
@@ -1044,7 +1088,7 @@ namespace JobApplicationAgent.Profile.IntegrationTests.Api
                 updatedEducation.Id);
 
             Assert.Equal(
-                "Université Paris-Saclay",
+                "UniversitÃ© Paris-Saclay",
                 updatedEducation.InstitutionName);
 
             Assert.Equal(
@@ -1063,7 +1107,7 @@ namespace JobApplicationAgent.Profile.IntegrationTests.Api
                 new DateOnly(2024, 6, 30),
                 updatedEducation.EndDate);
 
-            // Vérification de la persistance via GET
+            // VÃ©rification de la persistance via GET
             var getResponse = await _client.GetAsync(
                 "/api/v1/profile/educations");
 
@@ -1083,7 +1127,7 @@ namespace JobApplicationAgent.Profile.IntegrationTests.Api
                 persistedEducation.Id);
 
             Assert.Equal(
-                "Université Paris-Saclay",
+                "UniversitÃ© Paris-Saclay",
                 persistedEducation.InstitutionName);
 
             Assert.Equal(
@@ -1095,7 +1139,7 @@ namespace JobApplicationAgent.Profile.IntegrationTests.Api
                 persistedEducation.FieldOfStudy);
 
             Assert.Equal(
-                "Formation mise à jour",
+                "Formation mise Ã  jour",
                 persistedEducation.Description);
         }
 
@@ -1122,7 +1166,7 @@ namespace JobApplicationAgent.Profile.IntegrationTests.Api
 
             var command = new
             {
-                institutionName = "Université Paris-Saclay",
+                institutionName = "UniversitÃ© Paris-Saclay",
                 degree = "Master",
                 fieldOfStudy = "Data Science",
                 location = "Paris",
@@ -1164,7 +1208,7 @@ namespace JobApplicationAgent.Profile.IntegrationTests.Api
 
             var createCommand = new
             {
-                institutionName = "Université A",
+                institutionName = "UniversitÃ© A",
                 degree = "Licence",
                 fieldOfStudy = "Informatique",
                 location = "Paris",
@@ -1187,7 +1231,7 @@ namespace JobApplicationAgent.Profile.IntegrationTests.Api
 
             var invalidCommand = new
             {
-                institutionName = "Université Paris-Saclay",
+                institutionName = "UniversitÃ© Paris-Saclay",
                 degree = "Master",
                 fieldOfStudy = "Data Science",
                 location = "Paris",
@@ -1228,14 +1272,14 @@ namespace JobApplicationAgent.Profile.IntegrationTests.Api
 
             var createCommand = new
             {
-                institutionName = "Université Paris-Saclay",
+                institutionName = "UniversitÃ© Paris-Saclay",
                 degree = "Master",
                 fieldOfStudy = "Data Science",
                 location = "Paris",
                 startDate = "2022-09-01",
                 endDate = "2024-06-30",
                 isCurrent = false,
-                description = "Formation à supprimer"
+                description = "Formation Ã  supprimer"
             };
 
             var createResponse = await _client.PostAsJsonAsync(
@@ -1256,7 +1300,7 @@ namespace JobApplicationAgent.Profile.IntegrationTests.Api
                 HttpStatusCode.NoContent,
                 deleteResponse.StatusCode);
 
-            // Vérification de la persistance de la suppression
+            // VÃ©rification de la persistance de la suppression
             var getResponse = await _client.GetAsync(
                 "/api/v1/profile/educations");
 
@@ -2046,6 +2090,290 @@ namespace JobApplicationAgent.Profile.IntegrationTests.Api
             Assert.Equal(
                 HttpStatusCode.NotFound,
                 response.StatusCode);
+        }
+
+        private async Task CreateProfileForLinksAsync()
+        {
+            var response = await _client.PostAsJsonAsync("/api/v1/profile",
+                new { firstName = "Test", lastName = "Candidate", email = "links@example.com" });
+            Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task Links_ShouldPersistCreateUpdateAndDelete()
+        {
+            await CreateProfileForLinksAsync();
+            const string route = "/api/v1/profile/links";
+            Assert.Empty((await _client.GetFromJsonAsync<List<LinkDto>>(route))!);
+            var response = await _client.PostAsJsonAsync(route,
+                new { name = "Portfolio", url = "https://example.com/portfolio" });
+            Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+            var created = await response.Content.ReadFromJsonAsync<LinkDto>();
+            Assert.NotNull(created);
+            Assert.NotEqual(Guid.Empty, created.Id);
+            var persisted = Assert.Single((await _client.GetFromJsonAsync<List<LinkDto>>(route))!);
+            Assert.Equal(created.Id, persisted.Id);
+            Assert.Equal("Portfolio", persisted.Name);
+            Assert.Equal("https://example.com/portfolio", persisted.Url);
+
+            var updated = await _client.PutAsJsonAsync($"{route}/{created.Id}",
+                new { name = "GitHub", url = "https://github.com/example" });
+            Assert.Equal(HttpStatusCode.OK, updated.StatusCode);
+            persisted = Assert.Single((await _client.GetFromJsonAsync<List<LinkDto>>(route))!);
+            Assert.Equal(created.Id, persisted.Id);
+            Assert.Equal("GitHub", persisted.Name);
+            Assert.Equal("https://github.com/example", persisted.Url);
+
+            Assert.Equal(HttpStatusCode.NoContent,
+                (await _client.DeleteAsync($"{route}/{created.Id}")).StatusCode);
+            Assert.Empty((await _client.GetFromJsonAsync<List<LinkDto>>(route))!);
+        }
+
+        [Fact]
+        public async Task Links_ShouldReturnNotFound_WhenProfileIsMissing()
+        {
+            const string route = "/api/v1/profile/links";
+            var command = new { name = "Portfolio", url = "https://example.com" };
+            Assert.Equal(HttpStatusCode.NotFound, (await _client.GetAsync(route)).StatusCode);
+            Assert.Equal(HttpStatusCode.NotFound, (await _client.PostAsJsonAsync(route, command)).StatusCode);
+            Assert.Equal(HttpStatusCode.NotFound, (await _client.PutAsJsonAsync($"{route}/{Guid.NewGuid()}", command)).StatusCode);
+            Assert.Equal(HttpStatusCode.NotFound, (await _client.DeleteAsync($"{route}/{Guid.NewGuid()}")).StatusCode);
+        }
+
+        [Fact]
+        public async Task Links_ShouldReturnNotFound_WhenLinkIsMissing()
+        {
+            await CreateProfileForLinksAsync();
+            var route = $"/api/v1/profile/links/{Guid.NewGuid()}";
+            Assert.Equal(HttpStatusCode.NotFound,
+                (await _client.PutAsJsonAsync(route, new { name = "Portfolio", url = "https://example.com" })).StatusCode);
+            Assert.Equal(HttpStatusCode.NotFound, (await _client.DeleteAsync(route)).StatusCode);
+        }
+
+        [Theory]
+        [InlineData("", "https://example.com")]
+        [InlineData("Portfolio", "")]
+        [InlineData("Portfolio", "/relative")]
+        [InlineData("Portfolio", "javascript:alert(1)")]
+        [InlineData("Portfolio", "ftp://example.com")]
+        public async Task Links_ShouldRejectInvalidCommands_WithoutChangingPersistedLink(string name, string url)
+        {
+            await CreateProfileForLinksAsync();
+            const string route = "/api/v1/profile/links";
+            var response = await _client.PostAsJsonAsync(route,
+                new { name = "Portfolio", url = "https://example.com" });
+            Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+            var created = await response.Content.ReadFromJsonAsync<LinkDto>();
+            var before = Assert.Single((await _client.GetFromJsonAsync<List<LinkDto>>(route))!);
+            Assert.Equal(HttpStatusCode.BadRequest, (await _client.PostAsJsonAsync(route, new { name, url })).StatusCode);
+            Assert.Equal(HttpStatusCode.BadRequest, (await _client.PutAsJsonAsync($"{route}/{created!.Id}", new { name, url })).StatusCode);
+            Assert.Equal(before, Assert.Single((await _client.GetFromJsonAsync<List<LinkDto>>(route))!));
+        }
+
+        private static UpdatePreferencesCommand ValidPreferencesCommand() =>
+            new(["Backend Developer", "Data Engineer"], ["Paris", "Lyon"], ["CDI", "Freelance"],
+                ["Hybrid", "Remote"], 55000.25m, "EUR", new DateOnly(2027, 1, 1));
+
+        private async Task CreateProfileForPreferencesAsync()
+        {
+            var response = await _client.PostAsJsonAsync("/api/v1/profile",
+                new { firstName = "Test", lastName = "Candidate", email = "preferences@example.com" });
+            Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task Preferences_ShouldPersistCreateUpdateDeleteAndRecreate()
+        {
+            await CreateProfileForPreferencesAsync();
+            const string route = "/api/v1/profile/preferences";
+            Assert.Equal(HttpStatusCode.NotFound, (await _client.GetAsync(route)).StatusCode);
+            var command = ValidPreferencesCommand();
+            Assert.Equal(HttpStatusCode.NotFound, (await _client.PutAsJsonAsync(route, command)).StatusCode);
+            var response = await _client.PostAsJsonAsync(route, command);
+            Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+            Assert.EndsWith(route, response.Headers.Location!.ToString());
+            var beforeDuplicate = await _client.GetStringAsync(route);
+            Assert.Equal(HttpStatusCode.Conflict, (await _client.PostAsJsonAsync(route,
+                new UpdatePreferencesCommand([], [], [], [], null, null, null))).StatusCode);
+            Assert.Equal(beforeDuplicate, await _client.GetStringAsync(route));
+            var initial = await _client.GetFromJsonAsync<PreferencesDto>(route);
+            Assert.NotNull(initial);
+            Assert.Equal(command.DesiredJobTitles, initial.DesiredJobTitles);
+            Assert.Equal(command.PreferredLocations, initial.PreferredLocations);
+            Assert.Equal(command.ContractTypes, initial.ContractTypes);
+            Assert.Equal(command.WorkModes, initial.WorkModes);
+            Assert.Equal(command.MinimumAnnualGrossSalary, initial.MinimumAnnualGrossSalary);
+            Assert.Equal("EUR", initial.SalaryCurrency);
+            Assert.Equal(command.AvailableFrom, initial.AvailableFrom);
+
+            var replacement = new UpdatePreferencesCommand(["Architect"], [], [], ["OnSite"], null, null, null);
+            response = await _client.PutAsJsonAsync(route, replacement);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            var updated = await _client.GetFromJsonAsync<PreferencesDto>(route);
+            Assert.NotNull(updated);
+            Assert.Equal(initial.CandidateProfileId, updated.CandidateProfileId);
+            Assert.Equal(initial.CreatedAtUtc, updated.CreatedAtUtc);
+            Assert.Equal(replacement.DesiredJobTitles, updated.DesiredJobTitles);
+            Assert.Empty(updated.PreferredLocations);
+            Assert.Empty(updated.ContractTypes);
+            Assert.Equal(replacement.WorkModes, updated.WorkModes);
+            Assert.Null(updated.MinimumAnnualGrossSalary);
+            Assert.Null(updated.SalaryCurrency);
+            Assert.Null(updated.AvailableFrom);
+            using (var scope = _factory.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<ProfileDbContext>();
+                Assert.Equal(1, await db.Preferences.CountAsync());
+            }
+
+            Assert.Equal(HttpStatusCode.NoContent, (await _client.DeleteAsync(route)).StatusCode);
+            Assert.Equal(HttpStatusCode.NotFound, (await _client.GetAsync(route)).StatusCode);
+            Assert.Equal(HttpStatusCode.NotFound, (await _client.DeleteAsync(route)).StatusCode);
+            using (var scope = _factory.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<ProfileDbContext>();
+                Assert.Equal(0, await db.Preferences.CountAsync());
+                Assert.Equal(1, await db.CandidateProfiles.CountAsync());
+            }
+            Assert.Equal(HttpStatusCode.NotFound, (await _client.PutAsJsonAsync(route, command)).StatusCode);
+            Assert.Equal(HttpStatusCode.Created, (await _client.PostAsJsonAsync(route, command)).StatusCode);
+            Assert.Equal(command.DesiredJobTitles,
+                (await _client.GetFromJsonAsync<PreferencesDto>(route))!.DesiredJobTitles);
+
+            // Deleting the parent must also remove its preferences.
+            await _factory.ResetDatabaseAsync();
+            using var finalScope = _factory.Services.CreateScope();
+            Assert.Equal(0, await finalScope.ServiceProvider.GetRequiredService<ProfileDbContext>().Preferences.CountAsync());
+        }
+
+        [Fact]
+        public async Task Preferences_ShouldReturnNotFound_WhenProfileIsMissing()
+        {
+            const string route = "/api/v1/profile/preferences";
+            Assert.Equal(HttpStatusCode.NotFound, (await _client.GetAsync(route)).StatusCode);
+            Assert.Equal(HttpStatusCode.NotFound, (await _client.PutAsJsonAsync(route, ValidPreferencesCommand())).StatusCode);
+            Assert.Equal(HttpStatusCode.NotFound, (await _client.PostAsJsonAsync(route, ValidPreferencesCommand())).StatusCode);
+            Assert.Equal(HttpStatusCode.NotFound, (await _client.DeleteAsync(route)).StatusCode);
+        }
+
+        [Fact]
+        public async Task Preferences_ShouldAcceptEmptyCriteria()
+        {
+            await CreateProfileForPreferencesAsync();
+            const string route = "/api/v1/profile/preferences";
+            var response = await _client.PostAsJsonAsync(route,
+                new UpdatePreferencesCommand([], [], [], [], null, null, null));
+            Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+            var dto = await _client.GetFromJsonAsync<PreferencesDto>(route);
+            Assert.NotNull(dto);
+            Assert.Empty(dto.DesiredJobTitles);
+            Assert.Empty(dto.PreferredLocations);
+            Assert.Empty(dto.ContractTypes);
+            Assert.Empty(dto.WorkModes);
+            Assert.Null(dto.MinimumAnnualGrossSalary);
+            Assert.Null(dto.SalaryCurrency);
+            Assert.Null(dto.AvailableFrom);
+        }
+
+        [Theory]
+        [InlineData("titles")]
+        [InlineData("nullList")]
+        [InlineData("mode")]
+        [InlineData("salary")]
+        [InlineData("precision")]
+        [InlineData("currency")]
+        public async Task Preferences_ShouldRejectInvalidCriteriaWithoutChangingStoredPreferences(string scenario)
+        {
+            await CreateProfileForPreferencesAsync();
+            const string route = "/api/v1/profile/preferences";
+            var valid = ValidPreferencesCommand();
+            Assert.Equal(HttpStatusCode.Created, (await _client.PostAsJsonAsync(route, valid)).StatusCode);
+            var before = await _client.GetStringAsync(route);
+            var invalid = scenario switch
+            {
+                "titles" => valid with { DesiredJobTitles = [""] },
+                "nullList" => valid with { PreferredLocations = null! },
+                "mode" => valid with { WorkModes = ["invalid"] },
+                "salary" => valid with { MinimumAnnualGrossSalary = -1 },
+                "precision" => valid with { MinimumAnnualGrossSalary = 12.345m },
+                _ => valid with { SalaryCurrency = null }
+            };
+            Assert.Equal(HttpStatusCode.BadRequest, (await _client.PutAsJsonAsync(route, invalid)).StatusCode);
+            Assert.Equal(HttpStatusCode.BadRequest, (await _client.PostAsJsonAsync(route, invalid)).StatusCode);
+            Assert.Equal(before, await _client.GetStringAsync(route));
+        }
+
+        [Fact]
+        public async Task Update_ShouldPersistProfileAndPreserveAssociatedData()
+        {
+            await CreateProfileForPreferencesAsync();
+            const string route = "/api/v1/profile";
+            var initial = await _client.GetFromJsonAsync<CandidateProfileDto>(route);
+            Assert.NotNull(initial);
+            Assert.Equal(HttpStatusCode.Created, (await _client.PostAsJsonAsync(route + "/links",
+                new { name = "Portfolio", url = "https://example.com" })).StatusCode);
+            Assert.Equal(HttpStatusCode.Created,
+                (await _client.PostAsJsonAsync(route + "/preferences", ValidPreferencesCommand())).StatusCode);
+            var linksBefore = await _client.GetStringAsync(route + "/links");
+            var preferencesBefore = await _client.GetStringAsync(route + "/preferences");
+            var command = new UpdateCandidateProfileCommand("Updated", "Person", "updated@example.com",
+                "0612345678", "Architect", "Updated summary");
+            var response = await _client.PutAsJsonAsync(route, command);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            var updated = await _client.GetFromJsonAsync<CandidateProfileDto>(route);
+            Assert.NotNull(updated);
+            Assert.Equal(initial.Id, updated.Id);
+            Assert.Equal(initial.CreatedAtUtc, updated.CreatedAtUtc);
+            Assert.Equal(command.FirstName, updated.FirstName);
+            Assert.Equal(command.LastName, updated.LastName);
+            Assert.Equal(command.Email, updated.Email);
+            Assert.Equal(command.PhoneNumber, updated.PhoneNumber);
+            Assert.Equal(command.JobTitle, updated.JobTitle);
+            Assert.Equal(command.Summary, updated.Summary);
+            Assert.Equal(linksBefore, await _client.GetStringAsync(route + "/links"));
+            Assert.Equal(preferencesBefore, await _client.GetStringAsync(route + "/preferences"));
+
+            response = await _client.PutAsJsonAsync(route, command with { PhoneNumber = null, JobTitle = null, Summary = null });
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            updated = await _client.GetFromJsonAsync<CandidateProfileDto>(route);
+            Assert.Null(updated!.PhoneNumber);
+            Assert.Null(updated.JobTitle);
+            Assert.Null(updated.Summary);
+        }
+
+        [Fact]
+        public async Task Update_ShouldReturnNotFound_WhenProfileDoesNotExist()
+        {
+            var response = await _client.PutAsJsonAsync("/api/v1/profile",
+                new UpdateCandidateProfileCommand("Test", "Candidate", "test@example.com", null, null, null));
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+            Assert.Equal(HttpStatusCode.NotFound, (await _client.GetAsync("/api/v1/profile")).StatusCode);
+        }
+
+        [Theory]
+        [InlineData("firstName")]
+        [InlineData("lastName")]
+        [InlineData("email")]
+        [InlineData("phone")]
+        [InlineData("jobTitle")]
+        [InlineData("summary")]
+        public async Task Update_ShouldRejectInvalidDataWithoutChangingProfile(string field)
+        {
+            await CreateProfileForPreferencesAsync();
+            const string route = "/api/v1/profile";
+            var before = await _client.GetStringAsync(route);
+            var command = new UpdateCandidateProfileCommand("Test", "Candidate", "test@example.com", null, null, null);
+            command = field switch
+            {
+                "firstName" => command with { FirstName = "" },
+                "lastName" => command with { LastName = "" },
+                "email" => command with { Email = "invalid" },
+                "phone" => command with { PhoneNumber = new string('1', 31) },
+                "jobTitle" => command with { JobTitle = new string('a', 151) },
+                _ => command with { Summary = new string('a', 2001) }
+            };
+            Assert.Equal(HttpStatusCode.BadRequest, (await _client.PutAsJsonAsync(route, command)).StatusCode);
+            Assert.Equal(before, await _client.GetStringAsync(route));
         }
     }
 }

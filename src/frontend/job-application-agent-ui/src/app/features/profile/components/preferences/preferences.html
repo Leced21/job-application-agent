@@ -1,0 +1,140 @@
+<section class="preferences-card">
+  <div class="card-header">
+    <div>
+      <h2>Préférences professionnelles</h2>
+      <p>Définissez les critères utilisés pour personnaliser les offres et le matching.</p>
+    </div>
+    @if (!loading() && !error() && !editing() && preferences()) {
+      <button class="edit-button" type="button" [disabled]="deleting()" (click)="startEditing()">Modifier</button>
+    }
+  </div>
+
+  @if (loading()) {
+    <div class="state" role="status">Chargement des préférences...</div>
+  } @else if (error()) {
+    <div class="state state--error" role="alert">
+      <p>{{ error() }}</p>
+      <button type="button" (click)="loadPreferences()">Réessayer</button>
+    </div>
+  } @else if (editing()) {
+    <form class="preferences-form" [formGroup]="form" (ngSubmit)="savePreferences()">
+      <div class="form-title">
+        <h3>{{ preferences() ? 'Modifier mes préférences' : 'Configurer mes préférences' }}</h3>
+        <p>Une liste vide signifie que vous n’avez pas de préférence pour ce critère.</p>
+      </div>
+      <fieldset [disabled]="saving()">
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="desiredJobTitles">Postes recherchés</label>
+            <textarea id="desiredJobTitles" rows="3" formControlName="desiredJobTitles" placeholder="Data Engineer"></textarea>
+            <span class="field-hint">Un poste par ligne, 20 maximum.</span>
+            @if (form.controls.desiredJobTitles.touched && form.controls.desiredJobTitles.invalid) {
+              <span class="field-error">20 postes maximum, 150 caractères par poste.</span>
+            }
+          </div>
+          <div class="form-field">
+            <label for="preferredLocations">Localisations souhaitées</label>
+            <textarea id="preferredLocations" rows="3" formControlName="preferredLocations" placeholder="Paris, France"></textarea>
+            <span class="field-hint">Une localisation par ligne, 20 maximum.</span>
+            @if (form.controls.preferredLocations.touched && form.controls.preferredLocations.invalid) {
+              <span class="field-error">20 localisations maximum, 200 caractères par localisation.</span>
+            }
+          </div>
+          <div class="form-field form-field--wide">
+            <label for="contractTypes">Types de contrat</label>
+            <textarea id="contractTypes" rows="3" formControlName="contractTypes" placeholder="CDI"></textarea>
+            <span class="field-hint">Un contrat par ligne : CDI, CDD, Freelance… 20 maximum.</span>
+            @if (form.controls.contractTypes.touched && form.controls.contractTypes.invalid) {
+              <span class="field-error">20 contrats maximum, 100 caractères par contrat.</span>
+            }
+          </div>
+          <fieldset class="form-field--wide">
+            <legend>Modes de travail</legend>
+            <div class="choice-grid">
+              <label class="choice-card"><input type="checkbox" formControlName="remote" /><span>Télétravail</span></label>
+              <label class="choice-card"><input type="checkbox" formControlName="hybrid" /><span>Hybride</span></label>
+              <label class="choice-card"><input type="checkbox" formControlName="onSite" /><span>Sur site</span></label>
+            </div>
+          </fieldset>
+          <div class="form-field">
+            <label for="minimumAnnualGrossSalary">Salaire annuel brut minimum</label>
+            <input id="minimumAnnualGrossSalary" type="number" min="0" max="9999999999.99" step="0.01" formControlName="minimumAnnualGrossSalary" />
+            @if (form.controls.minimumAnnualGrossSalary.touched && form.controls.minimumAnnualGrossSalary.invalid) {
+              <span class="field-error">Saisissez un montant entre 0 et 9 999 999 999,99, avec deux décimales maximum.</span>
+            }
+          </div>
+          <div class="form-field">
+            <label for="salaryCurrency">Devise</label>
+            <input id="salaryCurrency" type="text" maxlength="3" formControlName="salaryCurrency" placeholder="EUR" />
+            @if (form.touched && form.hasError('currency')) {
+              <span class="field-error">Indiquez une devise sur trois lettres lorsque le salaire est renseigné.</span>
+            }
+          </div>
+          <div class="form-field">
+            <label for="availableFrom">Disponible à partir du</label>
+            <input id="availableFrom" type="date" formControlName="availableFrom" />
+          </div>
+        </div>
+      </fieldset>
+      @if (saveError()) { <p class="save-error" role="alert">{{ saveError() }}</p> }
+      <div class="form-actions">
+        <button class="cancel-button" type="button" [disabled]="saving()" (click)="cancelForm()">Annuler</button>
+        <button class="save-button" type="submit" [disabled]="saving()">{{ saving() ? 'Enregistrement...' : 'Enregistrer les préférences' }}</button>
+      </div>
+    </form>
+  } @else if (preferences(); as value) {
+    <div class="preferences-content">
+      <div class="preference-section">
+        <span class="preference-label">Postes recherchés</span>
+        <div class="preference-values">
+          @for (title of value.desiredJobTitles; track $index) { <span class="preference-chip">{{ title }}</span> }
+          @empty { <span class="empty-value">Sans préférence</span> }
+        </div>
+      </div>
+      <div class="preference-section">
+        <span class="preference-label">Localisations</span>
+        <div class="preference-values">
+          @for (location of value.preferredLocations; track $index) { <span class="preference-chip">{{ location }}</span> }
+          @empty { <span class="empty-value">Sans préférence</span> }
+        </div>
+      </div>
+      <div class="preference-section">
+        <span class="preference-label">Modes de travail</span>
+        <strong class="preference-value">{{ modesLabel(value.workModes) }}</strong>
+      </div>
+      <div class="preference-section">
+        <span class="preference-label">Types de contrat</span>
+        <div class="preference-values">
+          @for (contract of value.contractTypes; track $index) { <span class="preference-chip">{{ contract }}</span> }
+          @empty { <span class="empty-value">Sans préférence</span> }
+        </div>
+      </div>
+      <div class="preference-section">
+        <span class="preference-label">Salaire annuel brut minimum</span>
+        <strong class="preference-value">{{ value.minimumAnnualGrossSalary !== null ? value.minimumAnnualGrossSalary + ' ' + value.salaryCurrency : 'Non renseigné' }}</strong>
+      </div>
+      <div class="preference-section">
+        <span class="preference-label">Disponible à partir du</span>
+        <strong class="preference-value">{{ value.availableFrom || 'Non renseigné' }}</strong>
+      </div>
+    </div>
+    @if (confirmingDelete()) {
+      <div class="delete-confirmation">
+        <p>Supprimer vos préférences professionnelles ?</p>
+        <div class="form-actions">
+          <button type="button" [disabled]="deleting()" (click)="cancelDelete()">Annuler</button>
+          <button class="delete-confirm-button" type="button" [disabled]="deleting()" (click)="deletePreferences()">{{ deleting() ? 'Suppression...' : 'Confirmer la suppression' }}</button>
+        </div>
+        @if (deleteError()) { <p class="save-error" role="alert">{{ deleteError() }}</p> }
+      </div>
+    } @else {
+      <button class="delete-button" type="button" (click)="requestDelete()">Supprimer les préférences</button>
+    }
+  } @else {
+    <div class="empty-state">
+      <div class="empty-icon" aria-hidden="true">+</div>
+      <div><h3>Aucune préférence définie</h3><p>Configurez vos critères de recherche pour personnaliser les offres proposées.</p></div>
+      <button class="configure-button" type="button" (click)="startEditing()">Configurer</button>
+    </div>
+  }
+</section>

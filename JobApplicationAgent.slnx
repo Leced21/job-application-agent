@@ -10,4 +10,9 @@
     <Project Path="src/services/Profile/JobApplicationAgent.Profile.Domain/JobApplicationAgent.Profile.Domain.csproj" />
     <Project Path="src/services/Profile/JobApplicationAgent.Profile.Infrastructure/JobApplicationAgent.Profile.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/tests/" />
+  <Folder Name="/tests/Profile/">
+    <Project Path="tests/Profile/JobApplicationAgent.Profile.IntegrationTests/JobApplicationAgent.Profile.IntegrationTests.csproj" />
+    <Project Path="tests/Profile/JobApplicationAgent.Profile.UnitTests/JobApplicationAgent.Profile.UnitTests.csproj" />
+  </Folder>
 </Solution>

@@ -1,0 +1,37 @@
+@if (loading()) {
+
+  <div class="state-card">
+    <p>Chargement du profil...</p>
+  </div>
+
+} @else if (error()) {
+
+  <div class="state-card state-card--error">
+    <h2>Profil indisponible</h2>
+    <p>{{ error() }}</p>
+  </div>
+
+} @else if (profile(); as candidate) {
+
+  <div class="profile-page">
+
+    <app-personal-information
+      [profile]="candidate"
+      (profileUpdated)="profile.set($event)" />
+
+    <app-experiences />
+
+    <app-educations />
+
+    <app-skills />
+
+    <app-languages />
+
+    <app-certifications />
+
+    <app-links />
+
+    <app-preferences />
+
+  </div>
+}

@@ -1,0 +1,62 @@
+<section class="languages-card" aria-labelledby="languages-title">
+  <div class="card-header">
+    <div><h2 id="languages-title">Langues</h2><p>Les langues utilisées pour enrichir vos candidatures.</p></div>
+    <button class="add-button" type="button" (click)="startAdding()" [disabled]="loading() || !!error() || saving() || deleting()">+ Ajouter</button>
+  </div>
+  @if (adding() || editingId()) {
+    <form class="language-form" [formGroup]="form" (ngSubmit)="saveLanguage()">
+      <h3>{{ editingId() ? 'Modifier la langue' : 'Nouvelle langue' }}</h3>
+      <fieldset [disabled]="saving() || deleting()">
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="language-name">Langue *</label>
+            <input id="language-name" formControlName="name" maxlength="100" placeholder="Français, anglais…" aria-describedby="language-name-error" [attr.aria-invalid]="form.controls.name.touched && form.controls.name.invalid" />
+            <span id="language-name-error" class="field-error">@if (form.controls.name.touched && form.controls.name.invalid) { Renseignez une langue (100 caractères maximum). }</span>
+          </div>
+          <div class="form-field">
+            <label for="language-level">Niveau *</label>
+            <input id="language-level" formControlName="proficiencyLevel" maxlength="50" placeholder="Langue maternelle, courant, B2…" aria-describedby="language-level-error" [attr.aria-invalid]="form.controls.proficiencyLevel.touched && form.controls.proficiencyLevel.invalid" />
+            <span id="language-level-error" class="field-error">@if (form.controls.proficiencyLevel.touched && form.controls.proficiencyLevel.invalid) { Renseignez un niveau (50 caractères maximum). }</span>
+          </div>
+        </div>
+      </fieldset>
+      @if (saveError()) { <p class="save-error" role="alert">{{ saveError() }}</p> }
+      <div class="form-actions">
+        <button type="button" (click)="cancelForm()" [disabled]="saving() || deleting()">Annuler</button>
+        <button class="save-button" type="submit" [disabled]="saving() || deleting()">{{ saving() ? 'Enregistrement…' : 'Enregistrer' }}</button>
+      </div>
+    </form>
+  }
+  @if (loading()) {
+    <p class="state" role="status">Chargement des langues…</p>
+  } @else if (error()) {
+    <div class="state state--error" role="alert"><p>{{ error() }}</p><button type="button" (click)="loadLanguages()">Réessayer</button></div>
+  } @else if (languages().length === 0) {
+    <div class="empty-state"><h3>Aucune langue</h3><p>Ajoutez votre première langue.</p></div>
+  } @else {
+    <div class="language-list">
+      @for (item of languages(); track item.id) {
+        <article class="language">
+          <div class="language-header">
+            <h3>{{ item.name }}</h3>
+            <div class="language-actions">
+              <button type="button" (click)="startEditing(item)" [disabled]="saving() || deleting()" [attr.aria-label]="'Modifier ' + item.name">Modifier</button>
+              <button class="delete-button" type="button" (click)="requestDelete(item.id)" [disabled]="saving() || deleting()" [attr.aria-label]="'Supprimer ' + item.name">Supprimer</button>
+            </div>
+          </div>
+          <p>Niveau : {{ item.proficiencyLevel }}</p>
+          @if (deletingId() === item.id) {
+            <div class="delete-confirmation">
+              <p>Supprimer « {{ item.name }} » ?</p>
+              <div class="language-actions">
+                <button type="button" (click)="cancelDelete()" [disabled]="deleting()">Annuler</button>
+                <button class="delete-confirm-button" type="button" (click)="deleteLanguage(item.id)" [disabled]="deleting()">{{ deleting() ? 'Suppression…' : 'Confirmer' }}</button>
+              </div>
+              @if (deleteError()) { <p class="field-error" role="alert">{{ deleteError() }}</p> }
+            </div>
+          }
+        </article>
+      }
+    </div>
+  }
+</section>

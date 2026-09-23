@@ -1,0 +1,66 @@
+<section class="links-card" aria-labelledby="links-title">
+  <div class="card-header">
+    <div><h2 id="links-title">Liens</h2><p>Les liens utilisés pour enrichir vos candidatures.</p></div>
+    <button class="add-button" type="button" (click)="startAdding()" [disabled]="loading() || !!error() || saving() || deleting()">+ Ajouter</button>
+  </div>
+  @if (adding() || editingId()) {
+    <form class="link-form" [formGroup]="form" (ngSubmit)="saveLink()">
+      <h3>{{ editingId() ? 'Modifier le lien' : 'Nouveau lien' }}</h3>
+      <fieldset [disabled]="saving() || deleting()">
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="link-name">Nom du lien *</label>
+            <input id="link-name" formControlName="name" maxlength="100" placeholder="GitHub, LinkedIn, Portfolio…" aria-describedby="link-name-error" [attr.aria-invalid]="form.controls.name.touched && form.controls.name.invalid" />
+            <span id="link-name-error" class="field-error">@if (form.controls.name.touched && form.controls.name.invalid) { Renseignez un nom (100 caractères maximum). }</span>
+          </div>
+          <div class="form-field">
+            <label for="link-level">URL * </label>
+            <input id="link-level" type="url" formControlName="url" maxlength="2000" placeholder="https://example.com" aria-describedby="link-level-error" [attr.aria-invalid]="form.controls.url.touched && form.controls.url.invalid" />
+            <span id="link-level-error" class="field-error">@if (form.controls.url.touched && form.controls.url.invalid) { Saisissez une URL HTTP ou HTTPS (2 000 caractères maximum). }</span>
+          </div>
+        </div>
+      </fieldset>
+      @if (saveError()) { <p class="save-error" role="alert">{{ saveError() }}</p> }
+      <div class="form-actions">
+        <button type="button" (click)="cancelForm()" [disabled]="saving() || deleting()">Annuler</button>
+        <button class="save-button" type="submit" [disabled]="saving() || deleting()">{{ saving() ? 'Enregistrement…' : 'Enregistrer' }}</button>
+      </div>
+    </form>
+  }
+  @if (loading()) {
+    <p class="state" role="status">Chargement des liens…</p>
+  } @else if (error()) {
+    <div class="state state--error" role="alert"><p>{{ error() }}</p><button type="button" (click)="loadLinks()">Réessayer</button></div>
+  } @else if (links().length === 0) {
+    <div class="empty-state"><h3>Aucun lien</h3><p>Ajoutez votre premier lien.</p></div>
+  } @else {
+    <div class="link-list">
+      @for (item of links(); track item.id) {
+        <article class="link">
+          <div class="link-header">
+            <h3>{{ item.name }}</h3>
+            <div class="link-actions">
+              <button type="button" (click)="startEditing(item)" [disabled]="saving() || deleting()" [attr.aria-label]="'Modifier ' + item.name">Modifier</button>
+              <button class="delete-button" type="button" (click)="requestDelete(item.id)" [disabled]="saving() || deleting()" [attr.aria-label]="'Supprimer ' + item.name">Supprimer</button>
+            </div>
+          </div>
+          @if (safeUrl(item.url); as url) {
+            <a [href]="url" target="_blank" rel="noopener noreferrer">{{ item.url }} <span class="sr-only">(nouvel onglet)</span> ↗</a>
+          } @else {
+            <p class="field-error">URL invalide : modifiez ce lien.</p>
+          }
+          @if (deletingId() === item.id) {
+            <div class="delete-confirmation">
+              <p>Supprimer « {{ item.name }} » ?</p>
+              <div class="link-actions">
+                <button type="button" (click)="cancelDelete()" [disabled]="deleting()">Annuler</button>
+                <button class="delete-confirm-button" type="button" (click)="deleteLink(item.id)" [disabled]="deleting()">{{ deleting() ? 'Suppression…' : 'Confirmer' }}</button>
+              </div>
+              @if (deleteError()) { <p class="field-error" role="alert">{{ deleteError() }}</p> }
+            </div>
+          }
+        </article>
+      }
+    </div>
+  }
+</section>

@@ -1,4 +1,9 @@
-﻿using JobApplicationAgent.Profile.Application.Profiles.Create;
+using JobApplicationAgent.Profile.Application.Profiles.Update;
+using JobApplicationAgent.Profile.Application.Profiles.Preferences.Add;
+using JobApplicationAgent.Profile.Application.Profiles.Preferences.Get;
+using JobApplicationAgent.Profile.Application.Profiles.Preferences.Update;
+using JobApplicationAgent.Profile.Application.Profiles.Preferences.Delete;
+using JobApplicationAgent.Profile.Application.Profiles.Create;
 using JobApplicationAgent.Profile.Application.Profiles.Get;
 using Microsoft.AspNetCore.Mvc;
 using JobApplicationAgent.Profile.Application.Profiles.Experiences.Add;
@@ -14,9 +19,17 @@ using JobApplicationAgent.Profile.Application.Profiles.Skills.Get;
 using JobApplicationAgent.Profile.Application.Profiles.Skills.Update;
 using JobApplicationAgent.Profile.Application.Profiles.Skills.Delete;
 using JobApplicationAgent.Profile.Application.Profiles.Languages.Add;
+using JobApplicationAgent.Profile.Application.Profiles.Links.Add;
+using JobApplicationAgent.Profile.Application.Profiles.Certifications.Add;
 using JobApplicationAgent.Profile.Application.Profiles.Languages.Get;
+using JobApplicationAgent.Profile.Application.Profiles.Links.Get;
+using JobApplicationAgent.Profile.Application.Profiles.Certifications.Get;
 using JobApplicationAgent.Profile.Application.Profiles.Languages.Update;
+using JobApplicationAgent.Profile.Application.Profiles.Links.Update;
+using JobApplicationAgent.Profile.Application.Profiles.Certifications.Update;
 using JobApplicationAgent.Profile.Application.Profiles.Languages.Delete;
+using JobApplicationAgent.Profile.Application.Profiles.Links.Delete;
+using JobApplicationAgent.Profile.Application.Profiles.Certifications.Delete;
 
 
 namespace JobApplicationAgent.Profile.Api.Controllers
@@ -24,6 +37,7 @@ namespace JobApplicationAgent.Profile.Api.Controllers
     [ApiController]
     [Route("api/v1/profile")]
     public sealed class ProfileController(CreateCandidateProfileHandler createHandler,
+                                            UpdateCandidateProfileHandler updateHandler,
                                             GetCandidateProfileHandler getHandler,
                                             AddProfessionalExperienceHandler addExperienceHandler,
                                             GetProfessionalExperiencesHandler getExperiencesHandler,
@@ -40,7 +54,19 @@ namespace JobApplicationAgent.Profile.Api.Controllers
                                             AddLanguageHandler addLanguageHandler,
                                             GetLanguagesHandler getLanguagesHandler,
                                             UpdateLanguageHandler updateLanguageHandler,
-                                            DeleteLanguageHandler deleteLanguageHandler
+                                            DeleteLanguageHandler deleteLanguageHandler,
+                                            AddCertificationHandler addCertificationHandler,
+                                            GetCertificationsHandler getCertificationsHandler,
+                                            UpdateCertificationHandler updateCertificationHandler,
+                                            DeleteCertificationHandler deleteCertificationHandler,
+                                            AddLinkHandler addLinkHandler,
+                                            GetLinksHandler getLinksHandler,
+                                            UpdateLinkHandler updateLinkHandler,
+                                            DeleteLinkHandler deleteLinkHandler,
+                                            AddPreferencesHandler addPreferencesHandler,
+                                            GetPreferencesHandler getPreferencesHandler,
+                                            UpdatePreferencesHandler updatePreferencesHandler,
+                                            DeletePreferencesHandler deletePreferencesHandler
                                             ) : ControllerBase
     {
         [HttpGet]
@@ -49,6 +75,12 @@ namespace JobApplicationAgent.Profile.Api.Controllers
             var profile = await getHandler.HandleAsync(cancellationToken);
 
             return profile is null ? NotFound() : Ok(profile);
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> Update(UpdateCandidateProfileCommand command, CancellationToken cancellationToken)
+        {
+            return Ok(await updateHandler.HandleAsync(command, cancellationToken));
         }
 
         [HttpPost]
@@ -197,6 +229,108 @@ namespace JobApplicationAgent.Profile.Api.Controllers
                 languageId,
                 cancellationToken);
 
+            return NoContent();
+        }
+        [HttpPost("links")]
+        public async Task<IActionResult> AddLink(AddLinkCommand command, CancellationToken cancellationToken)
+        {
+            var link = await addLinkHandler.HandleAsync(
+                command,
+                cancellationToken);
+
+            return StatusCode(
+                StatusCodes.Status201Created,
+                link);
+        }
+        [HttpGet("links")]
+        public async Task<IActionResult> GetLinks(CancellationToken cancellationToken)
+        {
+            var links = await getLinksHandler.HandleAsync(cancellationToken);
+
+            return Ok(links);
+        }
+        [HttpPut("links/{linkId:guid}")]
+        public async Task<IActionResult> UpdateLink(Guid linkId, UpdateLinkCommand command, CancellationToken cancellationToken)
+        {
+            var link =
+                await updateLinkHandler.HandleAsync(
+                    linkId,
+                    command,
+                    cancellationToken);
+
+            return Ok(link);
+        }
+        [HttpDelete("links/{linkId:guid}")]
+        public async Task<IActionResult> DeleteLink(Guid linkId, CancellationToken cancellationToken)
+        {
+            await deleteLinkHandler.HandleAsync(
+                linkId,
+                cancellationToken);
+
+            return NoContent();
+        }
+        [HttpPost("certifications")]
+        public async Task<IActionResult> AddCertification(AddCertificationCommand command, CancellationToken cancellationToken)
+        {
+            var certification = await addCertificationHandler.HandleAsync(
+                command,
+                cancellationToken);
+
+            return StatusCode(
+                StatusCodes.Status201Created,
+                certification);
+        }
+        [HttpGet("certifications")]
+        public async Task<IActionResult> GetCertifications(CancellationToken cancellationToken)
+        {
+            var certifications = await getCertificationsHandler.HandleAsync(cancellationToken);
+
+            return Ok(certifications);
+        }
+        [HttpPut("certifications/{certificationId:guid}")]
+        public async Task<IActionResult> UpdateCertification(Guid certificationId, UpdateCertificationCommand command, CancellationToken cancellationToken)
+        {
+            var certification =
+                await updateCertificationHandler.HandleAsync(
+                    certificationId,
+                    command,
+                    cancellationToken);
+
+            return Ok(certification);
+        }
+        [HttpDelete("certifications/{certificationId:guid}")]
+        public async Task<IActionResult> DeleteCertification(Guid certificationId, CancellationToken cancellationToken)
+        {
+            await deleteCertificationHandler.HandleAsync(
+                certificationId,
+                cancellationToken);
+
+            return NoContent();
+        }
+
+        [HttpPost("preferences")]
+        public async Task<IActionResult> AddPreferences(AddPreferencesCommand command, CancellationToken cancellationToken)
+        {
+            var preferences = await addPreferencesHandler.HandleAsync(command, cancellationToken);
+            return CreatedAtAction(nameof(GetPreferences), preferences);
+        }
+
+        [HttpGet("preferences")]
+        public async Task<IActionResult> GetPreferences(CancellationToken cancellationToken)
+        {
+            return Ok(await getPreferencesHandler.HandleAsync(cancellationToken));
+        }
+
+        [HttpPut("preferences")]
+        public async Task<IActionResult> UpdatePreferences(UpdatePreferencesCommand command, CancellationToken cancellationToken)
+        {
+            return Ok(await updatePreferencesHandler.HandleAsync(command, cancellationToken));
+        }
+
+        [HttpDelete("preferences")]
+        public async Task<IActionResult> DeletePreferences(CancellationToken cancellationToken)
+        {
+            await deletePreferencesHandler.HandleAsync(cancellationToken);
             return NoContent();
         }
     }

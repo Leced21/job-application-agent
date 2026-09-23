@@ -1,4 +1,4 @@
-﻿using JobApplicationAgent.Profile.Domain.Entities;
+using JobApplicationAgent.Profile.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -12,6 +12,10 @@ namespace JobApplicationAgent.Profile.Infrastructure.Persistence.Configurations
             builder.ToTable("candidate_profiles");
 
             builder.HasKey(x => x.Id);
+            builder.HasOne(x => x.Preferences)
+                .WithOne(x => x.CandidateProfile)
+                .HasForeignKey<CandidatePreferences>(x => x.CandidateProfileId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             builder.Property(x => x.FirstName)
                 .HasMaxLength(100)
@@ -43,22 +47,30 @@ namespace JobApplicationAgent.Profile.Infrastructure.Persistence.Configurations
             builder.HasIndex(x => x.Email)
                 .IsUnique();
             builder.HasMany(x => x.ProfessionalExperiences)
-                .WithOne()
+                .WithOne(x => x.CandidateProfile)
                 .HasForeignKey(x => x.CandidateProfileId)
                 .OnDelete(DeleteBehavior.Cascade);
             builder.Navigation(x => x.ProfessionalExperiences)
                 .UsePropertyAccessMode(PropertyAccessMode.Field);
 
             builder.HasMany(x => x.Educations)
-                .WithOne()
+                .WithOne(x => x.CandidateProfile)
                 .HasForeignKey(x => x.CandidateProfileId)
                 .OnDelete(DeleteBehavior.Cascade);
             builder.HasMany(x => x.Skills)
-                .WithOne()
+                .WithOne(x => x.CandidateProfile)
                 .HasForeignKey(x => x.CandidateProfileId)
                 .OnDelete(DeleteBehavior.Cascade);
             builder.HasMany(x => x.Languages)
-                .WithOne()
+                .WithOne(x => x.CandidateProfile)
+                .HasForeignKey(x => x.CandidateProfileId)
+                .OnDelete(DeleteBehavior.Cascade);
+            builder.HasMany(x => x.Links)
+                .WithOne(x => x.CandidateProfile)
+                .HasForeignKey(x => x.CandidateProfileId)
+                .OnDelete(DeleteBehavior.Cascade);
+            builder.HasMany(x => x.Certifications)
+                .WithOne(x => x.CandidateProfile)
                 .HasForeignKey(x => x.CandidateProfileId)
                 .OnDelete(DeleteBehavior.Cascade);
         }

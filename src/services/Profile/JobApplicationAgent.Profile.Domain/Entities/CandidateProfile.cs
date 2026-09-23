@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -15,6 +15,8 @@ namespace JobApplicationAgent.Profile.Domain.Entities
         private readonly List<Education> _educations = [];
         private readonly List<Skill> _skills = [];
         private readonly List<Language> _languages = [];
+        private readonly List<Link> _links = [];
+        private readonly List<Certification> _certifications = [];
 
         public CandidateProfile(
             string firstName,
@@ -47,6 +49,27 @@ namespace JobApplicationAgent.Profile.Domain.Entities
         public IReadOnlyCollection<Education> Educations => _educations;
         public IReadOnlyCollection<Skill> Skills => _skills;
         public IReadOnlyCollection<Language> Languages => _languages;
+        public IReadOnlyCollection<Link> Links => _links;
+        public IReadOnlyCollection<Certification> Certifications => _certifications;
+        public CandidatePreferences? Preferences { get; private set; }
+
+        public void Update(
+            string firstName,
+            string lastName,
+            string email,
+            string? phoneNumber = null,
+            string? jobTitle = null,
+            string? summary = null)
+        {
+            FirstName = firstName;
+            LastName = lastName;
+            Email = email;
+            PhoneNumber = phoneNumber;
+            JobTitle = jobTitle;
+            Summary = summary;
+            UpdatedAtUtc = DateTime.UtcNow;
+        }
+
         public ProfessionalExperience AddProfessionalExperience(
             string companyName,
             string jobTitle,
@@ -298,6 +321,162 @@ namespace JobApplicationAgent.Profile.Domain.Entities
             _languages.Remove(language);
             UpdatedAtUtc = DateTime.UtcNow;
 
+            return true;
+        }
+        public Link AddLink(
+    string name,
+    string url)
+        {
+            var link = new Link(
+                Id,
+                name,
+                url);
+
+            _links.Add(link);
+            UpdatedAtUtc = DateTime.UtcNow;
+
+            return link;
+        }
+
+        public Link? UpdateLink(
+            Guid linkId,
+            string name,
+            string url)
+        {
+            var link =
+                _links.SingleOrDefault(x => x.Id == linkId);
+
+            if (link is null)
+                return null;
+
+            link.Update(
+                name,
+                url);
+
+            UpdatedAtUtc = DateTime.UtcNow;
+
+            return link;
+        }
+
+        public bool RemoveLink(Guid linkId)
+        {
+            var link =
+                _links.SingleOrDefault(x => x.Id == linkId);
+
+            if (link is null)
+                return false;
+
+            _links.Remove(link);
+            UpdatedAtUtc = DateTime.UtcNow;
+
+            return true;
+        }
+        public Certification AddCertification(
+            string name,
+            string issuingOrganization,
+            DateOnly issueDate,
+            DateOnly? expirationDate = null,
+            string? credentialId = null,
+            string? credentialUrl = null)
+        {
+            var certification = new Certification(
+                Id,
+                name,
+                issuingOrganization,
+                issueDate,
+                expirationDate,
+                credentialId,
+                credentialUrl);
+
+            _certifications.Add(certification);
+            UpdatedAtUtc = DateTime.UtcNow;
+
+            return certification;
+        }
+
+        public Certification? UpdateCertification(
+            Guid certificationId,
+            string name,
+            string issuingOrganization,
+            DateOnly issueDate,
+            DateOnly? expirationDate = null,
+            string? credentialId = null,
+            string? credentialUrl = null)
+        {
+            var certification =
+                _certifications.SingleOrDefault(x => x.Id == certificationId);
+
+            if (certification is null)
+                return null;
+
+            certification.Update(
+                name,
+                issuingOrganization,
+                issueDate,
+                expirationDate,
+                credentialId,
+                credentialUrl);
+
+            UpdatedAtUtc = DateTime.UtcNow;
+
+            return certification;
+        }
+
+        public bool RemoveCertification(Guid certificationId)
+        {
+            var certification =
+                _certifications.SingleOrDefault(x => x.Id == certificationId);
+
+            if (certification is null)
+                return false;
+
+            _certifications.Remove(certification);
+            UpdatedAtUtc = DateTime.UtcNow;
+
+            return true;
+        }
+
+        public CandidatePreferences AddPreferences(
+            string[] desiredJobTitles,
+            string[] preferredLocations,
+            string[] contractTypes,
+            string[] workModes,
+            decimal? minimumAnnualGrossSalary = null,
+            string? salaryCurrency = null,
+            DateOnly? availableFrom = null)
+        {
+            if (Preferences is not null)
+                throw new InvalidOperationException("Candidate preferences already exist.");
+
+            Preferences = new CandidatePreferences(Id, desiredJobTitles, preferredLocations, contractTypes, workModes, minimumAnnualGrossSalary, salaryCurrency, availableFrom);
+            UpdatedAtUtc = DateTime.UtcNow;
+            return Preferences;
+        }
+
+        public CandidatePreferences? UpdatePreferences(
+            string[] desiredJobTitles,
+            string[] preferredLocations,
+            string[] contractTypes,
+            string[] workModes,
+            decimal? minimumAnnualGrossSalary = null,
+            string? salaryCurrency = null,
+            DateOnly? availableFrom = null)
+        {
+            if (Preferences is null)
+                return null;
+
+            Preferences.Update(desiredJobTitles, preferredLocations, contractTypes, workModes, minimumAnnualGrossSalary, salaryCurrency, availableFrom);
+            UpdatedAtUtc = DateTime.UtcNow;
+            return Preferences;
+        }
+
+        public bool RemovePreferences()
+        {
+            if (Preferences is null)
+                return false;
+
+            Preferences = null;
+            UpdatedAtUtc = DateTime.UtcNow;
             return true;
         }
     }

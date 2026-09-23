@@ -1,4 +1,4 @@
-﻿using JobApplicationAgent.Profile.Application.Abstractions;
+using JobApplicationAgent.Profile.Application.Abstractions;
 using JobApplicationAgent.Profile.Domain.Entities;
 using JobApplicationAgent.Profile.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -7,6 +7,13 @@ namespace JobApplicationAgent.Profile.Infrastructure.Repositories
 {
     public sealed class CandidateProfileRepository(ProfileDbContext dbContext) : ICandidateProfileRepository
     {
+        public Task<CandidateProfile?> GetWithPreferencesAsync(CancellationToken cancellationToken = default)
+        {
+            return dbContext.CandidateProfiles.AsNoTracking()
+                .Include(x => x.Preferences)
+                .SingleOrDefaultAsync(cancellationToken);
+        }
+
         public Task<CandidateProfile?> GetAsync(CancellationToken cancellationToken = default)
         {
             return dbContext.CandidateProfiles
@@ -26,10 +33,13 @@ namespace JobApplicationAgent.Profile.Infrastructure.Repositories
         public Task<CandidateProfile?> GetForUpdateAsync(CancellationToken cancellationToken = default)
         {
             return dbContext.CandidateProfiles
+                            .Include(x => x.Preferences)
                             .Include(x => x.ProfessionalExperiences)
                             .Include(x => x.Educations)
                             .Include(x => x.Skills)
                             .Include(x => x.Languages)
+                            .Include(x => x.Links)
+                            .Include(x => x.Certifications)
                             .SingleOrDefaultAsync(cancellationToken);
         }
         public Task<CandidateProfile?> GetWithProfessionalExperiencesAsync(CancellationToken cancellationToken = default)
@@ -58,6 +68,20 @@ namespace JobApplicationAgent.Profile.Infrastructure.Repositories
             return dbContext.CandidateProfiles
                 .AsNoTracking()
                 .Include(x => x.Languages)
+                .SingleOrDefaultAsync(cancellationToken);
+        }
+        public Task<CandidateProfile?> GetWithLinksAsync(CancellationToken cancellationToken = default)
+        {
+            return dbContext.CandidateProfiles
+                .AsNoTracking()
+                .Include(x => x.Links)
+                .SingleOrDefaultAsync(cancellationToken);
+        }
+        public Task<CandidateProfile?> GetWithCertificationsAsync(CancellationToken cancellationToken = default)
+        {
+            return dbContext.CandidateProfiles
+                .AsNoTracking()
+                .Include(x => x.Certifications)
                 .SingleOrDefaultAsync(cancellationToken);
         }
     }

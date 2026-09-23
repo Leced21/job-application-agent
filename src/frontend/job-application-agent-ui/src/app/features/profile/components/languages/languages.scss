@@ -1,0 +1,43 @@
+:host { display: block; }
+.languages-card { padding: 28px; border: 1px solid #e7eaf0; border-radius: 18px; background: #fff; }
+.card-header, .language-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
+.card-header { padding-bottom: 22px; border-bottom: 1px solid #edf0f4; }
+h2, h3 { margin: 0; color: #172033; }
+h2 { font-size: 17px; } h3 { font-size: 15px; overflow-wrap: anywhere; }
+p { color: #687386; font-size: 13px; line-height: 1.5; }
+.card-header p { margin: 6px 0 0; }
+button { padding: 9px 14px; border: 1px solid #d8dee9; border-radius: 9px; background: #fff; color: #596579; cursor: pointer; font-size: 12px; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+button:focus-visible, a:focus-visible { outline: 2px solid #6574d9; outline-offset: 3px; }
+.add-button, .save-button { background: #172033; color: #fff; flex-shrink: 0; }
+.language-form { margin-top: 24px; padding: 24px; border: 1px solid #e4e8f0; border-radius: 16px; background: #f9fafc; }
+fieldset { border: 0; padding: 0; margin: 24px 0 0; min-width: 0; }
+.form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 24px; }
+.form-field { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+label { color: #4b5565; font-size: 12px; font-weight: 600; }
+input { box-sizing: border-box; width: 100%; min-width: 0; padding: 11px 13px; border: 1px solid #d8dee9; border-radius: 9px; color: #172033; background: #fff; }
+input:focus { outline: 2px solid #6574d9; outline-offset: 1px; }
+.field-error { color: #b42318; font-size: 12px; }
+.save-error, .state--error { color: #b42318; background: #fff3f3; padding: 12px; border-radius: 8px; }
+.form-actions, .language-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.form-actions { justify-content: flex-end; margin-top: 20px; }
+.state, .empty-state { margin: 24px 0 0; padding: 20px; border-radius: 12px; background: #f9fafc; }
+.language { padding: 24px 0; border-bottom: 1px solid #edf0f4; }
+.language:last-child { border-bottom: 0; padding-bottom: 0; }
+.issuer { margin: 6px 0; overflow-wrap: anywhere; }
+.credential-id { overflow-wrap: anywhere; }
+a { color: #4b59bb; font-size: 13px; }
+.delete-button { color: #b42318; }
+.delete-confirmation { margin-top: 16px; padding: 16px; border: 1px solid #f0d3d3; border-radius: 10px; background: #fffafa; }
+.delete-confirm-button { background: #b42318; color: #fff; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+@media (max-width: 700px) {
+  .languages-card { padding: 20px; }
+  .card-header, .language-header { flex-direction: column; gap: 12px; }
+  .form-grid { grid-template-columns: 1fr; }
+  .language-form { padding: 16px; }
+  .add-button { width: 100%; }
+  .form-actions { flex-direction: column-reverse; }
+}
+
+.language p { overflow-wrap: anywhere; }
