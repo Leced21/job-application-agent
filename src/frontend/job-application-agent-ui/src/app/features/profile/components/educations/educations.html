@@ -1,0 +1,106 @@
+<section class="educations-card" aria-labelledby="educations-title">
+  <div class="card-header">
+    <div><h2 id="educations-title">Formations</h2><p>Vos diplômes et votre parcours de formation.</p></div>
+    <button class="add-button" type="button" (click)="startAdding()" [disabled]="loading() || !!error() || saving() || deleting()">+ Ajouter</button>
+  </div>
+  @if (adding() || editingId()) {
+    <form class="education-form" [formGroup]="form" (ngSubmit)="saveEducation()">
+      <h3>{{ editingId() ? 'Modifier la formation' : 'Nouvelle formation' }}</h3>
+      <fieldset [disabled]="saving() || deleting()">
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="education-institutionName">Établissement *</label>
+            <input id="education-institutionName" type="text" formControlName="institutionName" maxlength="200" [attr.aria-invalid]="form.controls.institutionName.touched && form.controls.institutionName.invalid" aria-describedby="education-institutionName-error" />
+            <span id="education-institutionName-error" class="field-error">
+              @if (form.controls.institutionName.touched && form.controls.institutionName.invalid) { Renseignez un établissement (200 caractères maximum). }
+            </span>
+          </div>
+          <div class="form-field">
+            <label for="education-degree">Diplôme *</label>
+            <input id="education-degree" type="text" formControlName="degree" maxlength="150" [attr.aria-invalid]="form.controls.degree.touched && form.controls.degree.invalid" aria-describedby="education-degree-error" />
+            <span id="education-degree-error" class="field-error">
+              @if (form.controls.degree.touched && form.controls.degree.invalid) { Renseignez un diplôme (150 caractères maximum). }
+            </span>
+          </div>
+          <div class="form-field">
+            <label for="education-fieldOfStudy">Domaine d’études</label>
+            <input id="education-fieldOfStudy" type="text" formControlName="fieldOfStudy" maxlength="200" [attr.aria-invalid]="form.controls.fieldOfStudy.touched && form.controls.fieldOfStudy.invalid" aria-describedby="education-fieldOfStudy-error" />
+            <span id="education-fieldOfStudy-error" class="field-error">
+              @if (form.controls.fieldOfStudy.touched && form.controls.fieldOfStudy.invalid) { 200 caractères maximum. }
+            </span>
+          </div>
+          <div class="form-field">
+            <label for="education-location">Localisation</label>
+            <input id="education-location" type="text" formControlName="location" maxlength="200" [attr.aria-invalid]="form.controls.location.touched && form.controls.location.invalid" aria-describedby="education-location-error" />
+            <span id="education-location-error" class="field-error">
+              @if (form.controls.location.touched && form.controls.location.invalid) { 200 caractères maximum. }
+            </span>
+          </div>
+          <div class="form-field">
+            <label for="education-startDate">Date de début *</label>
+            <input id="education-startDate" type="date" formControlName="startDate" [attr.aria-invalid]="form.controls.startDate.touched && form.controls.startDate.invalid" aria-describedby="education-startDate-error" />
+            <span id="education-startDate-error" class="field-error">
+              @if (form.controls.startDate.touched && form.controls.startDate.invalid) { Renseignez la date de début. }
+            </span>
+          </div>
+          <div class="form-field">
+            <label for="education-endDate">Date de fin</label>
+            <input id="education-endDate" type="date" formControlName="endDate" [attr.aria-invalid]="form.controls.endDate.touched && form.controls.endDate.invalid" aria-describedby="education-endDate-error" />
+            <span id="education-endDate-error" class="field-error">
+            </span>
+          </div>
+          <label class="current-field"><input type="checkbox" formControlName="isCurrent" /> Formation en cours</label>
+          <div class="form-field wide">
+            <label for="education-description">Description</label>
+            <textarea id="education-description" rows="4" maxlength="4000" formControlName="description" aria-describedby="education-description-error"></textarea>
+            <span id="education-description-error" class="field-error">@if (form.controls.description.touched && form.controls.description.invalid) { 4 000 caractères maximum. }</span>
+          </div>
+        </div>
+        @if (form.hasError('dateOrder') && form.controls.endDate.touched) {
+          <p class="field-error" role="alert">La date de fin doit être postérieure ou égale à la date de début.</p>
+        }
+      </fieldset>
+      @if (saveError()) { <p class="save-error" role="alert">{{ saveError() }}</p> }
+      <div class="form-actions">
+        <button class="cancel-button" type="button" (click)="cancelForm()" [disabled]="saving() || deleting()">Annuler</button>
+        <button class="save-button" type="submit" [disabled]="saving() || deleting()">{{ saving() ? 'Enregistrement…' : 'Enregistrer' }}</button>
+      </div>
+    </form>
+  }
+  @if (loading()) {
+    <p class="state" role="status">Chargement des formations…</p>
+  } @else if (error()) {
+    <div class="state state--error" role="alert"><p>{{ error() }}</p><button type="button" (click)="loadEducations()">Réessayer</button></div>
+  } @else if (educations().length === 0) {
+    <div class="empty-state"><h3>Aucune formation</h3><p>Ajoutez votre première formation.</p></div>
+  } @else {
+    <div class="education-list">
+      @for (item of educations(); track item.id) {
+        <article class="education">
+          <div class="education-header">
+            <div><h3>{{ item.degree }}</h3><p class="issuer">{{ item.institutionName }} @if (item.location) { · {{ item.location }} }</p></div>
+            <div class="education-actions">
+              <button type="button" (click)="startEditing(item)" [disabled]="saving() || deleting()" [attr.aria-label]="'Modifier ' + item.degree">Modifier</button>
+              <button class="delete-button" type="button" (click)="requestDelete(item.id)" [disabled]="saving() || deleting()" [attr.aria-label]="'Supprimer ' + item.degree">Supprimer</button>
+            </div>
+          </div>
+          <p class="period">{{ formatDate(item.startDate) }} —
+            @if (item.isCurrent) { En cours } @else if (item.endDate) { {{ formatDate(item.endDate) }} } @else { Date de fin non renseignée }
+          </p>
+          @if (item.fieldOfStudy) { <p>{{ item.fieldOfStudy }}</p> }
+          @if (item.description) { <p class="description">{{ item.description }}</p> }
+          @if (deletingId() === item.id) {
+            <div class="delete-confirmation">
+              <p>Supprimer « {{ item.degree }} — {{ item.institutionName }} » ?</p>
+              <div class="education-actions">
+                <button type="button" (click)="cancelDelete()" [disabled]="deleting()">Annuler</button>
+                <button class="delete-confirm-button" type="button" (click)="deleteEducation(item.id)" [disabled]="deleting()">{{ deleting() ? 'Suppression…' : 'Confirmer' }}</button>
+              </div>
+              @if (deleteError()) { <p class="field-error" role="alert">{{ deleteError() }}</p> }
+            </div>
+          }
+        </article>
+      }
+    </div>
+  }
+</section>

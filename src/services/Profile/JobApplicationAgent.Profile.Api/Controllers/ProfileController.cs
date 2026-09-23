@@ -1,3 +1,5 @@
+using JobApplicationAgent.Profile.Application.Profiles.Update;
+using JobApplicationAgent.Profile.Application.Profiles.Preferences.Add;
 using JobApplicationAgent.Profile.Application.Profiles.Preferences.Get;
 using JobApplicationAgent.Profile.Application.Profiles.Preferences.Update;
 using JobApplicationAgent.Profile.Application.Profiles.Preferences.Delete;
@@ -35,6 +37,7 @@ namespace JobApplicationAgent.Profile.Api.Controllers
     [ApiController]
     [Route("api/v1/profile")]
     public sealed class ProfileController(CreateCandidateProfileHandler createHandler,
+                                            UpdateCandidateProfileHandler updateHandler,
                                             GetCandidateProfileHandler getHandler,
                                             AddProfessionalExperienceHandler addExperienceHandler,
                                             GetProfessionalExperiencesHandler getExperiencesHandler,
@@ -60,6 +63,7 @@ namespace JobApplicationAgent.Profile.Api.Controllers
                                             GetLinksHandler getLinksHandler,
                                             UpdateLinkHandler updateLinkHandler,
                                             DeleteLinkHandler deleteLinkHandler,
+                                            AddPreferencesHandler addPreferencesHandler,
                                             GetPreferencesHandler getPreferencesHandler,
                                             UpdatePreferencesHandler updatePreferencesHandler,
                                             DeletePreferencesHandler deletePreferencesHandler
@@ -71,6 +75,12 @@ namespace JobApplicationAgent.Profile.Api.Controllers
             var profile = await getHandler.HandleAsync(cancellationToken);
 
             return profile is null ? NotFound() : Ok(profile);
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> Update(UpdateCandidateProfileCommand command, CancellationToken cancellationToken)
+        {
+            return Ok(await updateHandler.HandleAsync(command, cancellationToken));
         }
 
         [HttpPost]
@@ -296,6 +306,13 @@ namespace JobApplicationAgent.Profile.Api.Controllers
                 cancellationToken);
 
             return NoContent();
+        }
+
+        [HttpPost("preferences")]
+        public async Task<IActionResult> AddPreferences(AddPreferencesCommand command, CancellationToken cancellationToken)
+        {
+            var preferences = await addPreferencesHandler.HandleAsync(command, cancellationToken);
+            return CreatedAtAction(nameof(GetPreferences), preferences);
         }
 
         [HttpGet("preferences")]

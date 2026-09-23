@@ -1,0 +1,153 @@
+<section class="certifications-card" aria-labelledby="certifications-title">
+  <div class="card-header">
+    <div><h2 id="certifications-title">Certifications</h2><p>Vos certifications
+        et justificatifs professionnels.</p></div>
+    <button class="add-button" type="button" (click)="startAdding()"
+      [disabled]="loading() || !!error() || saving() || deleting()">+
+      Ajouter</button>
+  </div>
+  @if (adding() || editingId()) {
+  <form class="certification-form" [formGroup]="form"
+    (ngSubmit)="saveCertification()">
+    <h3>{{ editingId() ? 'Modifier la certification' : 'Nouvelle certification'
+      }}</h3>
+    <fieldset [disabled]="saving() || deleting()">
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="certification-name">Nom de la certification *</label>
+          <input id="certification-name" type="text" formControlName="name"
+            maxlength="200"
+            [attr.aria-invalid]="form.controls.name.touched && form.controls.name.invalid"
+            aria-describedby="certification-name-error" />
+          <span id="certification-name-error" class="field-error">
+            @if (form.controls.name.touched && form.controls.name.invalid) {
+            Renseignez un nom (200 caractères maximum). }
+          </span>
+        </div>
+        <div class="form-field">
+          <label for="certification-issuingOrganization">Organisme émetteur
+            *</label>
+          <input id="certification-issuingOrganization" type="text"
+            formControlName="issuingOrganization" maxlength="200"
+            [attr.aria-invalid]="form.controls.issuingOrganization.touched && form.controls.issuingOrganization.invalid"
+            aria-describedby="certification-issuingOrganization-error" />
+          <span id="certification-issuingOrganization-error"
+            class="field-error">
+            @if (form.controls.issuingOrganization.touched &&
+            form.controls.issuingOrganization.invalid) { Renseignez un organisme
+            (200 caractères maximum). }
+          </span>
+        </div>
+        <div class="form-field">
+          <label for="certification-issueDate">Date d’obtention *</label>
+          <input id="certification-issueDate" type="date"
+            formControlName="issueDate"
+            [attr.aria-invalid]="form.controls.issueDate.touched && form.controls.issueDate.invalid"
+            aria-describedby="certification-issueDate-error" />
+          <span id="certification-issueDate-error" class="field-error">
+            @if (form.controls.issueDate.touched &&
+            form.controls.issueDate.invalid) { Renseignez la date d’obtention. }
+          </span>
+        </div>
+        <div class="form-field">
+          <label for="certification-expirationDate">Date d’expiration</label>
+          <input id="certification-expirationDate" type="date"
+            formControlName="expirationDate"
+            [attr.aria-invalid]="form.controls.expirationDate.touched && form.controls.expirationDate.invalid"
+            aria-describedby="certification-expirationDate-error" />
+          <span id="certification-expirationDate-error" class="field-error">
+          </span>
+        </div>
+        <div class="form-field">
+          <label for="certification-credentialId">Identifiant du
+            certificat</label>
+          <input id="certification-credentialId" type="text"
+            formControlName="credentialId" maxlength="200"
+            [attr.aria-invalid]="form.controls.credentialId.touched && form.controls.credentialId.invalid"
+            aria-describedby="certification-credentialId-error" />
+          <span id="certification-credentialId-error" class="field-error">
+            @if (form.controls.credentialId.touched &&
+            form.controls.credentialId.invalid) { 200 caractères maximum. }
+          </span>
+        </div>
+        <div class="form-field">
+          <label for="certification-credentialUrl">URL du certificat</label>
+          <input id="certification-credentialUrl" type="url"
+            formControlName="credentialUrl" maxlength="2000"
+            [attr.aria-invalid]="form.controls.credentialUrl.touched && form.controls.credentialUrl.invalid"
+            aria-describedby="certification-credentialUrl-error" />
+          <span id="certification-credentialUrl-error" class="field-error">
+            @if (form.controls.credentialUrl.touched &&
+            form.controls.credentialUrl.invalid) { Saisissez une URL HTTP ou
+            HTTPS (2 000 caractères maximum). }
+          </span>
+        </div>
+      </div>
+      @if (form.hasError('dateOrder') && form.controls.expirationDate.touched) {
+      <p class="field-error" role="alert">La date d’expiration doit être
+        postérieure ou égale à la date d’obtention.</p>
+      }
+    </fieldset>
+    @if (saveError()) { <p class="save-error" role="alert">{{ saveError() }}</p>
+    }
+    <div class="form-actions">
+      <button class="cancel-button" type="button" (click)="cancelForm()"
+        [disabled]="saving() || deleting()">Annuler</button>
+      <button class="save-button" type="submit"
+        [disabled]="saving() || deleting()">{{ saving() ? 'Enregistrement…' :
+        'Enregistrer' }}</button>
+    </div>
+  </form>
+  }
+  @if (loading()) {
+  <p class="state" role="status">Chargement des certifications…</p>
+  } @else if (error()) {
+  <div class="state state--error" role="alert"><p>{{ error() }}</p><button
+      type="button" (click)="loadCertifications()">Réessayer</button></div>
+  } @else if (certifications().length === 0) {
+  <div class="empty-state"><h3>Aucune certification</h3><p>Ajoutez votre
+      première certification professionnelle.</p></div>
+  } @else {
+  <div class="certification-list">
+    @for (item of certifications(); track item.id) {
+    <article class="certification">
+      <div class="certification-header">
+        <div><h3>{{ item.name }}</h3><p class="issuer">{{
+            item.issuingOrganization }}</p></div>
+        <div class="certification-actions">
+          <button type="button" (click)="startEditing(item)"
+            [disabled]="saving() || deleting()"
+            [attr.aria-label]="'Modifier ' + item.name">Modifier</button>
+          <button class="delete-button" type="button"
+            (click)="requestDelete(item.id)" [disabled]="saving() || deleting()"
+            [attr.aria-label]="'Supprimer ' + item.name">Supprimer</button>
+        </div>
+      </div>
+      <p class="period">Obtenue le {{ formatDate(item.issueDate) }}
+        @if (item.expirationDate) { · Expiration le {{
+        formatDate(item.expirationDate) }} } @else { · Sans date d’expiration }
+      </p>
+      @if (item.credentialId) { <p class="credential-id">Identifiant : {{
+        item.credentialId }}</p> }
+      @if (safeUrl(item.credentialUrl); as url) { <a [href]="url"
+        target="_blank" rel="noopener noreferrer">Voir le certificat <span
+          class="sr-only">(nouvel onglet)</span> ↗</a> }
+      @if (deletingId() === item.id) {
+      <div class="delete-confirmation">
+        <p>Supprimer « {{ item.name }} » ?</p>
+        <div class="certification-actions">
+          <button type="button" (click)="cancelDelete()"
+            [disabled]="deleting()">Annuler</button>
+          <button class="delete-confirm-button" type="button"
+            (click)="deleteCertification(item.id)" [disabled]="deleting()">{{
+            deleting() ? 'Suppression…' : 'Confirmer' }}</button>
+        </div>
+        @if (deleteError()) { <p class="field-error" role="alert">{{
+          deleteError() }}</p> }
+      </div>
+      }
+    </article>
+    }
+  </div>
+  }
+</section>

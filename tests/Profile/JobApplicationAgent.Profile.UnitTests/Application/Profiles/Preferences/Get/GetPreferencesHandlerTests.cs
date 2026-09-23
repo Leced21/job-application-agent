@@ -13,7 +13,7 @@ public sealed class GetPreferencesHandlerTests
     {
         var repository = Substitute.For<ICandidateProfileRepository>();
         var profile = new CandidateProfile("Test", "Candidate", "test@example.com");
-        profile.SetPreferences(["Developer"], ["Paris"], ["CDI"], ["Hybrid"], 50000, "EUR", null);
+        profile.AddPreferences(["Developer"], ["Paris"], ["CDI"], ["Hybrid"], 50000, "EUR", null);
         repository.GetWithPreferencesAsync(Arg.Any<CancellationToken>()).Returns(profile);
         var result = await new GetPreferencesHandler(repository).HandleAsync();
         Assert.Equal(profile.Id, result.CandidateProfileId);

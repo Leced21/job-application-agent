@@ -13,7 +13,7 @@ public sealed class DeletePreferencesHandlerTests
     {
         var repository = Substitute.For<ICandidateProfileRepository>();
         var profile = new CandidateProfile("Test", "Candidate", "test@example.com");
-        profile.SetPreferences([], [], [], [], null, null, null);
+        profile.AddPreferences([], [], [], [], null, null, null);
         repository.GetForUpdateAsync(Arg.Any<CancellationToken>()).Returns(profile);
         await new DeletePreferencesHandler(repository).HandleAsync();
         Assert.Null(profile.Preferences);

@@ -3,10 +3,11 @@
 Un profil possède au maximum un ensemble de préférences. Le profil doit déjà exister.
 
 - GET /api/v1/profile/preferences : 200 avec les préférences, 404 si le profil ou les préférences sont absents.
-- PUT /api/v1/profile/preferences : crée ou remplace toutes les préférences et renvoie 200. Conserve la date de création lors des modifications.
+- POST /api/v1/profile/preferences : crée les préférences et renvoie 201 avec leur URL ; 409 si elles existent déjà, 404 si le profil est absent.
+- PUT /api/v1/profile/preferences : remplace les préférences existantes et renvoie 200 ; 404 si le profil ou les préférences sont absents. Conserve la date de création.
 - DELETE /api/v1/profile/preferences : 204 après suppression, 404 si le profil ou les préférences sont absents.
 
-Exemple de corps PUT :
+Exemple de corps POST ou PUT :
 
 ```json
 {

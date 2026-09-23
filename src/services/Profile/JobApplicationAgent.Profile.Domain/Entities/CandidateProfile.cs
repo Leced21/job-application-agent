@@ -36,8 +36,6 @@ namespace JobApplicationAgent.Profile.Domain.Entities
             CreatedAtUtc = DateTime.UtcNow;
             UpdatedAtUtc = DateTime.UtcNow;
         }
-        public CandidatePreferences? Preferences { get; private set; }
-
         public Guid Id { get; private set; }
         public string FirstName { get; private set; } = string.Empty;
         public string LastName { get; private set; } = string.Empty;
@@ -53,6 +51,25 @@ namespace JobApplicationAgent.Profile.Domain.Entities
         public IReadOnlyCollection<Language> Languages => _languages;
         public IReadOnlyCollection<Link> Links => _links;
         public IReadOnlyCollection<Certification> Certifications => _certifications;
+        public CandidatePreferences? Preferences { get; private set; }
+
+        public void Update(
+            string firstName,
+            string lastName,
+            string email,
+            string? phoneNumber = null,
+            string? jobTitle = null,
+            string? summary = null)
+        {
+            FirstName = firstName;
+            LastName = lastName;
+            Email = email;
+            PhoneNumber = phoneNumber;
+            JobTitle = jobTitle;
+            Summary = summary;
+            UpdatedAtUtc = DateTime.UtcNow;
+        }
+
         public ProfessionalExperience AddProfessionalExperience(
             string companyName,
             string jobTitle,
@@ -419,24 +436,36 @@ namespace JobApplicationAgent.Profile.Domain.Entities
             return true;
         }
 
-        public CandidatePreferences SetPreferences(
+        public CandidatePreferences AddPreferences(
             string[] desiredJobTitles,
             string[] preferredLocations,
             string[] contractTypes,
             string[] workModes,
-            decimal? minimumAnnualGrossSalary,
-            string? salaryCurrency,
-            DateOnly? availableFrom)
+            decimal? minimumAnnualGrossSalary = null,
+            string? salaryCurrency = null,
+            DateOnly? availableFrom = null)
+        {
+            if (Preferences is not null)
+                throw new InvalidOperationException("Candidate preferences already exist.");
+
+            Preferences = new CandidatePreferences(Id, desiredJobTitles, preferredLocations, contractTypes, workModes, minimumAnnualGrossSalary, salaryCurrency, availableFrom);
+            UpdatedAtUtc = DateTime.UtcNow;
+            return Preferences;
+        }
+
+        public CandidatePreferences? UpdatePreferences(
+            string[] desiredJobTitles,
+            string[] preferredLocations,
+            string[] contractTypes,
+            string[] workModes,
+            decimal? minimumAnnualGrossSalary = null,
+            string? salaryCurrency = null,
+            DateOnly? availableFrom = null)
         {
             if (Preferences is null)
-            {
-                Preferences = new CandidatePreferences(Id, desiredJobTitles, preferredLocations, contractTypes, workModes, minimumAnnualGrossSalary, salaryCurrency, availableFrom);
-            }
-            else
-            {
-                Preferences.Update(desiredJobTitles, preferredLocations, contractTypes, workModes, minimumAnnualGrossSalary, salaryCurrency, availableFrom);
-            }
+                return null;
 
+            Preferences.Update(desiredJobTitles, preferredLocations, contractTypes, workModes, minimumAnnualGrossSalary, salaryCurrency, availableFrom);
             UpdatedAtUtc = DateTime.UtcNow;
             return Preferences;
         }
