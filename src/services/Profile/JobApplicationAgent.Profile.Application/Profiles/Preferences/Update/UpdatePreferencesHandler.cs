@@ -15,7 +15,7 @@ public sealed class UpdatePreferencesHandler(
         var profile = await repository.GetForUpdateAsync(cancellationToken)
             ?? throw new CandidateProfileNotFoundException();
 
-        var preferences = profile.SetPreferences(
+        var preferences = profile.UpdatePreferences(
             command.DesiredJobTitles,
             command.PreferredLocations,
             command.ContractTypes,
@@ -23,6 +23,9 @@ public sealed class UpdatePreferencesHandler(
             command.MinimumAnnualGrossSalary,
             command.SalaryCurrency,
             command.AvailableFrom);
+
+        if (preferences is null)
+            throw new PreferencesNotFoundException();
 
         await repository.SaveChangesAsync(cancellationToken);
         return preferences.ToDto();

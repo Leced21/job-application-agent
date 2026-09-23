@@ -10,13 +10,14 @@ namespace JobApplicationAgent.Profile.UnitTests.Application.Profiles.Preferences
 public sealed class UpdatePreferencesHandlerTests
 {
     [Fact]
-    public async Task HandleAsync_ShouldCreateThenUpdateSamePreferences()
+    public async Task HandleAsync_ShouldUpdateSamePreferences()
     {
         var repository = Substitute.For<ICandidateProfileRepository>();
         var profile = new CandidateProfile("Test", "Candidate", "test@example.com");
         repository.GetForUpdateAsync(Arg.Any<CancellationToken>()).Returns(profile);
         var handler = new UpdatePreferencesHandler(repository, new UpdatePreferencesCommandValidator());
         var command = new UpdatePreferencesCommand(["Developer"], ["Paris"], ["CDI"], ["Hybrid"], 50000, "EUR", null);
+        profile.AddPreferences([], [], [], [], null, null, null);
         using var cts = new CancellationTokenSource();
         var created = await handler.HandleAsync(command, cts.Token);
         var entity = profile.Preferences;
@@ -37,6 +38,19 @@ public sealed class UpdatePreferencesHandlerTests
         Assert.Null(updated.SalaryCurrency);
         Assert.Equal(new DateOnly(2027, 1, 1), updated.AvailableFrom);
         await repository.Received(2).SaveChangesAsync(cts.Token);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ShouldRejectMissingPreferencesWithoutSaving()
+    {
+        var repository = Substitute.For<ICandidateProfileRepository>();
+        var profile = new CandidateProfile("Test", "Candidate", "test@example.com");
+        repository.GetForUpdateAsync(Arg.Any<CancellationToken>()).Returns(profile);
+        var handler = new UpdatePreferencesHandler(repository, new UpdatePreferencesCommandValidator());
+        await Assert.ThrowsAsync<PreferencesNotFoundException>(() =>
+            handler.HandleAsync(new([], [], [], [], null, null, null)));
+        Assert.Null(profile.Preferences);
+        await repository.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
     [Fact]

@@ -38,6 +38,7 @@ public sealed class Skill
     public Guid Id { get; private set; }
 
     public Guid CandidateProfileId { get; private set; }
+    public CandidateProfile CandidateProfile { get; private set; } = null!;
 
     public string Name { get; private set; } = string.Empty;
 

@@ -1,0 +1,281 @@
+<section class="skills-card">
+
+  <div class="card-header">
+    <div>
+      <h2>Compétences</h2>
+
+      <p>
+        Technologies et expertises utilisées pour enrichir votre profil
+        et vos candidatures.
+      </p>
+    </div>
+
+    <button
+      class="add-button"
+      type="button"
+      [disabled]="adding() || !!editingId() || saving() || !!deletingId()"
+      (click)="startAdding()">
+      + Ajouter
+    </button>
+  </div>
+  @if (adding() || editingId()) {
+
+  <form
+    class="skill-form"
+    [formGroup]="form"
+    (ngSubmit)="saveSkill()">
+
+    <div class="form-title">
+      <h3>{{ editingId() ? 'Modifier la compétence' : 'Nouvelle compétence' }}</h3>
+
+      <p>
+        Ajoutez une technologie ou un domaine d'expertise.
+      </p>
+    </div>
+
+    <div class="form-grid">
+
+      <div class="form-field">
+        <label for="skillName">
+          Compétence *
+        </label>
+
+        <input
+          id="skillName"
+          type="text"
+          maxlength="150"
+          formControlName="name"
+          placeholder="Ex. PySpark" />
+
+        @if (
+        form.controls.name.touched &&
+        form.controls.name.invalid
+        ) {
+        <span class="field-error">
+          La compétence est obligatoire.
+        </span>
+        }
+      </div>
+
+      <div class="form-field">
+        <label for="skillCategory">
+          Catégorie
+        </label>
+
+        <input
+          id="skillCategory"
+          type="text"
+          maxlength="100"
+          formControlName="category"
+          placeholder="Ex. Data Engineering" />
+      </div>
+
+      <div class="form-field">
+        <label for="skillLevel">
+          Niveau
+        </label>
+
+        <input
+          id="skillLevel"
+          type="text"
+          maxlength="50"
+          formControlName="level"
+          placeholder="Ex. Avancé" />
+      </div>
+
+      <div class="form-field">
+        <label for="skillYears">
+          Années d'expérience
+        </label>
+
+        <input
+          id="skillYears"
+          type="number"
+          min="0" max="2147483647" step="1"
+          formControlName="yearsOfExperience"
+          placeholder="Ex. 5" />
+
+        @if (
+        form.controls.yearsOfExperience.touched &&
+        form.controls.yearsOfExperience.invalid
+        ) {
+        <span class="field-error">
+          Saisissez un entier entre 0 et 2 147 483 647.
+        </span>
+        }
+      </div>
+
+    </div>
+
+    @if (saveError()) {
+    <p class="save-error">
+      {{ saveError() }}
+    </p>
+    }
+
+    <div class="form-actions">
+
+      <button
+        class="cancel-button"
+        type="button"
+        [disabled]="saving()"
+        (click)="cancelForm()">
+        Annuler
+      </button>
+
+      <button
+        class="save-button"
+        type="submit"
+        [disabled]="saving()">
+
+        @if (saving()) {
+        Enregistrement...
+        } @else {
+        {{ editingId() ? 'Enregistrer les modifications' : 'Ajouter la compétence' }}
+        }
+
+      </button>
+
+    </div>
+
+  </form>
+
+  }
+
+  @if (loading()) {
+
+  <div class="state">
+    Chargement des compétences...
+  </div>
+
+  } @else if (loadError()) {
+
+  <div class="state state--error" role="alert">
+    {{ loadError() }}
+    <button type="button" (click)="loadSkills()">Réessayer</button>
+  </div>
+
+  } @else if (skills().length === 0) {
+
+  <div class="empty-state">
+    <div class="empty-icon">+</div>
+
+    <div>
+      <h3>Aucune compétence</h3>
+
+      <p>
+        Ajoutez vos technologies et domaines d'expertise.
+      </p>
+    </div>
+  </div>
+
+  } @else {
+
+  <div class="skills-content">
+
+    @for (category of categories; track category) {
+
+    <div class="skill-group">
+
+      <div class="category-header">
+        <span>{{ category }}</span>
+
+        <span class="category-count">
+          {{ skillsForCategory(category).length }}
+        </span>
+      </div>
+
+      <div class="skill-list">
+
+        @for (
+        skill of skillsForCategory(category);
+        track skill.id
+        ) {
+
+        <button
+          class="skill-chip"
+          type="button" [disabled]="saving() || !!deletingId()" [attr.aria-label]="'Modifier ' + skill.name" (click)="startEditing(skill)">
+
+          <span class="skill-name">
+            {{ skill.name }}
+          </span>
+
+          @if (skill.level) {
+          <span class="skill-level">
+            {{ skill.level }}
+          </span>
+          }
+
+          @if (experienceLabel(skill.yearsOfExperience); as experience) {
+          <span class="skill-experience">
+            {{ experience }}
+          </span>
+          }
+
+        </button>
+        <button class="delete-button" type="button" [disabled]="saving() || !!deletingId()" [attr.aria-label]="'Supprimer ' + skill.name" (click)="requestDelete(skill.id)">Supprimer</button>
+        }
+
+      </div>
+    </div>
+    }
+
+    @if (uncategorizedSkills.length > 0) {
+
+    <div class="skill-group">
+
+      <div class="category-header">
+        <span>Autres</span>
+
+        <span class="category-count">
+          {{ uncategorizedSkills.length }}
+        </span>
+      </div>
+
+      <div class="skill-list">
+
+        @for (
+        skill of uncategorizedSkills;
+        track skill.id
+        ) {
+
+        <button
+          class="skill-chip"
+          type="button" [disabled]="saving() || !!deletingId()" [attr.aria-label]="'Modifier ' + skill.name" (click)="startEditing(skill)">
+
+          <span class="skill-name">
+            {{ skill.name }}
+          </span>
+
+          @if (skill.level) {
+          <span class="skill-level">
+            {{ skill.level }}
+          </span>
+          }
+
+          @if (experienceLabel(skill.yearsOfExperience); as experience) {
+          <span class="skill-experience">
+            {{ experience }}
+          </span>
+          }
+
+        </button>
+        <button class="delete-button" type="button" [disabled]="saving() || !!deletingId()" [attr.aria-label]="'Supprimer ' + skill.name" (click)="requestDelete(skill.id)">Supprimer</button>
+        }
+
+      </div>
+    </div>
+    }
+
+  </div>
+  }
+
+  @if (confirmingDeleteId(); as id) {
+    <div class="delete-confirmation">
+      <p>Supprimer cette compétence ?</p>
+      <button type="button" [disabled]="!!deletingId()" (click)="cancelDelete()">Annuler</button>
+      <button class="delete-button" type="button" [disabled]="!!deletingId()" (click)="deleteSkill(id)">{{ deletingId() ? 'Suppression...' : 'Confirmer la suppression' }}</button>
+      @if (deleteError()) { <p class="save-error" role="alert">{{ deleteError() }}</p> }
+    </div>
+  }
+</section>

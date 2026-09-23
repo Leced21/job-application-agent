@@ -1,0 +1,259 @@
+<section class="profile-card">
+
+    <div class="card-header">
+
+        <div>
+            <h2>Informations personnelles</h2>
+
+            <p>
+                Vos informations principales utilisées pour vos candidatures.
+            </p>
+        </div>
+
+        @if (!editing()) {
+        <button
+            class="secondary-button"
+            type="button"
+            (click)="startEditing()">
+            Modifier
+        </button>
+        }
+
+    </div>
+
+    @if (!editing()) {
+
+    <div class="information-grid">
+
+        <div class="information">
+            <span class="information-label">
+                Prénom
+            </span>
+
+            <strong>
+                {{ profile().firstName }}
+            </strong>
+        </div>
+
+        <div class="information">
+            <span class="information-label">
+                Nom
+            </span>
+
+            <strong>
+                {{ profile().lastName }}
+            </strong>
+        </div>
+
+        <div class="information">
+            <span class="information-label">
+                Email
+            </span>
+
+            <strong>
+                {{ profile().email }}
+            </strong>
+        </div>
+
+        <div class="information">
+            <span class="information-label">
+                Téléphone
+            </span>
+
+            <strong>
+                {{ profile().phoneNumber || 'Non renseigné' }}
+            </strong>
+        </div>
+
+        <div class="information">
+            <span class="information-label">
+                Poste recherché
+            </span>
+
+            <strong>
+                {{ profile().jobTitle || 'Non renseigné' }}
+            </strong>
+        </div>
+
+        <div class="information information--wide">
+            <span class="information-label">
+                Résumé professionnel
+            </span>
+
+            <strong>
+                {{ profile().summary || 'Non renseigné' }}
+            </strong>
+        </div>
+
+    </div>
+
+    } @else {
+
+    <form
+        class="profile-form"
+        [formGroup]="form"
+        (ngSubmit)="saveProfile()">
+
+        <fieldset class="form-grid" [disabled]="saving()">
+
+            <div class="form-field">
+
+                <label for="firstName">
+                    Prénom *
+                </label>
+
+                <input
+                    id="firstName"
+                    maxlength="100"
+                    type="text"
+                    formControlName="firstName" />
+
+                @if (
+                form.controls.firstName.touched &&
+                form.controls.firstName.invalid
+                ) {
+                <span class="field-error">
+                    Le prénom est obligatoire (100 caractères maximum).
+                </span>
+                }
+
+            </div>
+
+            <div class="form-field">
+
+                <label for="lastName">
+                    Nom *
+                </label>
+
+                <input
+                    id="lastName"
+                    maxlength="100"
+                    type="text"
+                    formControlName="lastName" />
+
+                @if (
+                form.controls.lastName.touched &&
+                form.controls.lastName.invalid
+                ) {
+                <span class="field-error">
+                    Le nom est obligatoire (100 caractères maximum).
+                </span>
+                }
+
+            </div>
+
+            <div class="form-field">
+
+                <label for="email">
+                    Email *
+                </label>
+
+                <input
+                    id="email"
+                    maxlength="255"
+                    type="email"
+                    formControlName="email" />
+
+                @if (
+                form.controls.email.touched &&
+                form.controls.email.invalid
+                ) {
+                <span class="field-error">
+                    Saisissez une adresse email valide.
+                </span>
+                }
+
+            </div>
+
+            <div class="form-field">
+
+                <label for="phoneNumber">
+                    Téléphone
+                </label>
+
+                <input
+                    id="phoneNumber"
+                    maxlength="30"
+                    type="tel"
+                    formControlName="phoneNumber"
+                    placeholder="+33 6 00 00 00 00" />
+                @if (form.controls.phoneNumber.touched && form.controls.phoneNumber.invalid) {
+                    <span class="field-error">30 caractères maximum.</span>
+                }
+
+            </div>
+
+            <div class="form-field form-field--wide">
+
+                <label for="jobTitle">
+                    Poste recherché
+                </label>
+
+                <input
+                    id="jobTitle"
+                    maxlength="150"
+                    type="text"
+                    formControlName="jobTitle"
+                    placeholder="Ex. Data Engineer" />
+                @if (form.controls.jobTitle.touched && form.controls.jobTitle.invalid) {
+                    <span class="field-error">150 caractères maximum.</span>
+                }
+
+            </div>
+
+            <div class="form-field form-field--wide">
+
+                <label for="summary">
+                    Résumé professionnel
+                </label>
+
+                <textarea
+                    id="summary"
+                    maxlength="2000"
+                    rows="5"
+                    formControlName="summary"
+                    placeholder="Présentez brièvement votre profil, vos compétences et vos objectifs professionnels..."></textarea>
+                @if (form.controls.summary.touched && form.controls.summary.invalid) {
+                    <span class="field-error">2000 caractères maximum.</span>
+                }
+
+            </div>
+
+        </fieldset>
+
+        @if (saveError()) {
+        <p class="save-error" role="alert">
+            {{ saveError() }}
+        </p>
+        }
+
+        <div class="form-actions">
+
+            <button
+                class="secondary-button"
+                type="button"
+                [disabled]="saving()"
+                (click)="cancelEditing()">
+                Annuler
+            </button>
+
+            <button
+                class="primary-button"
+                type="submit"
+                [disabled]="saving()">
+
+                @if (saving()) {
+                Enregistrement...
+                } @else {
+                Enregistrer les modifications
+                }
+
+            </button>
+
+        </div>
+
+    </form>
+
+    }
+
+</section>

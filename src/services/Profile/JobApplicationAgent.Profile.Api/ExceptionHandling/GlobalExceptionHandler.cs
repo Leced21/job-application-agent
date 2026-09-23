@@ -66,6 +66,12 @@ namespace JobApplicationAgent.Profile.Api.ExceptionHandling
                     Title = "Certification not found",
                     Detail = exception.Message
                 },
+                PreferencesAlreadyExistsException => new ProblemDetails
+                {
+                    Status = StatusCodes.Status409Conflict,
+                    Title = "Candidate preferences already exist",
+                    Detail = exception.Message
+                },
                 PreferencesNotFoundException => new ProblemDetails
                 {
                     Status = StatusCodes.Status404NotFound,

@@ -33,6 +33,7 @@ public sealed class Education
 
     public Guid Id { get; private set; }
     public Guid CandidateProfileId { get; private set; }
+    public CandidateProfile CandidateProfile { get; private set; } = null!;
 
     public string InstitutionName { get; private set; } = string.Empty;
     public string Degree { get; private set; } = string.Empty;

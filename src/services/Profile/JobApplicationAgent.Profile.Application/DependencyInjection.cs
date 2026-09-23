@@ -1,3 +1,5 @@
+using JobApplicationAgent.Profile.Application.Profiles.Update;
+using JobApplicationAgent.Profile.Application.Profiles.Preferences.Add;
 using JobApplicationAgent.Profile.Application.Profiles.Preferences.Get;
 using JobApplicationAgent.Profile.Application.Profiles.Preferences.Update;
 using JobApplicationAgent.Profile.Application.Profiles.Preferences.Delete;
@@ -39,6 +41,7 @@ namespace JobApplicationAgent.Profile.Application
         {
             services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
             services.AddScoped<CreateCandidateProfileHandler>();
+            services.AddScoped<UpdateCandidateProfileHandler>();
             services.AddScoped<GetCandidateProfileHandler>();
             services.AddScoped<AddProfessionalExperienceHandler>();
             services.AddScoped<GetProfessionalExperiencesHandler>();
@@ -64,6 +67,7 @@ namespace JobApplicationAgent.Profile.Application
             services.AddScoped<DeleteLanguageHandler>();
             services.AddScoped<DeleteLinkHandler>();
             services.AddScoped<DeleteCertificationHandler>();
+            services.AddScoped<AddPreferencesHandler>();
             services.AddScoped<GetPreferencesHandler>();
             services.AddScoped<UpdatePreferencesHandler>();
             services.AddScoped<DeletePreferencesHandler>();

@@ -55,6 +55,7 @@ public sealed class ProfessionalExperience
     public Guid Id { get; private set; }
 
     public Guid CandidateProfileId { get; private set; }
+    public CandidateProfile CandidateProfile { get; private set; } = null!;
 
     public string CompanyName { get; private set; } = string.Empty;
 

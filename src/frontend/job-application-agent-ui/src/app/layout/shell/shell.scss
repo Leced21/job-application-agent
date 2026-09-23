@@ -1,0 +1,27 @@
+.app-shell {
+    display: flex;
+    min-height: 100vh;
+    background: #f6f8fb;
+}
+
+.main {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.content {
+    flex: 1;
+    padding: 32px;
+}
+
+@media (max-width: 900px) {
+    app-sidebar {
+        display: none;
+    }
+
+    .content {
+        padding: 20px;
+    }
+}

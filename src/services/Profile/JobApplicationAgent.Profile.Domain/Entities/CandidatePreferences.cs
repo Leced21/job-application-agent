@@ -19,6 +19,7 @@ public sealed class CandidatePreferences
     }
 
     public Guid CandidateProfileId { get; private set; }
+    public CandidateProfile CandidateProfile { get; private set; } = null!;
     public string[] DesiredJobTitles { get; private set; } = [];
     public string[] PreferredLocations { get; private set; } = [];
     public string[] ContractTypes { get; private set; } = [];

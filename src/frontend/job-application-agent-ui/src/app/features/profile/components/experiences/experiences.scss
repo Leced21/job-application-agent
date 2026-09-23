@@ -1,0 +1,537 @@
+:host {
+  display: block;
+}
+
+.experiences-card {
+  padding: 28px;
+  border: 1px solid #e7eaf0;
+  border-radius: 18px;
+  background: #ffffff;
+}
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid #edf0f4;
+}
+
+.card-header h2 {
+  margin: 0;
+  color: #172033;
+  font-size: 17px;
+}
+
+.card-header p {
+  margin: 6px 0 0;
+  color: #929bab;
+  font-size: 12px;
+}
+
+.add-button {
+  flex: 0 0 auto;
+  padding: 10px 15px;
+  border: 0;
+  border-radius: 10px;
+  background: #172033;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  transition:
+    background 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.add-button:hover:not(:disabled) {
+  background: #263249;
+}
+
+.add-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+/* =========================================================
+   FORM
+   ========================================================= */
+
+.experience-form {
+  margin-top: 24px;
+  padding: 24px;
+  border: 1px solid #e4e8f0;
+  border-radius: 16px;
+  background: #f9fafc;
+}
+
+.form-title {
+  margin-bottom: 24px;
+}
+
+.form-title h3 {
+  margin: 0;
+  color: #172033;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px 24px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.form-field--wide {
+  grid-column: 1 / -1;
+}
+
+.form-field label {
+  color: #4b5565;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.form-field input,
+.form-field textarea {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  padding: 11px 13px;
+  border: 1px solid #d8dee9;
+  border-radius: 9px;
+  outline: none;
+  background: #ffffff;
+  color: #172033;
+  font-size: 13px;
+  line-height: 1.4;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.form-field input {
+  height: 42px;
+}
+
+.form-field textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.form-field input::placeholder,
+.form-field textarea::placeholder {
+  color: #a1a9b8;
+}
+
+.form-field input:hover:not(:disabled),
+.form-field textarea:hover {
+  border-color: #bcc5d3;
+}
+
+.form-field input:focus,
+.form-field textarea:focus {
+  border-color: #6574d9;
+  box-shadow: 0 0 0 3px rgba(101, 116, 217, 0.1);
+}
+
+.form-field input:disabled {
+  border-color: #e4e7ec;
+  background: #f0f2f5;
+  color: #98a2b3;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   CURRENT JOB
+   ========================================================= */
+
+.current-field {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid #e4e8f0;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #475467;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.current-field input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: #5665d8;
+}
+
+/* =========================================================
+   VALIDATION
+   ========================================================= */
+
+.field-error {
+  color: #c24141;
+  font-size: 11px;
+}
+
+.save-error {
+  margin: 18px 0 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fff3f3;
+  color: #b42318;
+  font-size: 12px;
+}
+
+/* =========================================================
+   FORM ACTIONS
+   ========================================================= */
+
+.form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e9f0;
+}
+
+.cancel-button,
+.save-button {
+  min-height: 38px;
+  padding: 9px 15px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 600;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.cancel-button {
+  border: 1px solid #d8dee9;
+  background: #ffffff;
+  color: #596579;
+}
+
+.cancel-button:hover:not(:disabled) {
+  background: #f4f6f8;
+}
+
+.save-button {
+  border: 1px solid #172033;
+  background: #172033;
+  color: #ffffff;
+}
+
+.save-button:hover:not(:disabled) {
+  background: #263249;
+}
+
+.cancel-button:disabled,
+.save-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+/* =========================================================
+   EXPERIENCE LIST
+   ========================================================= */
+
+.experience-list {
+  padding-top: 26px;
+}
+
+.experience {
+  display: flex;
+  gap: 18px;
+}
+
+.timeline {
+  display: flex;
+  flex: 0 0 12px;
+  flex-direction: column;
+  align-items: center;
+}
+
+.timeline-dot {
+  width: 10px;
+  height: 10px;
+  margin-top: 5px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  background: #5665d8;
+  box-shadow: 0 0 0 3px #e8eaff;
+}
+
+.timeline-line {
+  width: 1px;
+  min-height: 90px;
+  flex: 1;
+  margin-top: 8px;
+  background: #e6e9ef;
+}
+
+.experience:last-child .timeline-line {
+  background: transparent;
+}
+
+.experience-content {
+  flex: 1;
+  min-width: 0;
+  padding-bottom: 30px;
+}
+
+.experience-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.experience-header h3 {
+  margin: 0;
+  color: #273247;
+  font-size: 14px;
+}
+
+.company {
+  margin: 6px 0 0;
+  color: #687386;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.period {
+  margin-top: 10px;
+  color: #9aa3b1;
+  font-size: 11px;
+}
+
+.current {
+  color: #23845d;
+  font-weight: 600;
+}
+
+.description {
+  max-width: 750px;
+  margin: 13px 0 0;
+  color: #747f91;
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+/* =========================================================
+   EXPERIENCE ACTIONS
+   ========================================================= */
+
+.experience-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.experience-actions button {
+  padding: 7px 10px;
+  border: 1px solid #dfe4eb;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #687386;
+  font-size: 11px;
+  font-weight: 600;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.experience-actions button:hover {
+  border-color: #cdd3dd;
+  background: #f7f8fa;
+}
+
+.experience-actions .delete-button {
+  color: #b54747;
+}
+
+.experience-actions .delete-button:hover {
+  border-color: #f0cccc;
+  background: #fff7f7;
+}
+
+/* =========================================================
+   STATES
+   ========================================================= */
+
+.state,
+.empty-state {
+  margin-top: 24px;
+  padding: 24px;
+  border-radius: 12px;
+  background: #f8f9fb;
+  color: #7d8797;
+  font-size: 12px;
+}
+
+.state--error {
+  background: #fff7f7;
+  color: #b54747;
+}
+
+.empty-state {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.empty-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  border-radius: 10px;
+  background: #eef0ff;
+  color: #5665d8;
+  font-size: 20px;
+}
+
+.empty-state h3 {
+  margin: 0;
+  color: #4a5568;
+  font-size: 13px;
+}
+
+.empty-state p {
+  margin: 4px 0 0;
+}
+
+.delete-confirmation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: 16px;
+  padding: 14px 16px;
+  border: 1px solid #f0d3d3;
+  border-radius: 10px;
+  background: #fffafa;
+}
+
+.delete-confirmation__content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.delete-confirmation__content strong {
+  color: #9f3434;
+  font-size: 12px;
+}
+
+.delete-confirmation__content span {
+  color: #8b6464;
+  font-size: 11px;
+}
+
+.delete-confirmation__actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 8px;
+}
+
+.delete-cancel-button,
+.delete-confirm-button {
+  padding: 7px 11px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.delete-cancel-button {
+  border: 1px solid #dfe4eb;
+  background: #ffffff;
+  color: #687386;
+}
+
+.delete-confirm-button {
+  border: 1px solid #c24141;
+  background: #c24141;
+  color: #ffffff;
+}
+
+.delete-cancel-button:hover {
+  background: #f7f8fa;
+}
+
+.delete-confirm-button:hover {
+  background: #a93636;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 700px) {
+  .experiences-card {
+    padding: 20px;
+  }
+
+  .card-header,
+  .experience-header {
+    flex-direction: column;
+  }
+
+  .add-button {
+    width: 100%;
+  }
+
+  .experience-form {
+    padding: 18px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-field--wide,
+  .current-field {
+    grid-column: auto;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .cancel-button,
+  .save-button {
+    width: 100%;
+  }
+
+  .experience-actions {
+    width: 100%;
+  }
+
+  .delete-confirmation {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .delete-confirmation__actions {
+    justify-content: flex-end;
+  }
+}

@@ -20,6 +20,7 @@ public sealed class Certification
 
     public Guid Id { get; private set; }
     public Guid CandidateProfileId { get; private set; }
+    public CandidateProfile CandidateProfile { get; private set; } = null!;
     public string Name { get; private set; } = string.Empty;
     public string IssuingOrganization { get; private set; } = string.Empty;
     public DateOnly IssueDate { get; private set; }
