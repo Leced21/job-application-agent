@@ -1,0 +1,30 @@
+<div
+    class="app-shell"
+    [class.app-shell--menu-open]="mobileMenuOpen()">
+
+    <aside class="app-shell__sidebar">
+        <app-sidebar
+            (navigationClicked)="closeMobileMenu()" />
+    </aside>
+
+    @if (mobileMenuOpen()) {
+    <button
+        type="button"
+        class="app-shell__overlay"
+        aria-label="Fermer le menu"
+        (click)="closeMobileMenu()">
+    </button>
+    }
+
+    <div class="app-shell__main">
+
+        <app-header
+            (menuClicked)="toggleMobileMenu()" />
+
+        <main class="app-shell__content">
+            <router-outlet />
+        </main>
+
+    </div>
+
+</div>

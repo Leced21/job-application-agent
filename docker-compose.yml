@@ -21,5 +21,24 @@ services:
       timeout: 5s
       retries: 10
 
+  job-db:
+    image: postgres:17
+    container_name: job-application-agent-job-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: job_db
+      POSTGRES_USER: jobagent
+      POSTGRES_PASSWORD: jobagent_dev
+    ports:
+      - "5433:5432"
+    volumes:
+      - job_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jobagent -d job_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
 volumes:
+  job_postgres_data:
   profile_postgres_data:

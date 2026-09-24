@@ -1,0 +1,238 @@
+@if (loading()) {
+
+<div class="state-card">
+    <p>Chargement des offres...</p>
+</div>
+
+} @else if (error()) {
+
+<div class="state-card state-card--error">
+    <h2>Offres indisponibles</h2>
+    <p>{{ error() }}</p>
+</div>
+
+} @else {
+
+<section class="jobs-page">
+
+    <header class="jobs-header">
+        <div>
+            <span class="jobs-header__eyebrow">
+                Opportunités
+            </span>
+            <h1>Offres d’emploi</h1>
+            <p>
+                Trouvez les meilleures opportunités, analysées
+                et classées par vos agents IA.
+            </p>
+        </div>
+        <div class="jobs-header__summary">
+
+            <strong>{{ jobs().length }}</strong>
+
+            <span>
+                offre{{ jobs().length > 1 ? 's' : '' }}
+                disponible{{ jobs().length > 1 ? 's' : '' }}
+            </span>
+
+        </div>
+    </header>
+    <div class="jobs-toolbar">
+
+        <div class="global-search">
+
+            <span class="global-search__icon">
+                ⌕
+            </span>
+
+            <input
+                type="search"
+                [value]="globalSearch()"
+                (input)="search($any($event.target).value)"
+                placeholder="Rechercher une offre, une entreprise, un mot-clé..." />
+
+            @if (globalSearch()) {
+            <button
+                type="button"
+                class="global-search__clear"
+                aria-label="Effacer la recherche"
+                (click)="search('')">
+                ×
+            </button>
+            }
+
+        </div>
+
+    </div>
+    <div class="jobs-hero">
+
+        <div>
+            <span class="jobs-hero__eyebrow">
+                Votre recherche d’emploi
+            </span>
+
+            <h2>
+                Trouvez l’opportunité qui vous correspond.
+            </h2>
+
+            <p>
+                Centralisez vos offres et laissez progressivement
+                vos agents IA vous aider à identifier les meilleures
+                opportunités.
+            </p>
+        </div>
+
+        <div class="jobs-hero__decoration">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+
+    </div>
+
+    <nav class="jobs-tabs">
+
+        <button
+            type="button"
+            class="jobs-tab"
+            [class.jobs-tab--active]="activeTab() === 'all'"
+            (click)="selectTab('all')">
+
+            Toutes les offres
+
+            <span>{{ jobs().length }}</span>
+
+        </button>
+
+        <button
+            type="button"
+            class="jobs-tab"
+            disabled>
+
+            Recommandées
+
+            <small>IA</small>
+
+        </button>
+
+        <button
+            type="button"
+            class="jobs-tab"
+            disabled>
+
+            À fort potentiel
+
+            <small>IA</small>
+
+        </button>
+
+        <button
+            type="button"
+            class="jobs-tab"
+            [class.jobs-tab--active]="activeTab() === 'new'"
+            (click)="selectTab('new')">
+
+            Nouvelles
+
+            <span>{{ newJobsCount }}</span>
+
+        </button>
+
+    </nav>
+
+    @if (jobs().length === 0) {
+
+    <div class="state-card">
+        <h2>Aucune offre disponible</h2>
+        <p>
+            Les nouvelles offres apparaîtront ici dès
+            qu’elles seront ajoutées.
+        </p>
+    </div>
+
+    } @else {
+
+    <div class="jobs-workspace">
+
+        <app-job-filters
+            (filtersChanged)="applyFilters($event)" />
+
+        <div class="jobs-results">
+
+            <div class="jobs-results__header">
+
+                <strong>
+                    {{ filteredJobs().length }}
+                    offre{{ filteredJobs().length > 1 ? 's' : '' }}
+                    trouvée{{ filteredJobs().length > 1 ? 's' : '' }}
+                </strong>
+
+                <label class="jobs-sort">
+
+                    <span>Trier par</span>
+
+                    <select
+                        [value]="sort()"
+                        (change)="changeSort($any($event.target).value)">
+
+                        <option value="recent">
+                            Plus récentes
+                        </option>
+
+                        <option value="salary-desc">
+                            Salaire décroissant
+                        </option>
+
+                        <option value="salary-asc">
+                            Salaire croissant
+                        </option>
+
+                    </select>
+
+                </label>
+
+            </div>
+
+            <div class="jobs-list">
+
+                @for (job of filteredJobs(); track job.id) {
+
+                <app-job-card
+                    [job]="job"
+                    [selected]="selectedJob()?.id === job.id"
+                    (jobSelected)="selectJob($event)" />
+
+                } @empty {
+
+                <div class="state-card">
+                    <h2>Aucune offre trouvée</h2>
+                    <p>
+                        Modifiez vos critères de recherche.
+                    </p>
+                </div>
+
+                }
+
+            </div>
+
+        </div>
+
+        <aside class="job-details-panel">
+
+            @if (selectedJob(); as selected) {
+            <app-job-details [job]="selected" />
+            } @else {
+            <div class="state-card">
+                <p>Sélectionnez une offre pour afficher ses détails.</p>
+            </div>
+            }
+
+        </aside>
+
+    </div>
+
+    }
+
+</section>
+
+}
