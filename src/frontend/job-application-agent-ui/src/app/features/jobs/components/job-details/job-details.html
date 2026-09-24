@@ -1,0 +1,208 @@
+<section class="job-details">
+
+  <header class="job-details__header">
+
+    <div class="company">
+
+      <div class="company__logo">
+        {{ companyInitial }}
+      </div>
+
+      <div class="company__identity">
+        <span>{{ job().companyName }}</span>
+        <h2>{{ job().title }}</h2>
+      </div>
+
+    </div>
+
+    <button
+      type="button"
+      class="favorite-button"
+      title="Favoris bientôt disponible"
+      aria-label="Ajouter aux favoris">
+      ♡
+    </button>
+
+  </header>
+
+  <div class="job-details__metadata">
+
+    <div class="metadata">
+      <span class="metadata__label">Localisation</span>
+      <strong>{{ locationLabel }}</strong>
+    </div>
+
+    <div class="metadata">
+      <span class="metadata__label">Contrat</span>
+      <strong>{{ contractTypeLabel }}</strong>
+    </div>
+
+    <div class="metadata">
+      <span class="metadata__label">Organisation</span>
+      <strong>{{ workModeLabel }}</strong>
+    </div>
+
+    @if (salaryLabel) {
+      <div class="metadata">
+        <span class="metadata__label">Salaire</span>
+        <strong>{{ salaryLabel }}</strong>
+      </div>
+    }
+
+  </div>
+
+  <div class="job-details__actions">
+
+    <button
+      type="button"
+      class="primary-action"
+      disabled
+      title="Disponible avec le futur workflow de candidature">
+
+      <span>✦</span>
+      Postuler avec mes agents IA
+
+    </button>
+
+    <button
+      type="button"
+      class="secondary-action"
+      disabled
+      title="Fonctionnalité bientôt disponible">
+      ♡
+    </button>
+
+  </div>
+
+  <nav class="details-tabs">
+
+    <button
+      type="button"
+      class="details-tab details-tab--active">
+      Détails
+    </button>
+
+    <button
+      type="button"
+      class="details-tab"
+      disabled>
+      Analyse IA
+      <span>IA</span>
+    </button>
+
+    <button
+      type="button"
+      class="details-tab"
+      disabled>
+      Entreprise
+    </button>
+
+    <button
+      type="button"
+      class="details-tab"
+      disabled>
+      Processus
+    </button>
+
+  </nav>
+
+  <div class="job-details__content">
+
+    <section class="details-section">
+
+      <div class="details-section__heading">
+        <h3>Description du poste</h3>
+      </div>
+
+      @if (job().description) {
+
+        <p class="job-description">
+          {{ job().description }}
+        </p>
+
+      } @else {
+
+        <div class="empty-description">
+          <strong>Description non disponible</strong>
+          <span>
+            La source de cette offre n'a pas fourni de description.
+          </span>
+        </div>
+
+      }
+
+    </section>
+
+    <section class="details-section">
+
+      <div class="details-section__heading">
+        <h3>Informations sur l’offre</h3>
+      </div>
+
+      <dl class="information-list">
+
+        <div>
+          <dt>Entreprise</dt>
+          <dd>{{ job().companyName }}</dd>
+        </div>
+
+        <div>
+          <dt>Localisation</dt>
+          <dd>{{ locationLabel }}</dd>
+        </div>
+
+        <div>
+          <dt>Type de contrat</dt>
+          <dd>{{ contractTypeLabel }}</dd>
+        </div>
+
+        <div>
+          <dt>Mode de travail</dt>
+          <dd>{{ workModeLabel }}</dd>
+        </div>
+
+        @if (salaryLabel) {
+          <div>
+            <dt>Salaire</dt>
+            <dd>{{ salaryLabel }}</dd>
+          </div>
+        }
+
+        <div>
+          <dt>Source</dt>
+          <dd>{{ job().source }}</dd>
+        </div>
+
+        <div>
+          <dt>Publication</dt>
+          <dd>{{ publishedLabel }}</dd>
+        </div>
+
+      </dl>
+
+    </section>
+
+    <section class="matching-placeholder">
+
+      <div class="matching-placeholder__icon">
+        ✦
+      </div>
+
+      <div>
+        <span class="matching-placeholder__eyebrow">
+          Matching IA
+        </span>
+
+        <h3>Analyse de compatibilité</h3>
+
+        <p>
+          Le score de compatibilité et les recommandations
+          seront disponibles avec le Matching Service.
+        </p>
+      </div>
+
+    </section>
+
+  </div>
+
+</section>

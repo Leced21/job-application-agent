@@ -1,0 +1,159 @@
+<aside class="sidebar">
+
+  <div class="brand">
+
+    <div class="brand__logo">
+      J
+    </div>
+
+    <div class="brand__content">
+      <strong>JobAgent</strong>
+      <span>Votre copilote carrière</span>
+    </div>
+
+  </div>
+
+  <nav class="navigation">
+
+    <a
+      routerLink="/dashboard"
+      routerLinkActive="navigation__item--active"
+      class="navigation__item"
+      title="Tableau de bord"
+      (click)="navigationClicked.emit()">
+
+      <span class="navigation__icon">⌂</span>
+      <span class="navigation__label">Tableau de bord</span>
+
+    </a>
+
+    <a
+      routerLink="/jobs"
+      routerLinkActive="navigation__item--active"
+      class="navigation__item"
+      title="Offres d'emploi"
+      (click)="navigationClicked.emit()">
+
+      <span class="navigation__icon">⌕</span>
+      <span class="navigation__label">Offres d’emploi</span>
+
+    </a>
+
+    <a
+      routerLink="/applications"
+      routerLinkActive="navigation__item--active"
+      class="navigation__item"
+      title ="Mes candidatures"
+      (click)="navigationClicked.emit()">
+
+      <span class="navigation__icon">✓</span>
+      <span class="navigation__label">Mes candidatures</span>   
+
+    </a>
+
+    <a
+      routerLink="/profile"
+      routerLinkActive="navigation__item--active"
+      class="navigation__item"
+      title = "Mon profil"
+      (click)="navigationClicked.emit()">
+
+      <span class="navigation__icon">○</span>
+      <span class="navigation__label">Mon profil</span>
+
+    </a>
+
+    <a
+      routerLink="/resumes"
+      routerLinkActive="navigation__item--active"
+      class="navigation__item"
+      title = "Mes CV"
+      (click)="navigationClicked.emit()">
+
+      <span class="navigation__icon">▤</span>
+      <span class="navigation__label">Mes CV</span>
+
+    </a>
+
+    <div class="navigation__separator"></div>
+
+    <a
+      routerLink="/agents"
+      routerLinkActive="navigation__item--active"
+      class="navigation__item"
+      title = "Agents IA"
+      (click)="navigationClicked.emit()">
+
+      <span class="navigation__icon">✦</span>
+      <span class="navigation__label">Agents IA</span>
+
+    </a>
+
+    <a
+      routerLink="/automation"
+      routerLinkActive="navigation__item--active"
+      class="navigation__item"
+      title="Automatisation"
+      (click)="navigationClicked.emit()">
+
+      <span class="navigation__icon">⚡</span>
+      <span class="navigation__label">Automatisation</span>
+
+    </a>
+
+    <a
+      routerLink="/statistics"
+      routerLinkActive="navigation__item--active"
+      class="navigation__item"
+      title="Statistiques"
+      (click)="navigationClicked.emit()">
+
+      <span class="navigation__icon">⌁</span>
+      <span class="navigation__label">Statistiques</span>
+
+    </a>
+
+    <a
+      routerLink="/settings"
+      routerLinkActive="navigation__item--active"
+      class="navigation__item"
+      title="Paramètres"
+      (click)="navigationClicked.emit()">
+
+      <span class="navigation__icon">⚙</span>
+      <span class="navigation__label">Paramètres</span>
+
+    </a>
+
+  </nav>
+
+  <div class="sidebar__footer">
+
+    <div class="goal-card">
+
+      <div class="goal-card__header">
+        <span>Objectif du mois</span>
+        <strong>50%</strong>
+      </div>
+
+      <div class="goal-card__progress">
+        <span></span>
+      </div>
+
+      <strong class="goal-card__count">
+        5 / 10 candidatures
+      </strong>
+
+      <p>
+        Continuez comme ça, vous êtes à mi-chemin.
+      </p>
+
+      <button type="button">
+        Voir mes objectifs
+      </button>
+
+    </div>
+
+  </div>
+
+</aside>
