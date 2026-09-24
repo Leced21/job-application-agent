@@ -1,0 +1,90 @@
+<article
+    class="job-card"
+    [class.job-card--selected]="selected()"
+    tabindex="0"
+    role="button"
+    (click)="selectJob()"
+    (keydown.enter)="selectJob()">
+
+    <div class="job-card__top">
+
+        <div class="company-logo">
+            {{ companyInitial }}
+        </div>
+
+        <div class="job-card__identity">
+
+            <span class="job-card__company">
+                {{ job().companyName }}
+            </span>
+
+            <h3>
+                {{ job().title }}
+            </h3>
+
+        </div>
+
+        <button
+            type="button"
+            class="favorite-button"
+            aria-label="Ajouter aux favoris"
+            title="Favoris bientôt disponible"
+            (click)="$event.stopPropagation()">
+            ♡
+        </button>
+
+    </div>
+
+    <div class="job-card__metadata">
+
+        <span class="metadata-item">
+            {{ locationLabel }}
+        </span>
+
+        <span class="metadata-separator">•</span>
+
+        <span class="metadata-item">
+            {{ workModeLabel }}
+        </span>
+
+    </div>
+
+    <div class="job-card__tags">
+
+        <span class="job-tag job-tag--contract">
+            {{ contractTypeLabel }}
+        </span>
+
+        @if (salaryLabel) {
+        <span class="job-tag">
+            {{ salaryLabel }}
+        </span>
+        }
+
+    </div>
+
+    <div class="job-card__footer">
+
+        <div class="job-card__source">
+
+            <span>
+                {{ job().source }}
+            </span>
+
+            <span class="metadata-separator">•</span>
+
+            <span>
+                {{ publishedLabel }}
+            </span>
+
+        </div>
+
+        @if (selected()) {
+        <span class="selected-indicator">
+            Sélectionnée
+        </span>
+        }
+
+    </div>
+
+</article>

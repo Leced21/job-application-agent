@@ -1,0 +1,298 @@
+<aside class="filters">
+
+    <div class="filters__header">
+        <h2>Filtres</h2>
+
+        <button
+            type="button"
+            class="reset"
+            (click)="resetFilters()">
+            Réinitialiser
+        </button>
+    </div>
+
+    <div class="filter-group">
+        <label for="keywords">
+            Mots-clés
+        </label>
+
+        <input
+            id="keywords"
+            type="search"
+            [(ngModel)]="keywords"
+            (ngModelChange)="applyFilters()"
+            placeholder="Poste, entreprise..." 
+            />
+    </div>
+
+    <div class="filter-group">
+        <label for="location">
+            Localisation
+        </label>
+
+        <input
+            id="location"
+            type="search"
+            [(ngModel)]="location"
+            (ngModelChange)="applyFilters()"
+            placeholder="Paris, Lyon..." />
+    </div>
+
+    <label class="switch-row">
+
+        <span>
+            <strong>Télétravail uniquement</strong>
+            <small>Afficher les offres 100 % remote</small>
+        </span>
+
+        <input
+            type="checkbox"
+            [(ngModel)]="remoteOnly"
+            (ngModelChange)="applyFilters()" />
+
+    </label>
+    <div class="filter-section">
+
+        <h3>Type de contrat</h3>
+
+        <label class="checkbox-row">
+            <input
+                type="checkbox"
+                [checked]="contractTypes.includes(ContractType.Permanent)"
+                (change)="toggleContractType(
+        ContractType.Permanent,
+        $any($event.target).checked
+      )" />
+            <span>CDI</span>
+        </label>
+
+        <label class="checkbox-row">
+            <input
+                type="checkbox"
+                [checked]="contractTypes.includes(ContractType.FixedTerm)"
+                (change)="toggleContractType(
+        ContractType.FixedTerm,
+        $any($event.target).checked
+      )" />
+            <span>CDD</span>
+        </label>
+
+        <label class="checkbox-row">
+            <input
+                type="checkbox"
+                [checked]="contractTypes.includes(ContractType.Freelance)"
+                (change)="toggleContractType(
+        ContractType.Freelance,
+        $any($event.target).checked
+      )" />
+            <span>Freelance</span>
+        </label>
+
+        <label class="checkbox-row">
+            <input
+                type="checkbox"
+                [checked]="contractTypes.includes(ContractType.Internship)"
+                (change)="toggleContractType(
+        ContractType.Internship,
+        $any($event.target).checked
+      )" />
+            <span>Stage</span>
+        </label>
+
+        <label class="checkbox-row">
+            <input
+                type="checkbox"
+                [checked]="contractTypes.includes(ContractType.Apprenticeship)"
+                (change)="toggleContractType(ContractType.Apprenticeship, $any($event.target).checked)" />
+            <span>Alternance</span>
+        </label>
+
+    </div>
+
+    <div class="filter-section">
+
+        <h3>Salaire minimum</h3>
+
+        <div class="salary-input">
+            <input
+                type="number"
+                min="0"
+                step="5000"
+                [(ngModel)]="salaryMin"
+                (ngModelChange)="applyFilters()"
+                placeholder="Ex. 50000" />
+
+            <span>€</span>
+        </div>
+
+    </div>
+
+</aside>
+
+<aside class="filters-card">
+
+  <div class="filters-header">
+    <div>
+      <span class="filters-header__eyebrow">Recherche</span>
+      <h2>Filtres</h2>
+    </div>
+
+    <button
+      type="button"
+      class="reset-button"
+      (click)="resetFilters()">
+      Réinitialiser
+    </button>
+  </div>
+
+  <div class="filter-section">
+
+    <label class="filter-label" for="keywords">
+      Mots-clés
+    </label>
+
+    <div class="input-wrapper">
+      <span class="input-wrapper__icon">⌕</span>
+
+      <input
+        id="keywords"
+        type="text"
+        [(ngModel)]="keywords"
+        placeholder="Poste, compétence..." />
+    </div>
+
+  </div>
+
+  <div class="filter-section">
+
+    <label class="filter-label" for="location">
+      Localisation
+    </label>
+
+    <div class="input-wrapper">
+      <span class="input-wrapper__icon">○</span>
+
+      <input
+        id="location"
+        type="text"
+        [(ngModel)]="location"
+        placeholder="Ville, région..." />
+    </div>
+
+  </div>
+
+  <div class="filter-section filter-section--compact">
+
+    <label class="switch-row">
+
+      <div>
+        <strong>Télétravail uniquement</strong>
+        <span>Afficher les offres 100 % remote</span>
+      </div>
+
+      <input
+        type="checkbox"
+        [(ngModel)]="remoteOnly" />
+
+      <span class="switch" aria-hidden="true">
+        <span></span>
+      </span>
+
+    </label>
+
+  </div>
+
+  <div class="filter-section">
+
+    <div class="filter-section__title">
+      Type de contrat
+    </div>
+
+    <div class="checkbox-list">
+
+      <label class="checkbox-row">
+        <input
+          type="checkbox"
+          [checked]="contractTypes.includes(ContractType.Permanent)"
+          (change)="toggleContractType(ContractType.Permanent, $any($event.target).checked)" />
+
+        <span class="checkbox-control"></span>
+        <span>CDI</span>
+      </label>
+
+      <label class="checkbox-row">
+        <input
+          type="checkbox"
+          [checked]="contractTypes.includes(ContractType.FixedTerm)"
+          (change)="toggleContractType(ContractType.FixedTerm, $any($event.target).checked)" />
+
+        <span class="checkbox-control"></span>
+        <span>CDD</span>
+      </label>
+
+      <label class="checkbox-row">
+        <input
+          type="checkbox"
+          [checked]="contractTypes.includes(ContractType.Freelance)"
+          (change)="toggleContractType(ContractType.Freelance, $any($event.target).checked)" />
+
+        <span class="checkbox-control"></span>
+        <span>Freelance</span>
+      </label>
+
+      <label class="checkbox-row">
+        <input
+          type="checkbox"
+          [checked]="contractTypes.includes(ContractType.Internship)"
+          (change)="toggleContractType(ContractType.Internship, $any($event.target).checked)" />
+
+        <span class="checkbox-control"></span>
+        <span>Stage</span>
+      </label>
+
+      <label class="checkbox-row">
+        <input
+          type="checkbox"
+          [checked]="contractTypes.includes(ContractType.Apprenticeship)"
+          (change)="toggleContractType(ContractType.Apprenticeship, $any($event.target).checked)" />
+
+        <span class="checkbox-control"></span>
+        <span>Alternance</span>
+      </label>
+
+    </div>
+
+  </div>
+
+  <div class="filter-section">
+
+    <label class="filter-label" for="salaryMin">
+      Salaire minimum
+    </label>
+
+    <div class="salary-input">
+      <input
+        id="salaryMin"
+        type="number"
+        min="0"
+        step="1000"
+        [(ngModel)]="salaryMin"
+        placeholder="Ex. 50 000" />
+
+      <span>€ / an</span>
+    </div>
+
+  </div>
+
+  <div class="filters-actions">
+
+    <button
+      type="button"
+      class="apply-button"
+      (click)="applyFilters()">
+      Appliquer les filtres
+    </button>
+
+  </div>
+
+</aside>

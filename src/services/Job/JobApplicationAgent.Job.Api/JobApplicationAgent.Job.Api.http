@@ -1,6 +1,23 @@
-@JobApplicationAgent.Job.Api_HostAddress = http://localhost:5138
+@JobApi = http://localhost:5002
 
-GET {{JobApplicationAgent.Job.Api_HostAddress}}/weatherforecast/
+GET {{JobApi}}/api/v1/jobs?page=1&pageSize=20
 Accept: application/json
 
-###
+### Créer une offre
+POST {{JobApi}}/api/v1/jobs
+Content-Type: application/json
+
+{
+  "title": "Data Engineer",
+  "companyName": "Example",
+  "location": "Paris",
+  "workMode": "Hybrid",
+  "contractType": "Permanent",
+  "salaryMin": 50000,
+  "salaryMax": 65000,
+  "salaryCurrency": "EUR",
+  "description": "Construction de plateformes de données",
+  "source": "Manual",
+  "sourceUrl": "https://example.com/jobs/123",
+  "publishedAtUtc": null
+}
