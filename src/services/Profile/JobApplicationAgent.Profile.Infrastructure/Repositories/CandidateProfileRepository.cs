@@ -84,5 +84,19 @@ namespace JobApplicationAgent.Profile.Infrastructure.Repositories
                 .Include(x => x.Certifications)
                 .SingleOrDefaultAsync(cancellationToken);
         }
+
+        public Task<CandidateProfile?> GetForMatchingAsync(CancellationToken cancellationToken = default)
+        {
+            return dbContext.CandidateProfiles
+                            .AsNoTracking()
+                            .AsSplitQuery()
+                            .Include(x => x.Preferences)
+                            .Include(x => x.ProfessionalExperiences)
+                            .Include(x => x.Skills)
+                            .Include(x => x.Educations)
+                            .Include(x => x.Certifications)
+                            .Include(x => x.Languages)
+                            .SingleOrDefaultAsync(cancellationToken);
+        }
     }
 }
