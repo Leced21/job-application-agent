@@ -30,6 +30,7 @@ using JobApplicationAgent.Profile.Application.Profiles.Certifications.Update;
 using JobApplicationAgent.Profile.Application.Profiles.Languages.Delete;
 using JobApplicationAgent.Profile.Application.Profiles.Links.Delete;
 using JobApplicationAgent.Profile.Application.Profiles.Certifications.Delete;
+using JobApplicationAgent.Profile.Application.Profiles.Matching;
 
 
 namespace JobApplicationAgent.Profile.Api.Controllers
@@ -66,7 +67,8 @@ namespace JobApplicationAgent.Profile.Api.Controllers
                                             AddPreferencesHandler addPreferencesHandler,
                                             GetPreferencesHandler getPreferencesHandler,
                                             UpdatePreferencesHandler updatePreferencesHandler,
-                                            DeletePreferencesHandler deletePreferencesHandler
+                                            DeletePreferencesHandler deletePreferencesHandler,
+                                            GetProfileMatchingDataHandler matchingDataHandler
                                             ) : ControllerBase
     {
         [HttpGet]
@@ -332,6 +334,17 @@ namespace JobApplicationAgent.Profile.Api.Controllers
         {
             await deletePreferencesHandler.HandleAsync(cancellationToken);
             return NoContent();
+        }
+
+        [HttpGet("matching-data")]
+        public async Task<IActionResult> GetMatchingData(
+            CancellationToken cancellationToken)
+        {
+            var matchingData = await matchingDataHandler.HandleAsync(cancellationToken);
+
+            return matchingData is null
+                ? NotFound()
+                : Ok(matchingData);
         }
     }
 }

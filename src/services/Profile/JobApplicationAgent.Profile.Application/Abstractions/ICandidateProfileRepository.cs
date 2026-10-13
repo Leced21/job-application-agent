@@ -21,5 +21,6 @@ namespace JobApplicationAgent.Profile.Application.Abstractions
         Task<CandidateProfile?> GetWithLanguagesAsync(CancellationToken cancellationToken = default);
         Task<CandidateProfile?> GetWithLinksAsync(CancellationToken cancellationToken = default);
         Task<CandidateProfile?> GetWithCertificationsAsync(CancellationToken cancellationToken = default);
+        Task<CandidateProfile?> GetForMatchingAsync(CancellationToken cancellationToken = default);
     }
 }

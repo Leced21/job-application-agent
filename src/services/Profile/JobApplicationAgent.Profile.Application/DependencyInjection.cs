@@ -31,6 +31,7 @@ using JobApplicationAgent.Profile.Application.Profiles.Certifications.Update;
 using JobApplicationAgent.Profile.Application.Profiles.Languages.Delete;
 using JobApplicationAgent.Profile.Application.Profiles.Links.Delete;
 using JobApplicationAgent.Profile.Application.Profiles.Certifications.Delete;
+using JobApplicationAgent.Profile.Application.Profiles.Matching;
 
 
 namespace JobApplicationAgent.Profile.Application
@@ -71,6 +72,7 @@ namespace JobApplicationAgent.Profile.Application
             services.AddScoped<GetPreferencesHandler>();
             services.AddScoped<UpdatePreferencesHandler>();
             services.AddScoped<DeletePreferencesHandler>();
+            services.AddScoped<GetProfileMatchingDataHandler>();
             return services;
         }
     }
