@@ -27,6 +27,9 @@
     <Project Path="tests/Job/JobApplicationAgent.Job.IntegrationTests/JobApplicationAgent.Job.IntegrationTests.csproj" />
     <Project Path="tests/Job/JobApplicationAgent.Job.UnitTests/JobApplicationAgent.Job.UnitTests.csproj" />
   </Folder>
+  <Folder Name="/tests/Matching/">
+    <Project Path="tests/Matching/JobApplicationAgent.Matching.UnitTests/JobApplicationAgent.Matching.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/tests/Profile/">
     <Project Path="tests/Profile/JobApplicationAgent.Profile.IntegrationTests/JobApplicationAgent.Profile.IntegrationTests.csproj" />
     <Project Path="tests/Profile/JobApplicationAgent.Profile.UnitTests/JobApplicationAgent.Profile.UnitTests.csproj" />
