@@ -106,8 +106,8 @@ try {
 
     $manifestCertificates = New-Object 'System.Collections.Generic.List[object]'
     foreach ($definition in $certificateDefinitions) {
-        $rsa = [System.Security.Cryptography.RSA]::Create()
-        $rsa.KeySize = $KeyLength
+        $rsa = [System.Security.Cryptography.RSACryptoServiceProvider]::new($KeyLength)
+        $rsa.PersistKeyInCsp = $false
         $rsaKeys.Add($rsa)
 
         $request = [System.Security.Cryptography.X509Certificates.CertificateRequest]::new(
@@ -162,6 +162,7 @@ try {
         $verificationPassword = ConvertTo-TemporaryPlainText -SecureValue $definition.Password
         $verificationBytes = $null
         $verifiedCertificate = $null
+        $verifiedRsaKey = $null
         try {
             $verificationBytes = [System.IO.File]::ReadAllBytes($definition.Path)
             $verifiedCertificate = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new(
@@ -169,16 +170,21 @@ try {
                 $verificationPassword,
                 [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::EphemeralKeySet
             )
+            $verifiedRsaKey = [System.Security.Cryptography.X509Certificates.RSACertificateExtensions]::GetRSAPrivateKey($verifiedCertificate)
             $verifiedUsage = @($verifiedCertificate.Extensions | Where-Object { $_ -is [System.Security.Cryptography.X509Certificates.X509KeyUsageExtension] } | Select-Object -First 1)
             if (-not $verifiedCertificate.HasPrivateKey -or
+                -not $verifiedRsaKey -or
                 $verifiedCertificate.Thumbprint -ne $certificate.Thumbprint -or
-                $verifiedCertificate.PrivateKey.KeySize -lt 2048 -or
+                $verifiedRsaKey.KeySize -lt 2048 -or
                 $verifiedUsage.Count -ne 1 -or
                 ([int]$verifiedUsage[0].KeyUsages -band [int]$definition.KeyUsage) -ne [int]$definition.KeyUsage) {
                 throw "The exported $($definition.Name) PFX failed its private-key or usage validation."
             }
         }
         finally {
+            if ($verifiedRsaKey) {
+                $verifiedRsaKey.Dispose()
+            }
             if ($verifiedCertificate) {
                 $verifiedCertificate.Dispose()
             }

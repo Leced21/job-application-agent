@@ -190,12 +190,17 @@ for (const outcome of ['Submitted', 'Unknown'] as const) {
   await page.getByLabel(/Je confirme que ce résultat correspond/).check();
   await page.getByRole('button', { name: 'Enregistrer le résultat' }).click();
 
+  const resultStatus = page.locator('.controlled-status');
+  await expect(resultStatus).toBeVisible();
+
   if (outcome === 'Submitted') {
-    await expect(page.getByText('Envoi confirmé', { exact: false })).toBeVisible();
+    await expect(resultStatus).toContainText('Envoi confirmé');
     await expect(page.locator('.detail-heading .status-pill')).toHaveText('Envoyée manuellement');
   } else {
-    await expect(page.getByText(/Résultat incertain/)).toBeVisible();
-    await expect(page.getByText(/Aucune nouvelle tentative contrôlée ne sera réservée/)).toBeVisible();
+    await expect(resultStatus).toContainText('Résultat incertain');
+    await expect(resultStatus).toContainText(
+      'Aucune nouvelle tentative contrôlée ne sera réservée',
+    );
     await expect(page.getByRole('button', { name: 'Réserver la tentative' })).toHaveCount(0);
     await expect(page.getByRole('heading', { name: 'Enregistrer un envoi manuel' })).toHaveCount(0);
   }
