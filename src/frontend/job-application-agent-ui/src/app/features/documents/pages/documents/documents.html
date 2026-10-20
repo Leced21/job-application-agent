@@ -1,0 +1,89 @@
+<main class="documents-page" aria-labelledby="documents-title" [attr.aria-busy]="loading() || uploading() || savingSeries()">
+    <header class="page-heading">
+      <div><span class="eyebrow">Votre espace Documents</span><h1 id="documents-title">CV et versions</h1><p>Importez vos fichiers et regroupez-les dans des historiques que vous choisissez.</p></div>
+    </header>
+
+    <section class="overview" aria-label="Résumé de vos documents">
+      <article><span class="metric-icon" aria-hidden="true">▤</span><div><small>CV importés</small><strong>{{ resumes().length }}</strong></div></article>
+      <article><span class="metric-icon metric-icon--violet" aria-hidden="true">↗</span><div><small>Dossiers de versions</small><strong>{{ series().length }}</strong></div></article>
+      <article><span class="metric-icon metric-icon--green" aria-hidden="true">◫</span><div><small>Stockage représenté</small><strong>{{ totalSize() | number:'1.0-0' }} <small>octets</small></strong></div></article>
+    </section>
+
+    @if (error()) { <div class="error-banner" role="alert"><span>{{ error() }}</span><button type="button" (click)="error.set(null)" aria-label="Fermer le message">×</button></div> }
+
+    <section class="upload-panel" aria-labelledby="upload-title">
+      <div class="upload-copy"><span class="upload-icon" aria-hidden="true">↑</span><div><h2 id="upload-title">Ajouter un CV</h2><p>PDF ou DOCX, 5 Mio maximum. Le fichier original est conservé dans votre espace Documents.</p></div></div>
+      <label class="button button--primary file-button" [class.file-button--disabled]="uploading()">
+        {{ uploading() ? 'Import en cours…' : 'Choisir un fichier' }}
+        <input #resumeFile type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" [disabled]="uploading()" (change)="upload(resumeFile)">
+      </label>
+    </section>
+
+    @if (loading()) {
+      <div class="state-panel" role="status"><span class="loader" aria-hidden="true"></span>Chargement de vos documents…</div>
+    } @else {
+      <section class="section-block" aria-labelledby="resume-list-title">
+        <div class="section-heading"><div><span class="eyebrow">Fichiers conservés</span><h2 id="resume-list-title">Mes CV</h2></div><button class="icon-button" type="button" (click)="load()" aria-label="Actualiser les documents">↻</button></div>
+        @if (resumes().length) {
+          <div class="resume-list">
+            @for (resume of resumes(); track resume.id) {
+              <article class="resume-row">
+                <span class="file-icon" aria-hidden="true">{{ resume.fileName.toLowerCase().endsWith('.pdf') ? 'PDF' : 'DOC' }}</span>
+                <div class="resume-row__main"><strong>{{ resume.fileName }}</strong><span>{{ formatSize(resume.length) }} · Importé le {{ resume.uploadedAtUtc | date:'d MMM y':'':'fr' }}</span></div>
+                <span class="status-pill">{{ statusLabel(resume.status) }}</span>
+                <button class="button button--secondary" type="button" (click)="download(resume)">Télécharger</button>
+              </article>
+            }
+          </div>
+        } @else {
+          <div class="empty-panel"><span class="empty-icon" aria-hidden="true">▤</span><div><strong>Aucun CV importé</strong><p>Ajoutez un PDF ou un DOCX pour commencer votre bibliothèque de documents.</p></div></div>
+        }
+      </section>
+
+      <section class="section-block" aria-labelledby="series-title">
+        <div class="section-heading"><div><span class="eyebrow">Organisation explicite</span><h2 id="series-title">Dossiers et versions</h2></div></div>
+        @if (resumes().length) {
+          <form class="series-create" (submit)="createSeries(seriesName.value, firstResume.value, firstLabel.value); $event.preventDefault()">
+            <div class="series-create__copy"><strong>Créer un dossier</strong><p>Choisissez vous-même le CV initial ; aucun regroupement n’est déduit automatiquement.</p></div>
+            <label>Nom du dossier<input #seriesName maxlength="200" required placeholder="Ex. CV Développement backend"></label>
+            <label>CV initial<select #firstResume required><option value="" disabled selected>Sélectionner un CV</option>@for (resume of resumes(); track resume.id) { <option [value]="resume.id">{{ resume.fileName }}</option> }</select></label>
+            <label>Libellé de version<input #firstLabel maxlength="200" placeholder="Facultatif"></label>
+            <button class="button button--primary" type="submit" [disabled]="savingSeries()">Créer le dossier</button>
+          </form>
+        }
+
+        @if (series().length) {
+          <div class="series-list">
+            @for (folder of series(); track folder.id) {
+              <article class="series-card">
+                <button class="series-card__heading" type="button" [attr.aria-expanded]="expandedSeriesId() === folder.id" (click)="toggleVersions(folder.id)">
+                  <span class="folder-icon" aria-hidden="true">▱</span><span class="series-card__identity"><strong>{{ folder.name }}</strong><small>{{ folder.versionCount }} {{ folder.versionCount === 1 ? 'version' : 'versions' }} · Créé le {{ folder.createdAtUtc | date:'d MMM y':'':'fr' }}</small></span><span class="chevron" aria-hidden="true">{{ expandedSeriesId() === folder.id ? '⌃' : '⌄' }}</span>
+                </button>
+                @if (expandedSeriesId() === folder.id) {
+                  <div class="series-card__body">
+                    @if (versionsLoading()) { <p class="muted-state" role="status">Chargement de l’historique…</p> }
+                    @else {
+                      <ol class="version-list">
+                        @for (version of versions(); track version.versionNumber) {
+                          <li><span class="version-number">v{{ version.versionNumber }}</span><span class="version-copy"><strong>{{ version.resume.fileName }}</strong><small>{{ version.label || 'Sans libellé' }} · {{ version.addedAtUtc | date:'d MMM y':'':'fr' }}</small></span><button class="text-button" type="button" (click)="download(version.resume)">Télécharger</button></li>
+                        }
+                      </ol>
+                      <form class="add-version" (submit)="addVersion(folder.id, nextResume.value, nextLabel.value); $event.preventDefault()">
+                        <label>Ajouter une version<select #nextResume required><option value="" disabled selected>Sélectionner un CV importé</option>@for (resume of resumes(); track resume.id) { <option [value]="resume.id">{{ resume.fileName }}</option> }</select></label>
+                        <label>Libellé<input #nextLabel maxlength="200" placeholder="Facultatif"></label>
+                        <button class="button button--secondary" type="submit" [disabled]="savingSeries()">Ajouter</button>
+                      </form>
+                    }
+                  </div>
+                }
+              </article>
+            }
+          </div>
+        } @else if (!resumes().length) {
+          <p class="muted-state">Importez d’abord un CV pour créer un dossier de versions.</p>
+        } @else {
+          <p class="muted-state">Aucun dossier pour le moment. Créez un dossier pour commencer un historique de CV.</p>
+        }
+      </section>
+    }
+</main>

@@ -1,6 +1,7 @@
 using JobEntity = JobApplicationAgent.Job.Domain.Entities.Job;
 using JobApplicationAgent.Job.Application.Abstractions;
 using JobApplicationAgent.Job.Domain.Entities;
+using JobApplicationAgent.Job.Domain.Enums;
 using JobApplicationAgent.Job.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -26,6 +27,35 @@ public sealed class JobRepository
             .AsNoTracking()
             .OrderByDescending(x => x.CreatedAtUtc)
             .ThenBy(x => x.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<JobEntity>> GetPageByStatusesAsync(
+        IReadOnlyCollection<JobStatus> statuses,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(statuses);
+        if (page is < 1 or > 1_000_000)
+            throw new ArgumentOutOfRangeException(nameof(page));
+        if (pageSize is < 1 or > 100)
+            throw new ArgumentOutOfRangeException(nameof(pageSize));
+        if (statuses.Any(status => !Enum.IsDefined(status)))
+            throw new ArgumentException("Unknown job status.", nameof(statuses));
+
+        cancellationToken.ThrowIfCancellationRequested();
+        if (statuses.Count == 0)
+            return [];
+
+        var allowedStatuses = statuses.Distinct().ToArray();
+        return await _dbContext.Jobs
+            .AsNoTracking()
+            .Where(job => allowedStatuses.Contains(job.Status))
+            .OrderByDescending(job => job.CreatedAtUtc)
+            .ThenBy(job => job.Id)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(cancellationToken);

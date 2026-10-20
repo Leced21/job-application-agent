@@ -11,6 +11,7 @@ namespace JobApplicationAgent.Profile.UnitTests.Application.Profiles.Create
     {
         private readonly ICandidateProfileRepository _repository;
         private readonly IValidator<CreateCandidateProfileCommand> _validator;
+        private readonly ICurrentProfileOwner _owner;
         private readonly CreateCandidateProfileHandler _handler;
 
         public CreateCandidateProfileHandlerTests()
@@ -18,10 +19,13 @@ namespace JobApplicationAgent.Profile.UnitTests.Application.Profiles.Create
             _repository = Substitute.For<ICandidateProfileRepository>();
 
             _validator = new CreateCandidateProfileCommandValidator();
+            _owner = Substitute.For<ICurrentProfileOwner>();
+            _owner.OwnerId.Returns(Guid.Parse("48c6a244-09d4-405f-b46e-74655149a352"));
 
             _handler = new CreateCandidateProfileHandler(
                 _repository,
-                _validator);
+                _validator,
+                _owner);
         }
 
         [Fact]
@@ -49,7 +53,7 @@ namespace JobApplicationAgent.Profile.UnitTests.Application.Profiles.Create
             await _repository
                 .Received(1)
                 .AddAsync(
-                    Arg.Any<CandidateProfile>(),
+                    Arg.Is<CandidateProfile>(profile => profile.OwnerId == _owner.OwnerId),
                     Arg.Any<CancellationToken>());
 
             await _repository

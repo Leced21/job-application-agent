@@ -1,0 +1,19 @@
+services:
+  agents-db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${AGENTS_DB_NAME:-agents_db}
+      POSTGRES_USER: ${AGENTS_DB_USER:?Set AGENTS_DB_USER locally}
+      POSTGRES_PASSWORD: ${AGENTS_DB_PASSWORD:?Set AGENTS_DB_PASSWORD locally}
+    ports:
+      - "127.0.0.1:5438:5432"
+    volumes:
+      - agents_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+volumes:
+  agents_postgres_data:

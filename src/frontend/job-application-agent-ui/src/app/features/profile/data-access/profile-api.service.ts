@@ -20,6 +20,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { CandidateProfile } from '../models/candidate-profile.model';
+import { CreateCandidateProfile } from '../models/create-candidate-profile.model';
 import { UpdateCandidateProfile } from '../models/update-candidate-profile.model';
 import { UpdateProfessionalExperience } from '../models/update-professional-experience.model';
 import { ProfessionalExperience } from '../models/professional-experience.model';
@@ -35,6 +36,9 @@ export class ProfileApiService {
 
     getProfile(): Observable<CandidateProfile> {
         return this.http.get<CandidateProfile>(this.baseUrl);
+    }
+    createProfile(command: CreateCandidateProfile): Observable<CandidateProfile> {
+        return this.http.post<CandidateProfile>(this.baseUrl, command);
     }
     updateProfile(command: UpdateCandidateProfile): Observable<CandidateProfile> {
         return this.http.put<CandidateProfile>(this.baseUrl, command);

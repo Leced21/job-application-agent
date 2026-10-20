@@ -24,9 +24,11 @@ namespace JobApplicationAgent.Profile.Domain.Entities
             string email,
             string? phoneNumber = null,
             string? jobTitle = null,
-            string? summary = null)
+            string? summary = null,
+            Guid? ownerId = null)
         {
             Id = Guid.NewGuid();
+            OwnerId = ownerId;
             FirstName = firstName;
             LastName = lastName;
             Email = email;
@@ -37,6 +39,7 @@ namespace JobApplicationAgent.Profile.Domain.Entities
             UpdatedAtUtc = DateTime.UtcNow;
         }
         public Guid Id { get; private set; }
+        public Guid? OwnerId { get; private set; }
         public string FirstName { get; private set; } = string.Empty;
         public string LastName { get; private set; } = string.Empty;
         public string Email { get; private set; } = string.Empty;

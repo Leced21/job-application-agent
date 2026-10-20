@@ -1,0 +1,48 @@
+services:
+  agents-api:
+    build:
+      context: .
+      dockerfile: src/services/Agents/Dockerfile
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: 8080
+      ConnectionStrings__AgentsDatabase: Host=agents-db;Port=5432;Database=${AGENTS_DB_NAME:-agents_db};Username=${AGENTS_DB_USER:?Set AGENTS_DB_USER locally};Password=${AGENTS_DB_PASSWORD:?Set AGENTS_DB_PASSWORD locally}
+      Agents__LocalAuth__OwnerId: ${AGENTS_OWNER_ID:?Set AGENTS_OWNER_ID locally}
+      Agents__LocalAuth__Token: ${AGENTS_LOCAL_TOKEN:?Set AGENTS_LOCAL_TOKEN locally}
+      Agents__Quota__MaxTokens: ${AGENTS_MAX_TOKENS:-100000}
+      Agents__Quota__MaxUsd: ${AGENTS_MAX_USD:-0}
+      Agents__Model__Provider: Disabled
+      Agents__JobBaseUrl: http://job-api:8080/
+      Agents__ProfileAnalysis__Enabled: "false"
+      Agents__ProfileAnalysis__BaseUrl: http://profile-api:8080/
+      Agents__MatchingEnrichment__Enabled: "false"
+      Agents__MatchingEnrichment__BaseUrl: http://matching-api:8080/
+      Agents__ResumeAdaptation__Enabled: "false"
+      Agents__ResumeAdaptation__ProfileBaseUrl: http://profile-api:8080/
+      Agents__ResumeAdaptation__JobBaseUrl: http://job-api:8080/
+      Agents__CoverLetter__Enabled: "false"
+      Agents__CoverLetter__ProfileBaseUrl: http://profile-api:8080/
+      Agents__CoverLetter__JobBaseUrl: http://job-api:8080/
+      Agents__ApplicationPreparation__Enabled: "false"
+      Agents__ApplicationPreparation__ProfileBaseUrl: http://profile-api:8080/
+      Agents__ApplicationPreparation__JobBaseUrl: http://job-api:8080/
+      Agents__FollowUpSuggestion__Enabled: "false"
+      Agents__FollowUpSuggestion__ApplicationsBaseUrl: http://applications-api:8080/
+    ports:
+      - "127.0.0.1:5008:8080"
+    depends_on:
+      agents-db:
+        condition: service_healthy
+      job-api:
+        condition: service_healthy
+      profile-api:
+        condition: service_healthy
+      matching-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:8080/health/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s

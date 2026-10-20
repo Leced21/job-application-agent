@@ -86,6 +86,34 @@ namespace JobApplicationAgent.Profile.IntegrationTests.Api
             // Assert
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         }
+
+        [Fact]
+        public async Task Get_ShouldRequireGatewayServiceToken()
+        {
+            using var unauthenticatedClient = _factory.CreateUnauthenticatedClient();
+
+            var response = await unauthenticatedClient.GetAsync("/api/v1/profile");
+
+            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task Get_ShouldNotExposeAnotherOwnersProfile()
+        {
+            await _factory.ResetDatabaseAsync();
+            var otherOwnerProfile = new JobApplicationAgent.Profile.Domain.Entities.CandidateProfile(
+                "Private", "Candidate", "private@example.com", ownerId: Guid.NewGuid());
+            using (var scope = _factory.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<ProfileDbContext>();
+                db.CandidateProfiles.Add(otherOwnerProfile);
+                await db.SaveChangesAsync();
+            }
+
+            var response = await _client.GetAsync("/api/v1/profile");
+
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        }
         [Fact]
         public async Task Create_ShouldReturnCreated_WhenCommandIsValid()
         {

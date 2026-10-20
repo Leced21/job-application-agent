@@ -55,6 +55,9 @@ public sealed class MatchingCriterion
         Status = status;
     }
 
+    public static MatchingCriterion NotApplicable(string name, decimal weight, string explanation) =>
+        new(name, null, weight, explanation, MatchingCriterionStatus.NotApplicable);
+
     public static MatchingCriterion NotEvaluated(
         string name,
         decimal weight,

@@ -3,5 +3,6 @@ namespace JobApplicationAgent.Matching.Domain.Enums;
 public enum MatchingCriterionStatus
 {
     Evaluated = 0,
-    NotEvaluated = 1
+    NotEvaluated = 1,
+    NotApplicable = 2
 }

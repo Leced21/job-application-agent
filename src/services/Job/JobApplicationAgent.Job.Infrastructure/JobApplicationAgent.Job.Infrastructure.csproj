@@ -1,6 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <Compile Include="..\..\..\shared\JobApplicationAgent.Observability\EventTransportMetrics.cs" Link="Observability\EventTransportMetrics.cs" />
+    <Compile Include="..\..\..\shared\JobApplicationAgent.Observability\TraceContextHeaders.cs" Link="Observability\TraceContextHeaders.cs" />
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <ProjectReference Include="..\JobApplicationAgent.Job.Domain\JobApplicationAgent.Job.Domain.csproj" />
     <ProjectReference Include="..\JobApplicationAgent.Job.Application\JobApplicationAgent.Job.Application.csproj" />
   </ItemGroup>
@@ -13,6 +16,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.12" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+    <PackageReference Include="RabbitMQ.Client" Version="7.2.2" />
   </ItemGroup>
 
   <PropertyGroup>

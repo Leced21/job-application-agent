@@ -1,0 +1,78 @@
+services:
+  agents-ollama:
+    image: ollama/ollama:0.40.5
+    restart: unless-stopped
+    gpus: all
+    environment:
+      OLLAMA_NO_CLOUD: "1"
+      OLLAMA_MODELS: /models
+      OLLAMA_KEEP_ALIVE: 30m
+      OLLAMA_MAX_LOADED_MODELS: "1"
+      OLLAMA_NUM_PARALLEL: "1"
+    volumes:
+      - type: bind
+        source: ${AGENTS_OLLAMA_MODELS_PATH:?Run tools/Start-LocalAgentsCompose.ps1 to validate Ollama and set local paths}
+        target: /models
+        read_only: true
+    networks:
+      - agents-model
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /root/.ollama
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  agents-api:
+    environment:
+      Agents__Model__Provider: Ollama
+      Agents__Model__BaseUrl: http://agents-ollama:11434/
+      Agents__Model__ModelName: qwen2.5:7b
+      Agents__Model__ModelDigest: 845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e
+      Agents__Model__TokenizerProfile: Qwen2
+      Agents__Model__TokenizerPath: /app/qwen2.tiktoken
+      Agents__Model__TokenizerSha256: 6cf5f2a2560a7d581548aeb0c31c6a60de2d3e873152346e421affc871699be4
+      Agents__Model__MaxInputTokens: "4096"
+      Agents__Model__MaxOutputTokens: "1024"
+      Agents__Model__ContextSize: "8192"
+      Agents__Model__TimeoutSeconds: "120"
+      Agents__Model__AllowJobDescriptions: "true"
+      Agents__Model__LocalServerCloudDisabled: "true"
+      Agents__ProfileAnalysis__Enabled: "true"
+      Agents__ProfileAnalysis__BaseUrl: http://profile-api:8080/
+      Agents__MatchingEnrichment__Enabled: "true"
+      Agents__MatchingEnrichment__BaseUrl: http://matching-api:8080/
+      Agents__ResumeAdaptation__Enabled: "true"
+      Agents__ResumeAdaptation__ProfileBaseUrl: http://profile-api:8080/
+      Agents__ResumeAdaptation__JobBaseUrl: http://job-api:8080/
+      Agents__CoverLetter__Enabled: "true"
+      Agents__CoverLetter__ProfileBaseUrl: http://profile-api:8080/
+      Agents__CoverLetter__JobBaseUrl: http://job-api:8080/
+      Agents__ApplicationPreparation__Enabled: "true"
+      Agents__ApplicationPreparation__ProfileBaseUrl: http://profile-api:8080/
+      Agents__ApplicationPreparation__JobBaseUrl: http://job-api:8080/
+      Agents__FollowUpSuggestion__Enabled: "true"
+      Agents__FollowUpSuggestion__ApplicationsBaseUrl: http://applications-api:8080/
+    volumes:
+      - type: bind
+        source: ${AGENTS_OLLAMA_TOKENIZER_PATH:?Run tools/Start-LocalAgentsCompose.ps1 to validate Ollama and set local paths}
+        target: /app/qwen2.tiktoken
+        read_only: true
+    networks:
+      - default
+      - agents-model
+    depends_on:
+      agents-ollama:
+        condition: service_healthy
+      applications-api:
+        condition: service_healthy
+
+networks:
+  agents-model:
+    internal: true

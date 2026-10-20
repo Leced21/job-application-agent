@@ -10,8 +10,8 @@
   box-sizing: border-box;
   flex-direction: column;
   padding: 24px 16px;
-  border-right: 1px solid #e7eaf0;
-  background: #fff;
+  border-right: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .brand {
@@ -26,13 +26,13 @@
   }
 
   strong {
-    color: #172033;
+    color: var(--color-ink);
     font-size: 18px;
   }
 
   span {
     margin-top: 2px;
-    color: #98a2b3;
+    color: var(--color-subtle);
     font-size: 11px;
   }
 }
@@ -43,7 +43,7 @@
   height: 40px;
   place-items: center;
   border-radius: 12px;
-  background: #5665d8;
+  background: var(--color-brand);
   color: #fff;
   font-size: 19px;
   font-weight: 700;
@@ -60,7 +60,7 @@
   gap: 12px;
   padding: 11px 12px;
   border-radius: 10px;
-  color: #667085;
+  color: var(--color-muted);
   font-size: 14px;
   font-weight: 500;
   text-decoration: none;
@@ -70,13 +70,13 @@
 
   &:hover {
     background: #f7f8fc;
-    color: #344054;
+    color: var(--color-ink);
   }
 }
 
 .navigation__item--active {
-  background: #eef0ff;
-  color: #5665d8;
+  background: var(--color-brand-soft);
+  color: var(--color-brand);
   font-weight: 600;
 }
 
@@ -90,7 +90,7 @@
 .navigation__separator {
   height: 1px;
   margin: 12px 8px;
-  background: #eef0f3;
+  background: var(--color-line);
 }
 
 .sidebar__footer {
@@ -98,60 +98,44 @@
   padding-top: 24px;
 }
 
-.goal-card {
+.profile-tip {
+  display: grid;
+  justify-items: start;
   padding: 16px;
-  border: 1px solid #e7eaf0;
+  border: 1px solid var(--color-line);
   border-radius: 14px;
-  background: #f9faff;
+  background: #f8f9ff;
 
   p {
     margin: 8px 0 12px;
-    color: #98a2b3;
+    color: var(--color-muted);
     font-size: 11px;
     line-height: 1.5;
   }
 
-  button {
-    padding: 0;
-    border: 0;
-    background: transparent;
-    color: #5665d8;
-    cursor: pointer;
+  a {
+    color: var(--color-brand);
     font-size: 12px;
     font-weight: 600;
+    text-decoration: none;
   }
 }
 
-.goal-card__header {
-  display: flex;
-  justify-content: space-between;
-  color: #475467;
-  font-size: 11px;
-
-  strong {
-    color: #5665d8;
-  }
-}
-
-.goal-card__progress {
-  height: 6px;
-  overflow: hidden;
-  margin: 10px 0;
-  border-radius: 999px;
-  background: #e8eaf5;
-
-  span {
-    display: block;
-    width: 50%;
-    height: 100%;
-    border-radius: inherit;
-    background: #5665d8;
-  }
-}
-
-.goal-card__count {
-  color: #172033;
+.profile-tip > strong {
+  margin-top: 10px;
+  color: var(--color-ink);
   font-size: 12px;
+  line-height: 1.45;
+}
+
+.profile-tip__icon {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--color-brand-soft);
+  color: var(--color-brand);
 }
 
 @media (max-width: 1200px) and (min-width: 769px) {

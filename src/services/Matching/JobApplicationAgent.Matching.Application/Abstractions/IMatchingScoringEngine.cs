@@ -5,6 +5,8 @@ namespace JobApplicationAgent.Matching.Application.Abstractions;
 
 public interface IMatchingScoringEngine
 {
+    string Version => MatchingResult.LegacyScoringVersion;
+
     Task<IReadOnlyCollection<MatchingCriterion>> EvaluateAsync(
         ProfileMatchingData profile,
         JobMatchingData job,

@@ -1,0 +1,20 @@
+La génération a démarré 18/10/2026 11:12:47.
+     1>Projet "C:\Users\cedri\Downloads\repo\job-application-agent\tests\Agents\JobApplicationAgent.Agents.IntegrationTests\JobApplicationAgent.Agents.IntegrationTests.csproj" sur le nœud 1 (VSTest cible(s)).
+     1>BuildProject:
+         La build a démarré. Patientez…
+     1>Le projet "C:\Users\cedri\Downloads\repo\job-application-agent\tests\Agents\JobApplicationAgent.Agents.IntegrationTests\JobApplicationAgent.Agents.IntegrationTests.csproj" (1) génère "C:\Users\cedri\Downloads\repo\job-application-agent\tests\Agents\JobApplicationAgent.Agents.IntegrationTests\JobApplicationAgent.Agents.IntegrationTests.csproj" (1:2) sur le nœud 1 (cibles par défaut).
+     1>C:\Users\cedri\Downloads\repo\job-application-agent\tests\Agents\JobApplicationAgent.Agents.IntegrationTests\JobApplicationAgent.Agents.IntegrationTests.csproj : warning NU1900: Une erreur s’est produite lors de l’obtention des données de vulnérabilité du package : Impossible de charger l'index de service pour la source https://api.nuget.org/v3/index.json.
+     1>Génération du projet "C:\Users\cedri\Downloads\repo\job-application-agent\tests\Agents\JobApplicationAgent.Agents.IntegrationTests\JobApplicationAgent.Agents.IntegrationTests.csproj" terminée (cibles par défaut) -- ÉCHEC.
+     1>Génération du projet "C:\Users\cedri\Downloads\repo\job-application-agent\tests\Agents\JobApplicationAgent.Agents.IntegrationTests\JobApplicationAgent.Agents.IntegrationTests.csproj" terminée (VSTest cible(s)) -- ÉCHEC.
+
+ÉCHEC de la build.
+
+       "C:\Users\cedri\Downloads\repo\job-application-agent\tests\Agents\JobApplicationAgent.Agents.IntegrationTests\JobApplicationAgent.Agents.IntegrationTests.csproj" (VSTest cible) (1) ->
+       "C:\Users\cedri\Downloads\repo\job-application-agent\tests\Agents\JobApplicationAgent.Agents.IntegrationTests\JobApplicationAgent.Agents.IntegrationTests.csproj" (cible par défaut) (1:2) ->
+       (ResolvePackageAssets cible) -> 
+         C:\Users\cedri\Downloads\repo\job-application-agent\tests\Agents\JobApplicationAgent.Agents.IntegrationTests\JobApplicationAgent.Agents.IntegrationTests.csproj : warning NU1900: Une erreur s’est produite lors de l’obtention des données de vulnérabilité du package : Impossible de charger l'index de service pour la source https://api.nuget.org/v3/index.json.
+
+    1 Avertissement(s)
+    0 Erreur(s)
+
+Temps écoulé 00:00:11.31

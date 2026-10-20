@@ -1,0 +1,92 @@
+<main class="dashboard-page" aria-labelledby="dashboard-title"
+  [attr.aria-busy]="loading()">
+  <section class="welcome-panel">
+    <div class="welcome-panel__copy">
+      <span class="eyebrow">Votre espace carrière</span>
+      <h1 id="dashboard-title">Faites avancer votre prochaine étape.</h1>
+      <p>Retrouvez vos meilleures pistes et poursuivez votre recherche depuis un
+        seul endroit.</p>
+      <a class="button button--light" routerLink="/recommendations">Voir mes
+        recommandations <span aria-hidden="true">→</span></a>
+    </div>
+    <div class="welcome-panel__mark"
+      aria-hidden="true"><span>J</span><i></i><i></i><i></i></div>
+  </section>
+
+  <section class="overview" aria-label="Aperçu de votre recherche">
+    <article class="metric-card">
+      <span class="metric-card__icon metric-card__icon--violet"
+        aria-hidden="true">◇</span>
+      <div><p>Offres compatibles</p><strong>{{ totalOffers()
+          }}</strong><small>dans votre sélection actuelle</small></div>
+    </article>
+    <article class="metric-card">
+      <span class="metric-card__icon metric-card__icon--green"
+        aria-hidden="true">↗</span>
+      <div><p>Meilleur score aperçu</p><strong>{{ bestRanking() === null ? '—' :
+          (bestRanking() | number:'1.0-0') + '%' }}</strong><small>parmi les 3
+          premières offres</small></div>
+    </article>
+    <article class="metric-card metric-card--action">
+      <span class="metric-card__icon metric-card__icon--blue"
+        aria-hidden="true">⌕</span>
+      <div><p>Votre recherche</p><strong>Continuez à explorer</strong><a
+          routerLink="/jobs">Parcourir les offres <span
+            aria-hidden="true">→</span></a></div>
+    </article>
+  </section>
+
+  <section class="recommendations-section"
+    aria-labelledby="top-recommendations-title">
+    <div class="section-heading">
+      <div><span class="eyebrow">Sélection personnalisée</span><h2
+          id="top-recommendations-title">Vos meilleures pistes</h2></div>
+      <a class="text-link" routerLink="/recommendations">Toutes les
+        recommandations <span aria-hidden="true">→</span></a>
+    </div>
+    @if (loading()) {
+    <div class="state-panel" role="status"><span class="loader"
+        aria-hidden="true"></span>Chargement de votre sélection…</div>
+    } @else if (error()) {
+    <div class="state-panel state-panel--error" role="alert"><div><strong>Votre
+          sélection est momentanément indisponible.</strong><p>{{ error()
+          }}</p></div><button class="button button--outline" type="button"
+        (click)="load()">Réessayer</button></div>
+    } @else if (page()?.items?.length) {
+    <div class="recommendation-grid">
+      @for (job of page()!.items; track job.jobId) {
+      <a class="recommendation-card" routerLink="/recommendations">
+        <div class="recommendation-card__top"><span class="company-mark"
+            aria-hidden="true">{{ job.companyName.slice(0, 1) }}</span><span
+            class="match-badge">{{ job.rankingScore === null ? 'À évaluer' :
+            (job.rankingScore | number:'1.0-0') + '% de pertinence'
+            }}</span></div>
+        <h3>{{ job.title }}</h3><p class="company-name">{{ job.companyName
+          }}</p>
+        <div class="recommendation-card__meta"><span>{{ job.location ||
+            'Lieu non précisé' }}</span><span>{{ job.evaluationCoverage |
+            number:'1.0-0' }} % évalué</span></div>
+        <span class="recommendation-card__footer">Consulter l’analyse <span
+            aria-hidden="true">→</span></span>
+      </a>
+      }
+    </div>
+    } @else {
+    <div class="state-panel state-panel--empty"><span class="empty-icon"
+        aria-hidden="true">◇</span><div><strong>Votre sélection se construit
+          ici.</strong><p>Complétez votre profil pour obtenir des
+          recommandations adaptées à votre parcours.</p></div><a
+        class="button button--outline" routerLink="/profile">Compléter mon
+        profil</a></div>
+    }
+  </section>
+
+  <section class="quick-links" aria-label="Accès rapides">
+    <a routerLink="/profile"><span aria-hidden="true">○</span><div><strong>Mon
+          profil</strong><small>Compétences, expérience et
+          préférences</small></div><b aria-hidden="true">→</b></a>
+    <a routerLink="/jobs"><span aria-hidden="true">⌕</span><div><strong>Offres
+          d’emploi</strong><small>Explorez le catalogue
+          d’opportunités</small></div><b aria-hidden="true">→</b></a>
+  </section>
+</main>

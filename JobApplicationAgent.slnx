@@ -4,6 +4,31 @@
     <Project Path="src/gateway/JobApplicationAgent.Gateway/JobApplicationAgent.Gateway.csproj" />
   </Folder>
   <Folder Name="/src/services/" />
+  <Folder Name="/src/services/Agents/">
+    <Project Path="src/services/Agents/JobApplicationAgent.Agents.Domain/JobApplicationAgent.Agents.Domain.csproj" />
+    <Project Path="src/services/Agents/JobApplicationAgent.Agents.Api/JobApplicationAgent.Agents.Api.csproj" />
+    <Project Path="src/services/Agents/JobApplicationAgent.Agents.Application/JobApplicationAgent.Agents.Application.csproj" />
+    <Project Path="src/services/Agents/JobApplicationAgent.Agents.Infrastructure/JobApplicationAgent.Agents.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/services/Applications/">
+    <Project Path="src/services/Applications/JobApplicationAgent.Applications.Api/JobApplicationAgent.Applications.Api.csproj" />
+    <Project Path="src/services/Applications/JobApplicationAgent.Applications.Infrastructure/JobApplicationAgent.Applications.Infrastructure.csproj" />
+    <Project Path="src/services/Applications/JobApplicationAgent.Applications.Domain/JobApplicationAgent.Applications.Domain.csproj" />
+    <Project Path="src/services/Applications/JobApplicationAgent.Applications.Application/JobApplicationAgent.Applications.Application.csproj" />
+  </Folder>
+  <Folder Name="/src/services/Collection/">
+    <Project Path="src/services/Collection/JobApplicationAgent.Collection.Domain/JobApplicationAgent.Collection.Domain.csproj" />
+    <Project Path="src/services/Collection/JobApplicationAgent.Collection.Application/JobApplicationAgent.Collection.Application.csproj" />
+    <Project Path="src/services/Collection/JobApplicationAgent.Collection.Infrastructure/JobApplicationAgent.Collection.Infrastructure.csproj" />
+    <Project Path="src/services/Collection/JobApplicationAgent.Collection.Api/JobApplicationAgent.Collection.Api.csproj" />
+  </Folder>
+  <Folder Name="/src/services/Documents/">
+    <Project Path="src/services/Documents/JobApplicationAgent.Documents.Api/JobApplicationAgent.Documents.Api.csproj" />
+    <Project Path="src/services/Documents/JobApplicationAgent.Documents.Application/JobApplicationAgent.Documents.Application.csproj" />
+    <Project Path="src/services/Documents/JobApplicationAgent.Documents.Domain/JobApplicationAgent.Documents.Domain.csproj" />
+    <Project Path="src/services/Documents/JobApplicationAgent.Documents.ExtractionWorker/JobApplicationAgent.Documents.ExtractionWorker.csproj" />
+    <Project Path="src/services/Documents/JobApplicationAgent.Documents.Infrastructure/JobApplicationAgent.Documents.Infrastructure.csproj" />
+  </Folder>
   <Folder Name="/src/services/Job/">
     <Project Path="src/services/Job/JobApplicationAgent.Job.Application/JobApplicationAgent.Job.Application.csproj" />
     <Project Path="src/services/Job/JobApplicationAgent.Job.Domain/JobApplicationAgent.Job.Domain.csproj" />
@@ -23,11 +48,32 @@
     <Project Path="src/services/Profile/JobApplicationAgent.Profile.Infrastructure/JobApplicationAgent.Profile.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/tests/" />
+  <Folder Name="/tests/Gateway/">
+    <Project Path="tests/Gateway/JobApplicationAgent.Gateway.UnitTests/JobApplicationAgent.Gateway.UnitTests.csproj" />
+    <Project Path="tests/Gateway/JobApplicationAgent.Gateway.IntegrationTests/JobApplicationAgent.Gateway.IntegrationTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/Agents/">
+    <Project Path="tests/Agents/JobApplicationAgent.Agents.IntegrationTests/JobApplicationAgent.Agents.IntegrationTests.csproj" />
+    <Project Path="tests/Agents/JobApplicationAgent.Agents.UnitTests/JobApplicationAgent.Agents.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/Applications/">
+    <Project Path="tests/Applications/JobApplicationAgent.Applications.IntegrationTests/JobApplicationAgent.Applications.IntegrationTests.csproj" />
+    <Project Path="tests/Applications/JobApplicationAgent.Applications.UnitTests/JobApplicationAgent.Applications.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/Collection/">
+    <Project Path="tests/Collection/JobApplicationAgent.Collection.UnitTests/JobApplicationAgent.Collection.UnitTests.csproj" />
+    <Project Path="tests/Collection/JobApplicationAgent.Collection.IntegrationTests/JobApplicationAgent.Collection.IntegrationTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/Documents/">
+    <Project Path="tests/Documents/JobApplicationAgent.Documents.IntegrationTests/JobApplicationAgent.Documents.IntegrationTests.csproj" />
+    <Project Path="tests/Documents/JobApplicationAgent.Documents.UnitTests/JobApplicationAgent.Documents.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/tests/Job/">
     <Project Path="tests/Job/JobApplicationAgent.Job.IntegrationTests/JobApplicationAgent.Job.IntegrationTests.csproj" />
     <Project Path="tests/Job/JobApplicationAgent.Job.UnitTests/JobApplicationAgent.Job.UnitTests.csproj" />
   </Folder>
   <Folder Name="/tests/Matching/">
+    <Project Path="tests/Matching/JobApplicationAgent.Matching.IntegrationTests/JobApplicationAgent.Matching.IntegrationTests.csproj" />
     <Project Path="tests/Matching/JobApplicationAgent.Matching.UnitTests/JobApplicationAgent.Matching.UnitTests.csproj" />
   </Folder>
   <Folder Name="/tests/Profile/">

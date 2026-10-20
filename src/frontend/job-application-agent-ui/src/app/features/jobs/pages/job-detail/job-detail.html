@@ -1,0 +1,15 @@
+<main class="job-detail-page" aria-labelledby="job-detail-title" [attr.aria-busy]="loading()">
+  <a class="back-link" routerLink="/jobs"><span aria-hidden="true">←</span> Retour aux offres</a>
+  @if (loading()) {
+    <div class="state-panel" role="status"><span class="loader" aria-hidden="true"></span>Chargement de l’offre…</div>
+  } @else if (error()) {
+    <section class="state-panel state-panel--error" role="alert"><span class="state-icon" aria-hidden="true">!</span><div><h1 id="job-detail-title">Offre indisponible</h1><p>{{ error() }}</p><a class="button" routerLink="/jobs">Parcourir les offres</a></div></section>
+  } @else if (job(); as offer) {
+    <header class="detail-heading">
+      <span class="eyebrow">Détail de l’opportunité</span>
+      <h1 id="job-detail-title">{{ offer.title }}</h1>
+      <p>{{ offer.companyName }} <span aria-hidden="true">·</span> {{ offer.location || 'Localisation non renseignée' }}</p>
+    </header>
+    <app-job-details [job]="offer" [standalone]="true" />
+  }
+</main>

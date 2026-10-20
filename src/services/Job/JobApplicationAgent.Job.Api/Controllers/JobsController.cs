@@ -5,6 +5,7 @@ using JobApplicationAgent.Job.Application.Jobs.Delete;
 using JobApplicationAgent.Job.Application.Jobs.Get;
 using JobApplicationAgent.Job.Application.Jobs.Update;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace JobApplicationAgent.Job.Api.Controllers;
 
@@ -13,6 +14,7 @@ namespace JobApplicationAgent.Job.Api.Controllers;
 public sealed class JobsController : ControllerBase
 {
     [HttpPost]
+    [Authorize(Policy = "JobAdmin")]
     public async Task<IActionResult> Create(
         [FromBody] CreateJobCommand command,
         [FromServices] CreateJobHandler handler,
@@ -41,6 +43,7 @@ public sealed class JobsController : ControllerBase
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> GetAll(
         [FromServices] GetJobsHandler handler,
         CancellationToken cancellationToken,
@@ -53,7 +56,19 @@ public sealed class JobsController : ControllerBase
         return Ok(jobs);
     }
 
+    [HttpGet("recommendable")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetRecommendable(
+        [FromServices] GetRecommendableJobsHandler handler,
+        CancellationToken cancellationToken,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
+    {
+        return Ok(await handler.HandleAsync(page, pageSize, cancellationToken));
+    }
+
     [HttpGet("{id:guid}")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetById(
         Guid id,
         [FromServices] GetJobByIdHandler handler,
@@ -68,6 +83,7 @@ public sealed class JobsController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Policy = "JobAdmin")]
     public async Task<IActionResult> Update(
         Guid id,
         [FromBody] UpdateJobCommand command,
@@ -96,6 +112,7 @@ public sealed class JobsController : ControllerBase
     }
 
     [HttpPatch("{id:guid}/status")]
+    [Authorize(Policy = "JobAdmin")]
     public async Task<IActionResult> ChangeStatus(Guid id, ChangeJobStatusCommand command,
         [FromServices] ChangeJobStatusHandler handler, CancellationToken cancellationToken)
     {
@@ -103,6 +120,7 @@ public sealed class JobsController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Policy = "JobAdmin")]
     public async Task<IActionResult> Delete(
         Guid id,
         [FromServices] DeleteJobHandler handler,

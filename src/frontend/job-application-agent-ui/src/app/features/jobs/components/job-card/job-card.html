@@ -67,9 +67,18 @@
 
         <div class="job-card__source">
 
-            <span>
-                {{ job().source }}
-            </span>
+            @if (job().source.toLowerCase() === 'adzuna' && job().sourceUrl) {
+                <a
+                    class="job-card__source-attribution"
+                    [href]="job().sourceUrl"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    (click)="$event.stopPropagation()">
+                    Adzuna
+                </a>
+            } @else {
+                <span>{{ job().source }}</span>
+            }
 
             <span class="metadata-separator">•</span>
 

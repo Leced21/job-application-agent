@@ -1,0 +1,19 @@
+services:
+  documents-db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DOCUMENTS_DB_NAME:-documents_db}
+      POSTGRES_USER: ${DOCUMENTS_DB_USER:?Set DOCUMENTS_DB_USER locally}
+      POSTGRES_PASSWORD: ${DOCUMENTS_DB_PASSWORD:?Set DOCUMENTS_DB_PASSWORD locally}
+    ports:
+      - "127.0.0.1:5436:5432"
+    volumes:
+      - documents_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+volumes:
+  documents_postgres_data:

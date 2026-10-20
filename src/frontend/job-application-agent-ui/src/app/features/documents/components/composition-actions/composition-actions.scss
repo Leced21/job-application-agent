@@ -1,0 +1,26 @@
+:host { display: block; }
+.button { display: inline-flex; min-height: 34px; align-items: center; justify-content: center; padding: 0 11px; border: 1px solid var(--color-line); border-radius: 9px; background: #fff; color: var(--color-ink); cursor: pointer; font-size: 9px; font-weight: 700; }
+.button:disabled { cursor: default; opacity: .5; }
+.button--primary { border-color: var(--color-brand); background: var(--color-brand); color: #fff; }
+.button--secondary { background: #fff; }
+.composition-empty { padding: 13px; border-radius: 10px; background: #f7f8fb; }
+.composition-empty strong { color: var(--color-ink); font-size: 10px; }
+.composition-empty p { margin: 5px 0 0; color: var(--color-muted); font-size: 9px; }
+.composition-empty .button { margin-top: 12px; }
+.review-panel { display: grid; gap: 10px; margin-top: 14px; padding: 13px; border: 1px solid #e6e9f3; border-radius: 11px; background: #fbfcff; }
+.review-panel > strong, .export-panel strong { color: var(--color-ink); font-size: 10px; }
+.review-panel > p, .export-panel p { margin: -5px 0 0; color: var(--color-muted); font-size: 9px; line-height: 1.5; }
+.review-note-label { display: grid; gap: 5px; color: var(--color-muted); font-size: 9px; }
+.review-note-label textarea { width: 100%; padding: 8px; border: 1px solid var(--color-line); border-radius: 8px; font: inherit; }
+.confirmation { display: flex; align-items: flex-start; gap: 8px; color: var(--color-ink); font-size: 9px; line-height: 1.45; }
+.confirmation input { margin: 1px 0 0; accent-color: var(--color-brand); }
+.review-actions, .export-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.export-panel { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; padding: 13px; border-radius: 11px; background: #f4faf6; }
+.export-panel p { margin: 4px 0 0; }
+.export-list { display: grid; gap: 0; margin: 8px 0 0; padding: 0; list-style: none; }
+.export-list li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 2px; border-top: 1px solid #edf0f5; }
+.export-list li > span { display: grid; gap: 4px; }
+.export-list strong { color: var(--color-ink); font-size: 9px; }
+.export-list small { color: var(--color-subtle); font-size: 8px; }
+.text-button { border: 0; background: transparent; color: var(--color-brand); cursor: pointer; font-size: 10px; font-weight: 700; }
+@media (max-width: 560px) { .export-panel { align-items: flex-start; flex-direction: column; } }

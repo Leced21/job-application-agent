@@ -1,0 +1,7 @@
+# Phase 97.9 — Audit des contrôles d’isolation multi-compte
+
+L’audit des APIs privées confirme que le propriétaire des données candidat est obtenu à partir du claim `jobagent_owner_id` émis par OpenIddict et validé par les services. Profile, Documents, Applications et Agents ont des tests d’intégration qui refusent l’accès aux ressources d’un autre propriétaire. Matching résout le profil de la session courante avant de lire ou rechercher des résultats ; l’identifiant de profil fourni par le client ne peut pas élargir cette portée. Les catalogues Job et Collection restent des données partagées : leurs mutations sont soumises à des politiques d’administration, et la publication de Collection vers Job utilise une identité de service distincte.
+
+Les guides de sécurité et de préparation V1 ont été corrigés : l’isolation applicative multi-compte et ses tests ne sont plus présentés comme absents. Les points qui restent ouverts avant un déploiement sont l’attribution explicite des propriétaires aux données historiques, une répétition du parcours OIDC multi-compte sur copie anonymisée, les certificats persistants et la vérification du SHA livré par CI. Les comptes administrateurs Collection doivent aussi être configurés explicitement pour les opérations de catalogue.
+
+Cette tranche est documentaire et fondée sur l’inspection des APIs, dépôts et tests existants. Elle ne certifie pas une migration des données de production ni un déploiement exposé au réseau.

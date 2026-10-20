@@ -1,0 +1,86 @@
+services:
+  profile-api:
+    environment:
+      OpenIddict__Issuer: http://gateway-api:5000/
+
+  matching-api:
+    environment:
+      OpenIddict__Issuer: http://gateway-api:5000/
+
+  applications-api:
+    environment:
+      OpenIddict__Issuer: http://gateway-api:5000/
+
+  documents-api:
+    environment:
+      OpenIddict__Issuer: http://gateway-api:5000/
+
+  collection-api:
+    environment:
+      OpenIddict__Issuer: http://gateway-api:5000/
+
+  job-api:
+    environment:
+      OpenIddict__Issuer: http://gateway-api:5000/
+
+  agents-api:
+    environment:
+      OpenIddict__Issuer: http://gateway-api:5000/
+
+  gateway-api:
+    build:
+      context: .
+      dockerfile: src/gateway/JobApplicationAgent.Gateway/Dockerfile
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: 5000
+      ConnectionStrings__IdentityDatabase: Host=identity-db;Port=5432;Database=${IDENTITY_DB_NAME:-identity_db};Username=${IDENTITY_DB_USER:?Set IDENTITY_DB_USER locally};Password=${IDENTITY_DB_PASSWORD:?Set IDENTITY_DB_PASSWORD locally}
+      OpenIddict__Issuer: http://gateway-api:5000/
+      OpenIddict__Bff__ClientId: jobagent-local-bff
+      OpenIddict__Bff__ClientSecret: ${GATEWAY_BFF_CLIENT_SECRET:?Set GATEWAY_BFF_CLIENT_SECRET locally}
+      Identity__AllowRegistration: "true"
+      Identity__InitialOwnerId: ${APPLICATIONS_OWNER_ID:?Set APPLICATIONS_OWNER_ID locally}
+      ReverseProxy__Clusters__documents-cluster__Destinations__documents-api__Address: http://documents-api:8080/
+      ReverseProxy__Clusters__collection-cluster__Destinations__collection-api__Address: http://collection-api:8080/
+      ReverseProxy__Clusters__matching-cluster__Destinations__matching-api__Address: http://matching-api:8080/
+      ReverseProxy__Clusters__profile-cluster__Destinations__profile-api__Address: http://profile-api:8080/
+      ReverseProxy__Clusters__job-cluster__Destinations__job-api__Address: http://job-api:8080/
+      ReverseProxy__Clusters__agents-cluster__Destinations__agents-api__Address: http://agents-api:8080/
+      ReverseProxy__Clusters__applications-cluster__Destinations__applications-api__Address: http://applications-api:8080/
+    ports:
+      - "127.0.0.1:5000:5000"
+    depends_on:
+      identity-db:
+        condition: service_healthy
+      profile-api:
+        condition: service_healthy
+      job-api:
+        condition: service_healthy
+      matching-api:
+        condition: service_healthy
+      applications-api:
+        condition: service_healthy
+      documents-api:
+        condition: service_healthy
+      collection-api:
+        condition: service_healthy
+      agents-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:5000/health/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+
+  frontend:
+    build:
+      context: src/frontend/job-application-agent-ui
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:4200:80"
+    depends_on:
+      gateway-api:
+        condition: service_healthy

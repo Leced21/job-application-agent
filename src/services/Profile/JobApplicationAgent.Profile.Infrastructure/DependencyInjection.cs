@@ -21,6 +21,7 @@ namespace JobApplicationAgent.Profile.Infrastructure
             });
 
             services.AddScoped<ICandidateProfileRepository, CandidateProfileRepository>();
+            services.AddScoped<JobApplicationAgent.Profile.Application.Profiles.DocumentFacts.IDocumentFactImportRepository, DocumentFactImportRepository>();
 
             return services;
         }

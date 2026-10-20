@@ -11,9 +11,22 @@ Depuis la racine du dépôt :
 ```powershell
 docker compose up -d job-db
 $env:ASPNETCORE_ENVIRONMENT = 'Development'
+# Recopier depuis .env local, sans versionner ni afficher ces secrets.
+$env:Job__LocalAuth__OwnerId = '<APPLICATIONS_OWNER_ID de .env>'
+$env:Job__LocalAuth__Token = '<JOB_LOCAL_TOKEN de .env>'
+$env:Job__Admin__OwnerIds = $env:Job__LocalAuth__OwnerId
+$env:Job__CollectionPublisher__Token = '<JOB_COLLECTION_PUBLISHER_TOKEN de .env>'
 dotnet ef database update --project src/services/Job/JobApplicationAgent.Job.Infrastructure --startup-project src/services/Job/JobApplicationAgent.Job.Api
 dotnet run --project src/services/Job/JobApplicationAgent.Job.Api --launch-profile http
 ```
+
+Pour démarrer Job en conteneur avec PostgreSQL :
+
+```powershell
+docker compose up -d --build job-db job-api
+```
+
+L’image écoute sur le port 8080 dans le réseau Docker ; Compose la publie sur `127.0.0.1:5002`. RabbitMQ reste désactivé dans ce profil local. La base vide nécessite l’application préalable des migrations Job depuis l’hôte.
 
 L’API Job écoute sur http://localhost:5002. Dans des terminaux séparés, lancer la gateway et Angular si nécessaire :
 
@@ -40,6 +53,8 @@ Hors développement, fournir `ConnectionStrings__JobDatabase` via la configurati
 | PUT | /api/v1/jobs/{id} | Remplacement des champs éditables, 200 ou 404 |
 | PATCH | /api/v1/jobs/{id}/status | Changement de statut, 200 ou 404 |
 | DELETE | /api/v1/jobs/{id} | Suppression, 204 ou 404 |
+
+Les lectures du catalogue restent publiques. `POST`, `PUT`, `PATCH` et `DELETE` exigent la politique `JobAdmin` : un jeton OpenIddict doit porter le claim propriétaire `jobagent_owner_id` présent dans `Job:Admin:OwnerIds`. En `Development` et `Testing`, le Bearer local `Job:LocalAuth` fournit cette identité ; il est désactivé dans les autres environnements. La publication depuis Collection utilise une route distincte, authentifiée par `Job:CollectionPublisher:Token` et non par les credentials administrateur.
 
 Les erreurs de validation renvoient 400. `page` est compris entre 1 et 1 000 000, `pageSize` entre 1 et 100.
 

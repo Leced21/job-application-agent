@@ -17,7 +17,9 @@ public static class DependencyInjection
             typeof(DependencyInjection).Assembly);
 
         services.AddScoped<CreateJobHandler>();
+        services.AddScoped<PublishCollectionHandler>();
         services.AddScoped<GetJobsHandler>();
+        services.AddScoped<GetRecommendableJobsHandler>();
         services.AddScoped<GetJobByIdHandler>();
         services.AddScoped<UpdateJobHandler>();
         services.AddScoped<DeleteJobHandler>();

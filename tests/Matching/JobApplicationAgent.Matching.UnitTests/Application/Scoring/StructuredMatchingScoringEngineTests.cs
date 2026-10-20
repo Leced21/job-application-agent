@@ -1,14 +1,12 @@
-
 using JobApplicationAgent.Matching.Application.Models;
 using JobApplicationAgent.Matching.Application.Scoring;
 using JobApplicationAgent.Matching.Domain.Enums;
-using Xunit;
 
 namespace JobApplicationAgent.Matching.UnitTests.Application.Scoring;
 
 public sealed class StructuredMatchingScoringEngineTests
 {
-    private readonly StructuredMatchingScoringEngine _engine = new();
+    private readonly StructuredMatchingScoringEngine _engine = new StructuredMatchingScoringEngine(new JobTitleSimilarityService(), new SkillMatchingService(), new LocationMatchingService());
 
     [Fact]
     public async Task EvaluateAsync_ShouldMatchIdenticalJobTitles()
@@ -76,6 +74,42 @@ public sealed class StructuredMatchingScoringEngineTests
         var location = Assert.Single(criteria, x => x.Name == "Location");
 
         Assert.Equal(MatchingCriterionStatus.NotEvaluated, location.Status);
+    }
+
+    [Fact]
+    public async Task EvaluateAsync_ShouldUseJobTitleSimilarity_WhenTitlesAreRelated()
+    {
+        // Arrange
+        var profile = CreateProfile("Data Engineer");
+
+        var job = new JobMatchingData(
+            Guid.NewGuid(),
+            "Data Analyst",
+            "AnalyticsLab",
+            "Bordeaux",
+            "OnSite",
+            "FixedTerm",
+            40000m,
+            50000m,
+            "EUR",
+            "Analyse et valorisation des données."
+        );
+
+        var engine = new StructuredMatchingScoringEngine(new JobTitleSimilarityService(), new SkillMatchingService(), new LocationMatchingService());
+
+        // Act
+        var criteria = await engine.EvaluateAsync(profile, job);
+
+        // Assert
+        var jobTitleCriterion = Assert.Single(
+            criteria,
+            criterion => criterion.Name == "JobTitle");
+
+        Assert.Equal(65m, jobTitleCriterion.Score);
+        Assert.Equal(0.30m, jobTitleCriterion.Weight);
+        Assert.Equal(
+            "Job titles are related but not identical.",
+            jobTitleCriterion.Explanation);
     }
 
     private static ProfileMatchingData CreateProfile(string? jobTitle) =>

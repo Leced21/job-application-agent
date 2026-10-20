@@ -1,0 +1,20 @@
+@if (!composition()) {
+  <div class="composition-empty"><strong>Aucun contenu composé pour ce dossier.</strong><p>La composition déterministe utilise les sources figées et ne fait aucun appel à un modèle externe.</p><button class="button button--primary" type="button" [disabled]="busy()" (click)="composeRequested.emit()">{{ busy() ? 'Composition…' : 'Composer le contenu' }}</button></div>
+}
+@if (composition()?.composition?.decision === 'Pending') {
+  <div class="review-panel">
+    <strong>Revue humaine requise</strong><p>Relisez le contenu, ses preuves et les points de contrôle. La décision est définitive et liée à l’empreinte affichée.</p>
+    <label class="review-note-label">Note de revue, facultative<textarea maxlength="1000" [value]="reviewNote()" (input)="reviewNoteChange.emit($any($event.target).value)" rows="3"></textarea></label>
+    <label class="confirmation"><input type="checkbox" [checked]="reviewConfirmed()" (change)="reviewConfirmedChange.emit($any($event.target).checked)"><span>J’ai relu ce contenu et confirme ma décision. Je comprends qu’elle ne peut pas être modifiée.</span></label>
+    <div class="review-actions"><button class="button button--secondary" type="button" [disabled]="!reviewConfirmed() || busy()" (click)="reviewRequested.emit('Rejected')">Rejeter le contenu</button><button class="button button--primary" type="button" [disabled]="!reviewConfirmed() || busy()" (click)="reviewRequested.emit('Approved')">Approuver ce contenu</button></div>
+  </div>
+}
+@if (composition()?.composition?.decision === 'Approved') {
+  <div class="export-panel"><div><strong>Exporter le contenu approuvé</strong><p>Les fichiers restent dans votre espace Documents.</p></div><div class="export-actions">
+    @if (!exports().some(file => file.format === 'Pdf')) { <button class="button button--secondary" type="button" [disabled]="busy()" (click)="exportRequested.emit('Pdf')">Générer PDF</button> }
+    @if (!exports().some(file => file.format === 'Docx')) { <button class="button button--secondary" type="button" [disabled]="busy()" (click)="exportRequested.emit('Docx')">Générer DOCX</button> }
+  </div></div>
+  @if (exports().length) {
+    <ul class="export-list">@for (file of exports(); track file.id) { <li><span><strong>{{ file.format === 'Pdf' ? 'Document PDF' : 'Document Word' }}</strong><small>{{ file.length | number:'1.0-0' }} octets · {{ file.createdAtUtc | date:'d MMM y' }}</small></span><button class="text-button" type="button" (click)="downloadRequested.emit(file)">Télécharger</button></li> }</ul>
+  }
+}
