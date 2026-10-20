@@ -267,7 +267,7 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Run candidate journey browser tests
-        run: npm run test:e2e
+        run: npm run test:e2e -- --grep-invert @compose
 
       - name: Upload Playwright report
         if: always()
@@ -354,6 +354,7 @@ jobs:
           up --detach --wait --wait-timeout 300
 
       - name: Check published API readiness and frontend
+        id: compose-readiness
         shell: bash
         run: |
           for port in 5000 5001 5002 5004 5005 5007 5008 5186; do
@@ -362,6 +363,17 @@ jobs:
           done
           curl --fail --silent --show-error --retry 10 --retry-connrefused --retry-delay 2 \
             http://127.0.0.1:4200/ --output /dev/null
+          session_file="$RUNNER_TEMP/account-session.json"
+          session_status="$(curl --silent --show-error --retry 10 --retry-connrefused --retry-delay 2 \
+            --output "$session_file" --write-out '%{http_code}' http://127.0.0.1:4200/auth/session || true)"
+          echo "GET /auth/session returned HTTP ${session_status:-000}:"
+          cat "$session_file" 2>/dev/null || true
+          if [[ "$session_status" != '200' ]]; then
+            echo 'The account session endpoint is unavailable through the Compose frontend.' >&2
+            exit 1
+          fi
+          session_json="$(cat "$session_file")"
+          printf '%s' "$session_json" | python3 -c 'import json,sys; session=json.load(sys.stdin); print("Anonymous account session:", session); sys.exit(0 if session.get("registrationEnabled") is True else "Account registration is not enabled through the Compose Gateway.")'
 
       - name: Setup Node.js for real Compose browser test
         uses: actions/setup-node@v4
@@ -379,10 +391,28 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Verify registration and account isolation through the real Compose stack
+        id: compose-browser-tests
         working-directory: src/frontend/job-application-agent-ui
         env:
           PLAYWRIGHT_REUSE_EXISTING_SERVER: 'true'
         run: npm run test:e2e -- --workers=1 e2e/compose-registration.spec.ts e2e/compose-multi-account-isolation.spec.ts
+
+      - name: Show account stack logs after browser test failure
+        if: failure() && (steps.compose-readiness.outcome == 'failure' || steps.compose-browser-tests.outcome == 'failure')
+        run: >-
+          docker compose --project-name job-application-agent --env-file .env.example
+          -f docker-compose.yml
+          -f docker-compose.identity.yml
+          -f docker-compose.applications.yml
+          -f docker-compose.applications-api.yml
+          -f docker-compose.documents.yml
+          -f docker-compose.documents-api.yml
+          -f docker-compose.collection.yml
+          -f docker-compose.collection-api.yml
+          -f docker-compose.agents.yml
+          -f docker-compose.agents-api.yml
+          -f docker-compose.edge.yml
+          logs --no-color --tail=200 gateway-api frontend identity-db
 
       - name: Upload real Compose browser report
         if: always()

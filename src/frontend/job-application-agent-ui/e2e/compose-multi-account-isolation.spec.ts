@@ -1,8 +1,8 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page, type Response } from '@playwright/test';
 
 const password = 'Strong!Compose2026';
 
-test('separate accounts cannot read or change each other’s candidate data', async ({ browser }) => {
+test('@compose candidate account isolation', async ({ browser }) => {
   const firstEmail = `owner-a-${globalThis.crypto.randomUUID()}@example.test`;
   const secondEmail = `owner-b-${globalThis.crypto.randomUUID()}@example.test`;
   const contexts = [await browser.newContext(), await browser.newContext()];
@@ -82,12 +82,17 @@ test('separate accounts cannot read or change each other’s candidate data', as
     const firstAccountAfterAttack = await requestJson(firstPage, '/api/v1/profile/experiences');
     expect(companyNames(firstAccountAfterAttack.body)).toEqual(['Private Company A']);
   } finally {
-    await Promise.all(contexts.map((context) => context.close()));
+    await Promise.allSettled(contexts.map((context) => context.close()));
   }
 });
 
 async function register(page: Page, email: string): Promise<void> {
+  const sessionResponse = page.waitForResponse(
+    (response) =>
+      response.url().endsWith('/auth/session') && response.request().method() === 'GET',
+  );
   await page.goto('/login');
+  await expectRegistrationEnabled(await sessionResponse);
   await page.getByRole('button', { name: 'Créer un compte' }).click();
   await expect(page.getByRole('heading', { name: 'Créez votre compte' })).toBeVisible();
   await page.getByLabel('Adresse e-mail').fill(email);
@@ -99,6 +104,13 @@ async function register(page: Page, email: string): Promise<void> {
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
   expect((await registrationResponse).status()).toBe(200);
   await expect(page).toHaveURL(/\/dashboard$/);
+}
+
+async function expectRegistrationEnabled(response: Response): Promise<void> {
+  const body = await response.text();
+  expect(response.status(), `GET ${response.url()} returned ${body}`).toBe(200);
+  const session = JSON.parse(body) as { registrationEnabled?: boolean };
+  expect(session.registrationEnabled, `Unexpected account session: ${body}`).toBe(true);
 }
 
 async function createProfileThroughUi(

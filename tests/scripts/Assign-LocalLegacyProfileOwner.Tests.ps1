@@ -38,11 +38,12 @@ function global:docker {
     if ($sql -match 'COUNT\(\*\)::text \|\|' -and $sql -match 'FROM candidate_profiles;') {
         return "$($global:LegacyProfileOwnerMock.Total)|$($global:LegacyProfileOwnerMock.Unowned)|$($global:LegacyProfileOwnerMock.DistinctOwners)"
     }
-    if ($sql -match '^SELECT id::text FROM candidate_profiles WHERE owner_id IS NULL') {
+    if ($sql -match '^SELECT "Id"::text FROM candidate_profiles WHERE owner_id IS NULL') {
         if ($global:LegacyProfileOwnerMock.Unowned -eq 1) { return $testProfileId.ToString('D') }
         return @($testProfileId.ToString('D'), [Guid]::NewGuid().ToString('D'))
     }
     if ($sql -match '^SELECT COUNT\(\*\)::text FROM candidate_profiles WHERE owner_id =') { return '0' }
+    if ($sql -match '^SELECT COUNT\(\*\)::text FROM candidate_profiles WHERE "Id" =') { return '1' }
     if ($sql -match '^UPDATE candidate_profiles SET owner_id =') {
         $global:LegacyProfileOwnerMock.UpdateCount++
         return $testProfileId.ToString('D')
