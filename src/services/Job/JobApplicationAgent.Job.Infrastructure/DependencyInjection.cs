@@ -1,6 +1,7 @@
 using JobApplicationAgent.Job.Application.Abstractions;
 using JobApplicationAgent.Job.Infrastructure.Persistence;
 using JobApplicationAgent.Job.Infrastructure.Repositories;
+using JobApplicationAgent.Job.Infrastructure.Events;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,6 +22,10 @@ public static class DependencyInjection
         });
 
         services.AddScoped<IJobRepository, JobRepository>();
+        services.AddScoped<JobApplicationAgent.Job.Application.Jobs.Create.ICollectionPublicationRepository, CollectionPublicationRepository>();
+        services.AddScoped<JobOutboxDispatchService>();
+        services.AddSingleton<JobEventPublisher>();
+        services.AddSingleton<JobApplicationAgent.Job.Application.Jobs.Create.IJobEventPublisher>(sp => sp.GetRequiredService<JobEventPublisher>());
 
         return services;
     }

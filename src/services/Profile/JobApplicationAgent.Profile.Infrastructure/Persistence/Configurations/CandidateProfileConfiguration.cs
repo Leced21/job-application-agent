@@ -12,6 +12,8 @@ namespace JobApplicationAgent.Profile.Infrastructure.Persistence.Configurations
             builder.ToTable("candidate_profiles");
 
             builder.HasKey(x => x.Id);
+            builder.Property(x => x.OwnerId).HasColumnName("owner_id");
+            builder.HasIndex(x => x.OwnerId).IsUnique().HasFilter("owner_id IS NOT NULL");
             builder.HasOne(x => x.Preferences)
                 .WithOne(x => x.CandidateProfile)
                 .HasForeignKey<CandidatePreferences>(x => x.CandidateProfileId)

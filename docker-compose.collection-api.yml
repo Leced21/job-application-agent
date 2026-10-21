@@ -1,0 +1,43 @@
+services:
+  collection-api:
+    build:
+      context: .
+      dockerfile: src/services/Collection/Dockerfile
+    container_name: job-application-agent-collection-api
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: 8080
+      Collection__LocalAuth__Token: ${COLLECTION_LOCAL_TOKEN:?Set COLLECTION_LOCAL_TOKEN locally}
+      Collection__LocalAuth__OwnerId: ${APPLICATIONS_OWNER_ID:?Set APPLICATIONS_OWNER_ID locally}
+      Collection__Admin__OwnerIds: ${APPLICATIONS_OWNER_ID:?Set APPLICATIONS_OWNER_ID locally}
+      Job__CollectionPublisher__Token: ${JOB_COLLECTION_PUBLISHER_TOKEN:?Set JOB_COLLECTION_PUBLISHER_TOKEN locally}
+      ConnectionStrings__CollectionDatabase: Host=collection-db;Port=5432;Database=${COLLECTION_DB_NAME:-collection_db};Username=${COLLECTION_DB_USER:?Set COLLECTION_DB_USER locally};Password=${COLLECTION_DB_PASSWORD:?Set COLLECTION_DB_PASSWORD locally}
+      Services__Job__BaseUrl: http://job-api:8080/
+      Collection__EventTransport__Enabled: "false"
+      Collection__EventTransport__RabbitMq__Uri: amqp://${RABBITMQ_DEFAULT_USER:?Set RABBITMQ_DEFAULT_USER locally}:${RABBITMQ_DEFAULT_PASS:?Set RABBITMQ_DEFAULT_PASS locally}@rabbitmq:5672/
+      Collection__Adzuna__AppId: ${ADZUNA_APP_ID:-}
+      Collection__Adzuna__AppKey: ${ADZUNA_APP_KEY:-}
+      Collection__Adzuna__Country: fr
+      Collection__Adzuna__ResultsPerPage: ${ADZUNA_RESULTS_PER_PAGE:-20}
+      Collection__Adzuna__Sync__Enabled: ${ADZUNA_SYNC_ENABLED:-false}
+      Collection__Adzuna__Sync__IntervalMinutes: ${ADZUNA_SYNC_INTERVAL_MINUTES:-360}
+      Collection__Adzuna__Sync__Searches__0__What: ${ADZUNA_SEARCH_1_WHAT:-}
+      Collection__Adzuna__Sync__Searches__0__Where: ${ADZUNA_SEARCH_1_WHERE:-}
+      Collection__Adzuna__Sync__Searches__1__What: ${ADZUNA_SEARCH_2_WHAT:-}
+      Collection__Adzuna__Sync__Searches__1__Where: ${ADZUNA_SEARCH_2_WHERE:-}
+    ports:
+      - "127.0.0.1:5004:8080"
+    depends_on:
+      collection-db:
+        condition: service_healthy
+      job-api:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:8080/health/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s

@@ -6,6 +6,7 @@ using JobApplicationAgent.Profile.Application.Profiles.Preferences.Delete;
 using JobApplicationAgent.Profile.Application.Profiles.Create;
 using JobApplicationAgent.Profile.Application.Profiles.Get;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using JobApplicationAgent.Profile.Application.Profiles.Experiences.Add;
 using JobApplicationAgent.Profile.Application.Profiles.Experiences.Get;
 using JobApplicationAgent.Profile.Application.Profiles.Experiences.Update;
@@ -36,6 +37,7 @@ using JobApplicationAgent.Profile.Application.Profiles.Matching;
 namespace JobApplicationAgent.Profile.Api.Controllers
 {
     [ApiController]
+    [Authorize(AuthenticationSchemes = "ProfileAuth")]
     [Route("api/v1/profile")]
     public sealed class ProfileController(CreateCandidateProfileHandler createHandler,
                                             UpdateCandidateProfileHandler updateHandler,

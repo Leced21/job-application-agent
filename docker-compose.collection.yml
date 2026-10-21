@@ -1,0 +1,36 @@
+services:
+  rabbitmq:
+    image: rabbitmq:4-management
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:?Set RABBITMQ_DEFAULT_USER locally}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:?Set RABBITMQ_DEFAULT_PASS locally}
+    ports:
+      - "127.0.0.1:5672:5672"
+      - "127.0.0.1:15672:15672"
+    volumes:
+      - collection_rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+  collection-db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${COLLECTION_DB_NAME:-collection_db}
+      POSTGRES_USER: ${COLLECTION_DB_USER:?Set COLLECTION_DB_USER locally}
+      POSTGRES_PASSWORD: ${COLLECTION_DB_PASSWORD:?Set COLLECTION_DB_PASSWORD locally}
+    ports:
+      - "127.0.0.1:5435:5432"
+    volumes:
+      - collection_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+volumes:
+  collection_rabbitmq_data:
+  collection_postgres_data:

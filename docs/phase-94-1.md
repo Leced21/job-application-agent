@@ -1,0 +1,9 @@
+# Phase 94.1 — CI de dépôt et publication des images
+
+La GitHub Action `Repository CI` couvre les projets de la solution .NET, l’analyse .NET à la compilation, l’audit NuGet, les tests et le build de production Angular, la vérification Compose complète et la construction de toutes les images. Comme les projets de tests ne figurent pas dans `JobApplicationAgent.slnx`, le workflow les découvre séparément et restaure, compile et exécute chaque `.csproj` sous `tests`. Les tests d’intégration utilisent Docker sur le runner Ubuntu. La qualification Ollama reste opt-in et aucun modèle externe n’est appelé en CI. L’audit rend bloquantes les vulnérabilités NuGet modérées à critiques et npm celles de sévérité haute ou critique.
+
+Après la réussite de `Repository CI` sur un push vers `dev`, `Publish development images` construit puis publie les huit images d’API/Gateway et l’image frontend dans GHCR, taguées `dev` et par SHA. Les builds de pull request ne publient aucune image.
+
+Les workflows vérifient les pull requests vers `dev` et `main`. Activer la protection de branche dans les paramètres GitHub reste une opération au niveau du dépôt : rendre obligatoires les checks `.NET restore, analysis, build and tests`, `Angular audit, tests and production build` et `Compose validation and Docker image builds`, puis interdire le contournement des validations selon la politique d’équipe.
+
+Vérification locale : les workflows YAML passent le contrôle de formatage/parsing Prettier. Le périmètre de la solution, des projets de tests et des fichiers Docker a été inventorié. L’exécution GitHub Actions, les tests et la construction des images nécessitent un runner avec Docker et l’accès réseau ; ils ne sont pas déclenchés depuis cet environnement. La validation statique locale `dotnet format analyzers` n’a pas pu démarrer son build host à cause des permissions de pipe du sandbox, et le démon Docker n’est pas accessible ici.

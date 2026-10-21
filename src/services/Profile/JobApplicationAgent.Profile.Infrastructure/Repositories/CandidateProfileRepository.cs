@@ -5,24 +5,26 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JobApplicationAgent.Profile.Infrastructure.Repositories
 {
-    public sealed class CandidateProfileRepository(ProfileDbContext dbContext) : ICandidateProfileRepository
+    public sealed class CandidateProfileRepository(ProfileDbContext dbContext, JobApplicationAgent.Profile.Application.Abstractions.ICurrentProfileOwner owner) : ICandidateProfileRepository
     {
         public Task<CandidateProfile?> GetWithPreferencesAsync(CancellationToken cancellationToken = default)
         {
-            return dbContext.CandidateProfiles.AsNoTracking()
+            return dbContext.CandidateProfiles.Where(x => x.OwnerId == owner.OwnerId).AsNoTracking()
                 .Include(x => x.Preferences)
                 .SingleOrDefaultAsync(cancellationToken);
         }
 
         public Task<CandidateProfile?> GetAsync(CancellationToken cancellationToken = default)
         {
-            return dbContext.CandidateProfiles
+            return dbContext.CandidateProfiles.Where(x => x.OwnerId == owner.OwnerId)
                             .AsNoTracking()
                             .SingleOrDefaultAsync(cancellationToken);
         }
 
         public async Task AddAsync(CandidateProfile profile, CancellationToken cancellationToken = default)
         {
+            if (profile.OwnerId != owner.OwnerId)
+                throw new InvalidOperationException("A profile can only be created for the authenticated owner.");
             await dbContext.CandidateProfiles.AddAsync(profile, cancellationToken);
         }
 
@@ -32,7 +34,7 @@ namespace JobApplicationAgent.Profile.Infrastructure.Repositories
         }
         public Task<CandidateProfile?> GetForUpdateAsync(CancellationToken cancellationToken = default)
         {
-            return dbContext.CandidateProfiles
+            return dbContext.CandidateProfiles.Where(x => x.OwnerId == owner.OwnerId)
                             .Include(x => x.Preferences)
                             .Include(x => x.ProfessionalExperiences)
                             .Include(x => x.Educations)
@@ -44,42 +46,42 @@ namespace JobApplicationAgent.Profile.Infrastructure.Repositories
         }
         public Task<CandidateProfile?> GetWithProfessionalExperiencesAsync(CancellationToken cancellationToken = default)
         {
-            return dbContext.CandidateProfiles
+            return dbContext.CandidateProfiles.Where(x => x.OwnerId == owner.OwnerId)
                             .AsNoTracking()
                             .Include(x => x.ProfessionalExperiences)
                             .SingleOrDefaultAsync(cancellationToken);
         }
         public Task<CandidateProfile?> GetWithEducationsAsync(CancellationToken cancellationToken = default)
         {
-            return dbContext.CandidateProfiles
+            return dbContext.CandidateProfiles.Where(x => x.OwnerId == owner.OwnerId)
                             .AsNoTracking()
                             .Include(x => x.Educations)
                             .SingleOrDefaultAsync(cancellationToken);
         }
         public Task<CandidateProfile?> GetWithSkillsAsync(CancellationToken cancellationToken = default)
         {
-            return dbContext.CandidateProfiles
+            return dbContext.CandidateProfiles.Where(x => x.OwnerId == owner.OwnerId)
                 .AsNoTracking()
                 .Include(x => x.Skills)
                 .SingleOrDefaultAsync(cancellationToken);
         }
         public Task<CandidateProfile?> GetWithLanguagesAsync(CancellationToken cancellationToken = default)
         {
-            return dbContext.CandidateProfiles
+            return dbContext.CandidateProfiles.Where(x => x.OwnerId == owner.OwnerId)
                 .AsNoTracking()
                 .Include(x => x.Languages)
                 .SingleOrDefaultAsync(cancellationToken);
         }
         public Task<CandidateProfile?> GetWithLinksAsync(CancellationToken cancellationToken = default)
         {
-            return dbContext.CandidateProfiles
+            return dbContext.CandidateProfiles.Where(x => x.OwnerId == owner.OwnerId)
                 .AsNoTracking()
                 .Include(x => x.Links)
                 .SingleOrDefaultAsync(cancellationToken);
         }
         public Task<CandidateProfile?> GetWithCertificationsAsync(CancellationToken cancellationToken = default)
         {
-            return dbContext.CandidateProfiles
+            return dbContext.CandidateProfiles.Where(x => x.OwnerId == owner.OwnerId)
                 .AsNoTracking()
                 .Include(x => x.Certifications)
                 .SingleOrDefaultAsync(cancellationToken);
@@ -87,7 +89,7 @@ namespace JobApplicationAgent.Profile.Infrastructure.Repositories
 
         public Task<CandidateProfile?> GetForMatchingAsync(CancellationToken cancellationToken = default)
         {
-            return dbContext.CandidateProfiles
+            return dbContext.CandidateProfiles.Where(x => x.OwnerId == owner.OwnerId)
                             .AsNoTracking()
                             .AsSplitQuery()
                             .Include(x => x.Preferences)

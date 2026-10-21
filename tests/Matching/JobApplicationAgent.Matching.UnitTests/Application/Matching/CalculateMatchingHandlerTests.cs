@@ -5,7 +5,6 @@ using JobApplicationAgent.Matching.Application.Matching;
 using JobApplicationAgent.Matching.Application.Models;
 using JobApplicationAgent.Matching.Domain.Entities;
 using JobApplicationAgent.Matching.Domain.Enums;
-using Xunit;
 
 namespace JobApplicationAgent.Matching.UnitTests.Application.Matching;
 
@@ -18,11 +17,13 @@ public sealed class CalculateMatchingHandlerTests
     public async Task HandleAsync_ShouldReturnCompletedResult_WhenDataExists()
     {
         var scoringEngine = new FakeScoringEngine();
+        var resultRepository = new FakeMatchingResultRepository();
 
         var handler = CreateHandler(
             CreateJob(),
             CreateProfile(),
-            scoringEngine);
+            scoringEngine,
+            resultRepository);
 
         var result = await handler.HandleAsync(JobId);
 
@@ -33,6 +34,7 @@ public sealed class CalculateMatchingHandlerTests
         Assert.Equal(80m, result.OverallScore);
         Assert.Single(result.Criteria);
         Assert.True(scoringEngine.WasCalled);
+        Assert.Same(result, resultRepository.AddedResult);
     }
 
     [Fact]
@@ -73,7 +75,8 @@ public sealed class CalculateMatchingHandlerTests
         var handler = CreateHandler(
             CreateJob(),
             CreateProfile(),
-            new FakeScoringEngine());
+            new FakeScoringEngine(),
+            new FakeMatchingResultRepository());
 
         await Assert.ThrowsAsync<ArgumentException>(
             () => handler.HandleAsync(Guid.Empty));
@@ -90,7 +93,8 @@ public sealed class CalculateMatchingHandlerTests
                     "Job Service unavailable",
                     null,
                     HttpStatusCode.ServiceUnavailable)),
-            new FakeScoringEngine());
+            new FakeScoringEngine(),
+            new FakeMatchingResultRepository());
 
         await Assert.ThrowsAsync<HttpRequestException>(
             () => handler.HandleAsync(JobId));
@@ -99,12 +103,14 @@ public sealed class CalculateMatchingHandlerTests
     private static CalculateMatchingHandler CreateHandler(
         JobMatchingData? job,
         ProfileMatchingData? profile,
-        IMatchingScoringEngine scoringEngine)
+        IMatchingScoringEngine scoringEngine,
+        IMatchingResultRepository? resultRepository = null)
     {
         return new CalculateMatchingHandler(
             new FakeProfileClient(profile),
             new FakeJobClient(job),
-            scoringEngine);
+            scoringEngine,
+            resultRepository ?? new FakeMatchingResultRepository());
     }
 
     private static JobMatchingData CreateJob() =>
@@ -142,20 +148,26 @@ public sealed class CalculateMatchingHandlerTests
         }
     }
 
-    private sealed class FakeJobClient(
-        JobMatchingData? job,
-        Exception? exception = null) : IJobMatchingDataClient
+    private sealed class FakeJobClient( JobMatchingData? job, Exception? exception = null) : IJobMatchingDataClient
     {
-        public Task<JobMatchingData?> GetByIdAsync(
-            Guid jobId,
-            CancellationToken cancellationToken = default)
+        public Task<IReadOnlyList<JobMatchingData>> GetRecommendablePageAsync(
+            int page, int pageSize, CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException("Individual matching must fetch the job by ID.");
+
+        public Task<JobMatchingData?> GetByIdAsync(Guid jobId,CancellationToken cancellationToken = default)
         {
             if (exception is not null)
                 return Task.FromException<JobMatchingData?>(exception);
 
             return Task.FromResult(job);
         }
+
+        public Task<IReadOnlyList<JobMatchingData>> GetPageAsync( int page, int pageSize, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult<IReadOnlyList<JobMatchingData>>( Array.Empty<JobMatchingData>());
+        }
     }
+
 
     private sealed class FakeScoringEngine : IMatchingScoringEngine
     {
@@ -187,13 +199,37 @@ public sealed class CalculateMatchingHandlerTests
         var handler = new CalculateMatchingHandler(
             new FakeProfileClient(CreateProfile()),
             new FakeJobClient(CreateJob()),
-            new NotEvaluatedScoringEngine());
+            new NotEvaluatedScoringEngine(),
+            new FakeMatchingResultRepository());
 
         var result = await handler.HandleAsync(JobId);
 
         Assert.NotNull(result);
         Assert.Equal(MatchingStatus.InsufficientData, result.Status);
         Assert.Null(result.OverallScore);
+    }
+
+    private sealed class FakeMatchingResultRepository : IMatchingResultRepository
+    {
+        public MatchingResult? AddedResult { get; private set; }
+
+        public Task AddAsync(
+            MatchingResult result,
+            CancellationToken cancellationToken = default)
+        {
+            AddedResult = result;
+            return Task.CompletedTask;
+        }
+
+        public Task<MatchingResultDetails?> GetByIdAsync(
+            Guid id,
+            CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
+
+        public Task<MatchingResultPage> SearchAsync(
+            MatchingResultFilter filter,
+            CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
     }
 
     internal sealed class NotEvaluatedScoringEngine : IMatchingScoringEngine

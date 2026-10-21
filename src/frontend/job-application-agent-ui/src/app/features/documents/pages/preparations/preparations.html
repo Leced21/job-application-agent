@@ -1,0 +1,260 @@
+<main
+  class="preparations-page"
+  aria-labelledby="preparations-title"
+  [attr.aria-busy]="loading() || detailLoading()"
+>
+  <header class="page-heading">
+    <div>
+      <span class="eyebrow">Parcours candidat</span>
+      <h1 id="preparations-title">Préparations de candidature</h1>
+      <p>Retrouvez les sources figées et le contenu déjà composé pour chaque dossier.</p>
+    </div>
+  </header>
+  @if (error()) {
+    <div class="error-banner" role="alert">
+      {{ error()
+      }}<button type="button" (click)="error.set(null)" aria-label="Fermer le message">×</button>
+    </div>
+  }
+  @if (success()) {
+    <div class="success-banner" role="status">
+      {{ success() }} <a routerLink="/applications">Ouvrir Applications</a>
+    </div>
+  }
+
+  <div class="workspace">
+    <section class="drafts-panel" aria-labelledby="drafts-heading">
+      <div class="panel-heading">
+        <div>
+          <span class="eyebrow">Historique</span>
+          <h2 id="drafts-heading">Dossiers préparés</h2>
+        </div>
+        <button
+          type="button"
+          class="refresh-button"
+          (click)="load()"
+          aria-label="Actualiser les dossiers"
+        >
+          ↻
+        </button>
+      </div>
+      @if (loading()) {
+        <div class="empty-state" role="status">
+          <span class="loader" aria-hidden="true"></span>Chargement des dossiers…
+        </div>
+      } @else if (drafts().length) {
+        <div class="draft-list">
+          @for (draft of drafts(); track draft.id) {
+            <article
+              class="draft-row"
+              [class.draft-row--active]="selected()?.draft?.id === draft.id"
+            >
+              <span class="draft-icon" aria-hidden="true">{{
+                draft.kind === 'CoverLetter' ? '✉' : '▤'
+              }}</span>
+              <div class="draft-row__copy">
+                <strong>{{
+                  draft.kind === 'CoverLetter' ? 'Lettre de motivation' : 'CV adapté'
+                }}</strong
+                ><span
+                  >{{ statusLabel(draft.status) }} ·
+                  {{ draft.createdAtUtc | date: 'd MMM y' }}</span
+                ><small>{{ draft.id }}</small>
+              </div>
+              <button
+                class="button button--small"
+                type="button"
+                [disabled]="detailLoading()"
+                (click)="open(draft)"
+              >
+                {{ selected()?.draft?.id === draft.id ? 'Ouvert' : 'Ouvrir' }}
+              </button>
+            </article>
+          }
+        </div>
+        <p class="list-limit">Affichage limité aux 100 préparations les plus récentes.</p>
+      } @else {
+        <div class="empty-state">
+          <span class="empty-icon" aria-hidden="true">▣</span>
+          <div>
+            <strong>Aucune préparation enregistrée</strong>
+            <p>Les dossiers créés à partir d’un CV et d’une offre apparaîtront ici.</p>
+          </div>
+        </div>
+      }
+    </section>
+
+    <section class="draft-detail" aria-label="Détail du dossier sélectionné">
+      @if (detailLoading()) {
+        <div class="empty-state" role="status">
+          <span class="loader" aria-hidden="true"></span>Ouverture des sources…
+        </div>
+      } @else if (selected(); as detail) {
+        <header class="detail-heading">
+          <div>
+            <span class="eyebrow">{{
+              detail.draft.kind === 'CoverLetter' ? 'Lettre de motivation' : 'CV adapté'
+            }}</span>
+            <h2>{{ detail.snapshot.job.title }}</h2>
+            <p>
+              {{ detail.snapshot.job.companyName }} <span aria-hidden="true">·</span>
+              {{ detail.snapshot.job.location || 'Lieu non précisé' }}
+            </p>
+          </div>
+          <span class="status-pill">{{ statusLabel(detail.draft.status) }}</span>
+        </header>
+        <section class="source-card">
+          <h3>Offre enregistrée</h3>
+          <dl>
+            <div>
+              <dt>Entreprise</dt>
+              <dd>{{ detail.snapshot.job.companyName }}</dd>
+            </div>
+            <div>
+              <dt>Source</dt>
+              <dd>{{ detail.snapshot.job.source }}</dd>
+            </div>
+            <div>
+              <dt>CV source</dt>
+              <dd>{{ detail.snapshot.candidate.resume.fileName }}</dd>
+            </div>
+            @if (detail.snapshot.candidate.version; as version) {
+              <div>
+                <dt>Version du CV</dt>
+                <dd>
+                  v{{ version.versionNumber }}{{ version.label ? ' · ' + version.label : '' }}
+                </dd>
+              </div>
+            }
+          </dl>
+          @if (detail.snapshot.job.description) {
+            <details>
+              <summary>Description conservée de l’offre</summary>
+              <p class="source-description">{{ detail.snapshot.job.description }}</p>
+            </details>
+          }
+        </section>
+
+        <section class="facts-section">
+          <div class="subheading">
+            <h3>Faits sélectionnés</h3>
+            <span>{{ detail.snapshot.candidate.facts.length }}</span>
+          </div>
+          @for (item of detail.snapshot.candidate.facts; track item.fact.id) {
+            <article class="fact-card">
+              <div class="fact-card__heading">
+                <strong>{{ item.fact.kind }}</strong
+                ><span>{{
+                  item.datesOrigin === 'OwnerConfirmed' ? 'Dates confirmées' : 'Dates non précisées'
+                }}</span>
+              </div>
+              <dl>
+                @for (field of item.fact.fields; track field.field) {
+                  <div>
+                    <dt>{{ field.field }}</dt>
+                    <dd>{{ field.value }}</dd>
+                    <small>Extrait source · segment {{ field.segmentIndex + 1 }}</small>
+                  </div>
+                }
+              </dl>
+            </article>
+          }
+        </section>
+
+        <section class="composition-section">
+          <div class="subheading">
+            <h3>Contenu composé</h3>
+            @if (composition(); as composed) {
+              <span
+                class="decision-pill"
+                [class.decision-pill--approved]="composed.composition.decision === 'Approved'"
+                >{{
+                  composed.composition.decision === 'Pending'
+                    ? 'À relire'
+                    : composed.composition.decision === 'Approved'
+                      ? 'Approuvé'
+                      : 'Rejeté'
+                }}</span
+              >
+            }
+          </div>
+          @if (composition(); as composed) {
+            <h4>{{ composed.content.title }}</h4>
+            <pre>{{ composed.content.plainText }}</pre>
+            @if (composed.content.notices.length) {
+              <div class="notices">
+                <strong>Points de contrôle</strong>
+                <ul>
+                  @for (notice of composed.content.notices; track $index) {
+                    <li>{{ notice }}</li>
+                  }
+                </ul>
+              </div>
+            }
+            <p class="hash-label">
+              Empreinte du contenu : <code>{{ composed.composition.contentSha256 }}</code>
+            </p>
+            @if (composed.composition.reviewNote) {
+              <p class="review-note">Note de revue : {{ composed.composition.reviewNote }}</p>
+            }
+          }
+          <app-composition-actions
+            [composition]="composition()"
+            [exports]="selectedExports()"
+            [busy]="actionInProgress()"
+            [reviewConfirmed]="reviewConfirmed()"
+            [reviewNote]="reviewNote()"
+            (composeRequested)="compose()"
+            (reviewConfirmedChange)="updateReviewConfirmed($event)"
+            (reviewNoteChange)="updateReviewNote($event)"
+            (reviewRequested)="review($event)"
+            (exportRequested)="generateExport($event)"
+            (downloadRequested)="downloadExport($event)"
+          />
+        </section>
+        @if (attachableExport(); as applicationExport) {
+          <section class="application-creation" aria-label="Créer un dossier de candidature">
+            <div>
+              <h3>Suivre cette candidature</h3>
+              <p>
+                Créez un dossier de suivi et associez l’export
+                {{ detail.draft.kind === 'CoverLetter' ? 'de la lettre' : 'du CV' }} ({{
+                  applicationExport.format
+                }}). Cette action ne soumet pas votre candidature.
+              </p>
+            </div>
+            <button
+              class="button button--primary"
+              type="button"
+              [disabled]="actionInProgress() || applicationCreated()"
+              (click)="createApplication()"
+            >
+              {{
+                applicationCreated()
+                  ? 'Dossier créé'
+                  : actionInProgress()
+                    ? 'Création…'
+                    : 'Créer le dossier'
+              }}
+            </button>
+          </section>
+        }
+        <p class="no-submit-note">
+          <span aria-hidden="true">✓</span> La composition, la revue et l’export restent des actions
+          explicites. Aucun fichier n’est envoyé à un recruteur.
+        </p>
+      } @else {
+        <div class="empty-state empty-state--large">
+          <span class="empty-icon" aria-hidden="true">↖</span>
+          <div>
+            <strong>Ouvrez une préparation</strong>
+            <p>
+              Choisissez un dossier dans l’historique pour examiner l’offre, le CV source et les
+              faits sélectionnés.
+            </p>
+          </div>
+        </div>
+      }
+    </section>
+  </div>
+</main>

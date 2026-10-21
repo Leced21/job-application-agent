@@ -5,6 +5,7 @@ using JobApplicationAgent.Job.IntegrationTests.Infrastructure;
 using JobApplicationAgent.Job.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 namespace JobApplicationAgent.Job.IntegrationTests.Api;
 public sealed class JobsControllerTests(JobApiFactory factory) : IClassFixture<JobApiFactory>, IAsyncLifetime
 {
@@ -18,6 +19,18 @@ public sealed class JobsControllerTests(JobApiFactory factory) : IClassFixture<J
         ["salaryMax"] = 60000m, ["salaryCurrency"] = "EUR", ["description"] = "Description",
         ["source"] = "Manual", ["sourceUrl"] = "https://example.com/job", ["publishedAtUtc"] = "2026-01-01T12:00:00Z"
     };
+    [Fact]
+    public async Task Mutations_ShouldRequireAuthenticatedAdministrator_WhileReadsRemainPublic()
+    {
+        Assert.Equal(JobApiFactory.TestOwnerId.ToString(), factory.Services.GetRequiredService<IConfiguration>()["Job:Admin:OwnerIds"]);
+        using var anonymous = factory.CreateUnauthenticatedClient();
+        using var publisher = factory.CreatePublisherClient();
+
+        Assert.Equal(HttpStatusCode.OK, (await anonymous.GetAsync(Route)).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await anonymous.PostAsJsonAsync(Route, Command())).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await publisher.PostAsJsonAsync(Route, Command())).StatusCode);
+    }
+
     [Fact]
     public async Task Crud_ShouldPersistAndPreserveIdentityAndStatus()
     {

@@ -13,6 +13,8 @@ public sealed class ProfileApiFactory :
     WebApplicationFactory<Program>,
     IAsyncLifetime
 {
+    public const string ServiceToken = "profile-integration-test-service-token-with-strong-length";
+    public static readonly Guid OwnerId = Guid.Parse("48c6a244-09d4-405f-b46e-74655149a352");
     private readonly PostgreSqlContainer _postgres =
         new PostgreSqlBuilder("postgres:17")
             .WithDatabase("profile_test_db")
@@ -32,10 +34,21 @@ public sealed class ProfileApiFactory :
                     new Dictionary<string, string?>
                     {
                         ["ConnectionStrings:ProfileDatabase"] =
-                            _postgres.GetConnectionString()
+                            _postgres.GetConnectionString(),
+                        ["Profile:LocalAuth:Token"] = ServiceToken,
+                        ["Profile:LocalAuth:OwnerId"] = OwnerId.ToString()
                     });
             });
     }
+
+    public new HttpClient CreateClient()
+    {
+        var client = base.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", ServiceToken);
+        return client;
+    }
+
+    public HttpClient CreateUnauthenticatedClient() => base.CreateClient();
 
     public async Task InitializeAsync()
     {

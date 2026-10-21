@@ -1,0 +1,7 @@
+# Phase 91.20 — jetons utilisateur pour Applications et Agents
+
+Le Gateway échange désormais la session candidate contre un jeton OpenIddict pour les clusters Applications et Agents. Les deux API valident l’issuer configuré et l’audience `jobagent_api`, avec repli temporaire sur leurs schémas bearer locaux lorsque l’issuer n’est pas configuré. Les routes de candidatures, relances et exécutions d’agents prennent le propriétaire du claim signé `jobagent_owner_id`; la limitation de débit Agents est aussi compartimentée par ce propriétaire.
+
+Les services internes de lecture de sources gardent encore leurs liaisons locales. Applications vérifie l’offre, le profil et le document avec le propriétaire et le profil configurés. Agents vérifie les sources via ses adaptateurs locaux. Les propriétaires qui ne correspondent pas encore à ces liaisons sont refusés; les API ne substituent pas silencieusement le compte configuré. La phase suivante devra rendre ces liaisons multi-propriétaires et transmettre des identités de service authentifiées aux APIs sources avant d’annoncer la prise en charge de plusieurs comptes de bout en bout.
+
+Configuration : fournir `OpenIddict:Issuer` aux API Applications et Agents ainsi que la configuration BFF du Gateway. Garder les jetons locaux pendant la transition. Les tests unitaires et d’intégration Applications et Agents, ainsi que les API et le Gateway, ont été compilés; aucun test n’a été exécuté.

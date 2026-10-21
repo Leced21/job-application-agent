@@ -9,7 +9,9 @@ namespace JobApplicationAgent.Profile.Infrastructure.Persistence
         {
             var optionsBuilder = new DbContextOptionsBuilder<ProfileDbContext>();
 
-            optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=profile_db;Username=jobagent;Password=jobagent_dev");
+            var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__ProfileDatabase")
+                ?? "Host=localhost;Port=5432;Database=profile_db;Username=jobagent;Password=jobagent_dev";
+            optionsBuilder.UseNpgsql(connectionString);
 
             return new ProfileDbContext(optionsBuilder.Options);
         }

@@ -22,13 +22,15 @@
         <div class="user">
 
             <div class="user__avatar">
-                U
+                {{ email().charAt(0).toUpperCase() || 'U' }}
             </div>
 
             <div class="user__information">
-                <strong>Utilisateur</strong>
+                <strong>{{ email() || 'Candidat' }}</strong>
                 <span>Candidat</span>
             </div>
+
+            <button type="button" class="sign-out" (click)="signOut()" [disabled]="signingOut()">{{ signingOut() ? '…' : 'Déconnexion' }}</button>
 
         </div>
 

@@ -10,7 +10,7 @@ services:
       POSTGRES_PASSWORD: jobagent_dev
 
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
 
     volumes:
       - profile_postgres_data:/var/lib/postgresql/data
@@ -21,6 +21,28 @@ services:
       timeout: 5s
       retries: 10
 
+  profile-api:
+    build:
+      context: .
+      dockerfile: src/services/Profile/Dockerfile
+    container_name: job-application-agent-profile-api
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: 8080
+      ConnectionStrings__ProfileDatabase: Host=profile-db;Port=5432;Database=profile_db;Username=jobagent;Password=jobagent_dev
+    ports:
+      - "127.0.0.1:5001:8080"
+    depends_on:
+      profile-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:8080/health/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+
   job-db:
     image: postgres:17
     container_name: job-application-agent-job-db
@@ -30,7 +52,7 @@ services:
       POSTGRES_USER: jobagent
       POSTGRES_PASSWORD: jobagent_dev
     ports:
-      - "5433:5432"
+      - "127.0.0.1:5433:5432"
     volumes:
       - job_postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -39,6 +61,84 @@ services:
       timeout: 5s
       retries: 10
 
+  job-api:
+    build:
+      context: .
+      dockerfile: src/services/Job/Dockerfile
+    container_name: job-application-agent-job-api
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: 8080
+      ConnectionStrings__JobDatabase: Host=job-db;Port=5432;Database=job_db;Username=jobagent;Password=jobagent_dev
+      Job__LocalAuth__OwnerId: ${APPLICATIONS_OWNER_ID:?Set APPLICATIONS_OWNER_ID locally}
+      Job__LocalAuth__Token: ${JOB_LOCAL_TOKEN:?Set JOB_LOCAL_TOKEN locally}
+      Job__Admin__OwnerIds: ${APPLICATIONS_OWNER_ID:?Set APPLICATIONS_OWNER_ID locally}
+      Job__CollectionPublisher__Token: ${JOB_COLLECTION_PUBLISHER_TOKEN:?Set JOB_COLLECTION_PUBLISHER_TOKEN locally}
+      Job__EventTransport__Enabled: "false"
+    ports:
+      - "127.0.0.1:5002:8080"
+    depends_on:
+      job-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:8080/health/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+  matching-db:
+    image: postgres:17
+    container_name: job-application-agent-matching-db
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: matching_db
+      POSTGRES_USER: jobagent
+      POSTGRES_PASSWORD: jobagent_dev
+
+    ports:
+      - "127.0.0.1:5434:5432"
+
+    volumes:
+      - matching_postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jobagent -d matching_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  matching-api:
+    build:
+      context: .
+      dockerfile: src/services/Matching/Dockerfile
+    container_name: job-application-agent-matching-api
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: 8080
+      ConnectionStrings__MatchingDb: Host=matching-db;Port=5432;Database=matching_db;Username=jobagent;Password=jobagent_dev
+      Services__Job__BaseUrl: http://job-api:8080/
+      Services__Profile__BaseUrl: http://profile-api:8080/
+      Matching__EventTransport__Enabled: "false"
+    ports:
+      - "127.0.0.1:5186:8080"
+    depends_on:
+      matching-db:
+        condition: service_healthy
+      job-api:
+        condition: service_healthy
+      profile-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:8080/health/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+
 volumes:
   job_postgres_data:
   profile_postgres_data:
+  matching_postgres_data:

@@ -1,0 +1,100 @@
+<main class="recommendations-page" aria-labelledby="recommendations-title"
+  [attr.aria-busy]="loading()">
+  <header class="page-heading">
+    <div>
+      <span class="eyebrow">Votre recherche d’emploi</span>
+      <h1 id="recommendations-title">Des offres qui vous correspondent.</h1>
+      <p>Comparez les opportunités selon votre profil et les critères
+        évalués.</p>
+    </div>
+    <button class="button button--secondary" type="button"
+      (click)="load(page())" [disabled]="loading()">
+      <span aria-hidden="true">↻</span> Actualiser
+    </button>
+  </header>
+
+  <aside class="scoring-note" aria-label="Comment lire les scores">
+    <span class="scoring-note__icon" aria-hidden="true">i</span>
+    <p><strong>Trois indicateurs complémentaires.</strong> La compatibilité
+      mesure l’adéquation évaluée, la couverture indique la part des critères
+      renseignés et le classement combine ces deux éléments.</p>
+  </aside>
+
+  @if (scoringVersion(); as version) {
+  <p class="scoring-version" [title]="version">Version des règles : <strong>{{
+      version.split(':')[0] }}</strong></p>
+  }
+
+  @if (loading()) {
+  <div class="state-panel" role="status"><span class="loader"
+      aria-hidden="true"></span>Calcul des recommandations…</div>
+  } @else if (error()) {
+  <div class="state-panel state-panel--error" role="alert"><div><strong>Les
+        recommandations ne sont pas disponibles.</strong><p>{{ error()
+        }}</p></div><button class="button button--secondary" type="button"
+      (click)="load(page())">Réessayer</button></div>
+  } @else {
+  <div class="results-heading"><h2>Offres classées</h2><span>{{ totalCount() }}
+      {{ totalCount() === 1 ? 'offre' : 'offres' }}</span></div>
+  <div class="recommendation-list">
+    @for (job of items(); track job.jobId) {
+    <article class="recommendation-card">
+      <div class="recommendation-card__heading">
+        <span class="company-mark" aria-hidden="true">{{
+          job.companyName.slice(0, 1) }}</span>
+        <div class="job-title"><h2>{{ job.title }}</h2><p>{{ job.companyName }}
+            <span aria-hidden="true">·</span> {{ job.location ||
+            'Lieu non précisé' }}</p></div>
+        <span class="ranking-badge">{{ job.rankingScore === null ?
+          'Classement indisponible' : (job.rankingScore | number:'1.0-2') +
+          ' / 100 · classement' }}</span>
+      </div>
+      <dl class="score-grid">
+        <div class="score score--primary"><dt>Classement</dt><dd>{{
+            job.rankingScore === null ? 'Non évalué' : (job.rankingScore |
+            number:'1.0-2') + ' / 100' }}</dd><small>Score combiné</small></div>
+        <div class="score"><dt>Compatibilité</dt><dd>{{ job.overallScore ===
+            null ? 'Non évaluée' : (job.overallScore | number:'1.0-2') +
+            ' / 100' }}</dd><small>Adéquation évaluée</small></div>
+        <div class="score"><dt>Couverture</dt><dd>{{ job.evaluationCoverage |
+            number:'1.0-2' }} %</dd><small>Critères renseignés</small></div>
+      </dl>
+      <details class="criteria">
+        <summary>Voir les critères <span aria-hidden="true">⌄</span></summary>
+        @for (criterion of job.criteria; track $index) {
+        <div class="criterion">
+          <strong>{{ criterion.name }} <span class="criterion__score">{{
+              criterion.status === 2 ? 'Non applicable' : criterion.score ===
+              null ? 'Non évalué' : (criterion.score | number:'1.0-2') +
+              ' / 100' }}</span></strong>
+          <p>{{ criterion.explanation }}</p>
+        </div>
+        } @empty {
+        <p class="criteria-empty">Aucun détail de critère n’est disponible pour
+          cette offre.</p>
+        }
+      </details>
+    </article>
+    } @empty {
+    <div class="state-panel state-panel--empty"><span class="empty-icon"
+        aria-hidden="true">◇</span><div><strong>{{ page() === 1 ?
+          'Aucune offre disponible pour le moment.' :
+          'Vous avez atteint la fin des recommandations.' }}</strong><p>Vous
+          pouvez compléter votre profil pour obtenir une sélection plus
+          pertinente.</p></div></div>
+    }
+  </div>
+  }
+
+  <nav class="pagination" aria-label="Pages de recommandations">
+    <button class="button button--secondary" type="button"
+      (click)="load(page() - 1)" [disabled]="loading() || page() === 1">←
+      <span>Précédent</span></button>
+    <span aria-live="polite">Page {{ page() }} sur {{ totalPages() || 1
+      }}</span>
+    <button class="button button--secondary" type="button"
+      (click)="load(page() + 1)"
+      [disabled]="loading() || !!error() || page() >= totalPages()"><span>Suivant</span>
+      →</button>
+  </nav>
+</main>

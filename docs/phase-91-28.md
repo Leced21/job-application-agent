@@ -1,0 +1,9 @@
+# Phase 91.28 — protéger le catalogue Job et les publications de Collection
+
+Les routes de lecture du catalogue restent publiques. Les mutations `POST`, `PUT`, `PATCH` et `DELETE` exigent maintenant `JobAdmin` : le jeton doit contenir le claim `jobagent_owner_id`, et son GUID doit figurer dans `Job:Admin:OwnerIds`. En `Development` et `Testing`, le Bearer local configuré dans `Job:LocalAuth` fournit cette identité ; ce mécanisme est désactivé dans les autres environnements. Une liste d'administrateurs vide refuse toutes les mutations.
+
+L'endpoint de réception des publications Collection utilise un schéma distinct et un secret dédié `Job:CollectionPublisher:Token`. Le client Collection transmet ce Bearer au service Job ; il n'accorde pas l'accès aux mutations administrateur. Le Gateway relaie également les Bearer vers l'API Job pour les routes où l'identité utilisateur est requise. Compose relie `APPLICATIONS_OWNER_ID`, `JOB_LOCAL_TOKEN` et `JOB_COLLECTION_PUBLISHER_TOKEN` aux paramètres correspondants.
+
+La route de publication doit être appelée seulement depuis le réseau interne. Le secret partagé identifie le service Collection ; il ne remplace pas une identité utilisateur et sa rotation doit être coordonnée entre les deux services. Les lectures catalogue restent volontairement disponibles sans authentification pour Matching et les recommandations.
+
+Validation : Job 38/38, Collection 49/49, Applications 85/85 et Documents 161/161 tests d'intégration réussis ; Agents 147 réussis et 2 qualifications Ollama ignorées par conception. Les tests vérifient l'absence d'accès anonyme aux mutations, l'accès administrateur et la séparation entre jeton administrateur et jeton de publication. Le Gateway compile en Release et la configuration Compose complète est valide avec `.env.example`.

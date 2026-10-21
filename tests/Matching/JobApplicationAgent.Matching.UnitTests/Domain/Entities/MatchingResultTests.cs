@@ -223,11 +223,59 @@ public sealed class MatchingResultTests
 
         new MatchingCriterion(
             "Contract", 0m, 0.5m, "Incompatible contract")
-    };
+        };
 
         result.Complete(criteria);
 
         Assert.Equal(50m, result.OverallScore);
+    }
+
+    [Fact]
+    public void Complete_ShouldCalculateCoverage_WhenSomeCriteriaAreNotEvaluated()
+    {
+        var result = new MatchingResult(Guid.NewGuid(), Guid.NewGuid());
+
+        result.Complete(
+        [
+            new MatchingCriterion("JobTitle", 80m, 0.30m, "Match."),
+        MatchingCriterion.NotEvaluated("Skills", 0.50m, "Missing."),
+        MatchingCriterion.NotEvaluated("Location", 0.20m, "Missing.")
+        ]);
+
+        Assert.Equal(80m, result.OverallScore);
+        Assert.Equal(30m, result.EvaluationCoverage);
+    }
+
+    [Fact]
+    public void Complete_ShouldReturnFullCoverage_WhenAllCriteriaAreEvaluated()
+    {
+        var result = new MatchingResult(Guid.NewGuid(), Guid.NewGuid());
+
+        result.Complete(
+        [
+            new MatchingCriterion("JobTitle", 80m, 0.30m, "Match."),
+        new MatchingCriterion("Skills", 60m, 0.50m, "Match."),
+        new MatchingCriterion("Location", 100m, 0.20m, "Match.")
+        ]);
+
+        Assert.Equal(74m, result.OverallScore);
+        Assert.Equal(100m, result.EvaluationCoverage);
+    }
+
+    [Fact]
+    public void Complete_ShouldReturnZeroCoverage_WhenNoCriterionIsEvaluated()
+    {
+        var result = new MatchingResult(Guid.NewGuid(), Guid.NewGuid());
+
+        result.Complete(
+        [
+            MatchingCriterion.NotEvaluated("Skills", 0.50m, "Missing."),
+        MatchingCriterion.NotEvaluated("Location", 0.20m, "Missing.")
+        ]);
+
+        Assert.Equal(MatchingStatus.InsufficientData, result.Status);
+        Assert.Null(result.OverallScore);
+        Assert.Equal(0m, result.EvaluationCoverage);
     }
 
 }

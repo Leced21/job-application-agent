@@ -1,0 +1,34 @@
+services:
+  applications-api:
+    build:
+      context: .
+      dockerfile: src/services/Applications/Dockerfile
+    container_name: job-application-agent-applications-api
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: 8080
+      ConnectionStrings__ApplicationsDatabase: Host=applications-db;Port=5432;Database=${APPLICATIONS_DB_NAME:-applications_db};Username=${APPLICATIONS_DB_USER:?Set APPLICATIONS_DB_USER locally};Password=${APPLICATIONS_DB_PASSWORD:?Set APPLICATIONS_DB_PASSWORD locally}
+      Applications__LocalAuth__OwnerId: ${APPLICATIONS_OWNER_ID:?Set APPLICATIONS_OWNER_ID locally}
+      Applications__LocalAuth__Token: ${APPLICATIONS_LOCAL_TOKEN:?Set APPLICATIONS_LOCAL_TOKEN locally}
+      Applications__Sources__ProfileId: ${APPLICATIONS_PROFILE_ID:?Set APPLICATIONS_PROFILE_ID locally}
+      Applications__Sources__JobBaseUrl: http://job-api:8080
+      Applications__Sources__ProfileBaseUrl: http://profile-api:8080
+      Applications__Documents__BaseUrl: http://documents-api:8080
+    ports:
+      - "127.0.0.1:5007:8080"
+    depends_on:
+      applications-db:
+        condition: service_healthy
+      job-api:
+        condition: service_healthy
+      profile-api:
+        condition: service_healthy
+      documents-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:8080/health/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s

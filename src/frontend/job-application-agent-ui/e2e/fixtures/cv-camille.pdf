@@ -1,0 +1,6 @@
+%PDF-1.4
+% Synthetic Playwright fixture; content is never sent outside the mocked browser test.
+1 0 obj
+<< /Type /Catalog >>
+endobj
+%%EOF

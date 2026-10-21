@@ -1,0 +1,132 @@
+<main class="agents-page" aria-labelledby="agents-title" [attr.aria-busy]="loading() || running()">
+  <header class="page-heading">
+    <div>
+      <span class="eyebrow">Votre espace de travail</span>
+      <h1 id="agents-title">Agents IA</h1>
+      <p>Utilise le modèle local pour préparer des propositions que tu peux examiner avant toute suite.</p>
+    </div>
+    <div class="heading-actions">
+      <button class="button" type="button" (click)="load()" [disabled]="loading()">Actualiser</button>
+    </div>
+  </header>
+
+  @if (error()) {
+    <div class="error-banner" role="alert"><span>{{ error() }}</span><button type="button" (click)="error.set(null)" aria-label="Fermer le message">×</button></div>
+  }
+  @if (feedback()) {
+    <div class="feedback-banner" role="status"><span>{{ feedback() }}</span><button type="button" (click)="feedback.set(null)" aria-label="Fermer le message">×</button></div>
+  }
+  @if (loading() && !catalog()) {
+    <div class="state-card" role="status">Chargement de la configuration…</div>
+  } @else if (catalog(); as setup) {
+    <section class="provider-card" aria-labelledby="provider-title">
+      <div class="provider-mark" aria-hidden="true">{{ setup.provider === 'Ollama' ? 'O' : '—' }}</div>
+      <div class="provider-copy">
+        <span class="eyebrow">Fournisseur configuré</span>
+        <h2 id="provider-title">{{ setup.provider === 'Ollama' ? 'Ollama local' : 'Désactivé' }}</h2>
+        <p>{{ setup.availabilityVerified ? 'Disponibilité vérifiée' : 'Modèle local configuré' }}</p>
+      </div>
+      <span class="state-pill" [class.state-pill--active]="setup.modelAvailable">{{ setup.modelAvailable ? 'Activé' : 'Inactif' }}</span>
+      <dl class="model-details">
+        <div><dt>Identifiant</dt><dd>{{ setup.modelId ?? 'Aucun modèle configuré' }}</dd></div>
+        <div><dt>Tokenizer</dt><dd>{{ setup.tokenizerProfile ?? '—' }}</dd></div>
+        <div><dt>Limite d’entrée</dt><dd>{{ setup.inputLimit | number }} tokens</dd></div>
+        <div><dt>Limite de sortie</dt><dd>{{ setup.outputLimit | number }} tokens</dd></div>
+      </dl>
+      @if (setup.tokenizerSha256) { <p class="digest">SHA-256 tokenizer <code>{{ setup.tokenizerSha256 }}</code></p> }
+    </section>
+
+    @if (budget(); as quota) {
+      <section class="budget-section" aria-labelledby="budget-title">
+        <div class="section-heading">
+          <div><span class="eyebrow">Comptabilité persistante</span><h2 id="budget-title">Budget cumulé</h2></div>
+          <span class="budget-note">Aucun renouvellement automatique</span>
+        </div>
+        <div class="budget-grid">
+          <article class="budget-card"><span>Tokens imputés</span><strong>{{ quota.chargedTokens | number }} <small>/ {{ quota.maxTokens | number }}</small></strong><div class="meter"><span [style.width.%]="quota.maxTokens > 0 ? (quota.chargedTokens / quota.maxTokens * 100 > 100 ? 100 : quota.chargedTokens / quota.maxTokens * 100) : 0"></span></div><small>{{ quota.heldTokens | number }} réservés</small></article>
+          <article class="budget-card"><span>Montant imputé</span><strong>{{ quota.chargedUsd | currency:'USD':'symbol':'1.2-4':'fr' }} <small>/ {{ quota.maxUsd | currency:'USD':'symbol':'1.2-4':'fr' }}</small></strong><div class="meter meter--gold"><span [style.width.%]="quota.maxUsd > 0 ? (quota.chargedUsd / quota.maxUsd * 100 > 100 ? 100 : quota.chargedUsd / quota.maxUsd * 100) : 0"></span></div><small>{{ quota.heldUsd | currency:'USD':'symbol':'1.2-4':'fr' }} réservés</small></article>
+        </div>
+      </section>
+    }
+
+    <section class="catalog-section" aria-labelledby="catalog-title">
+      <div class="section-heading"><div><span class="eyebrow">Catalogue serveur</span><h2 id="catalog-title">Agents configurés</h2></div><span class="count-pill">{{ setup.definitions.length }}</span></div>
+      <div class="agent-list">
+        @for (agent of setup.definitions; track agent.kind) {
+          <article class="agent-card">
+            <div class="agent-icon" aria-hidden="true">✦</div>
+            <div class="agent-copy"><h3>{{ kindLabel(agent.kind) }}</h3><p>{{ agent.purpose }}</p><small>Prompt {{ agent.promptVersion ?? 'sans version' }}</small></div>
+            <span class="state-pill" [class.state-pill--active]="enabled(agent.kind, setup)">{{ statusLabel(agent.kind, setup) }}</span>
+          </article>
+        } @empty { <div class="state-card">Le catalogue ne contient aucun agent.</div> }
+      </div>
+    </section>
+
+    <section class="execution-section" aria-labelledby="execution-title">
+      <div class="section-heading"><div><span class="eyebrow">Traitement local</span><h2 id="execution-title">Lancer un agent</h2></div></div>
+      <p class="section-intro">Choisis un agent et une ressource. Le modèle reçoit les données nécessaires via les services locaux et retourne une proposition à examiner.</p>
+      <div class="execution-form">
+        <label>Agent
+          <select [value]="kind()" (change)="selectKind($any($event.target).value)">
+            @for (agentKind of agentKinds; track agentKind) { <option [value]="agentKind">{{ kindLabel(agentKind) }}</option> }
+          </select>
+        </label>
+        <label>Ressource
+          <select [value]="resourceId()" (change)="selectResource($any($event.target).value)" [disabled]="loadingResources() || !resources().length">
+            @if (loadingResources()) { <option value="">Chargement des ressources…</option> }
+            @else if (!resources().length) { <option value="">Aucune ressource compatible</option> }
+            @for (resource of resources(); track resource.id) { <option [value]="resource.id">{{ resource.label }}</option> }
+          </select>
+        </label>
+        <button class="button button--primary execute-button" type="button" (click)="execute()" [disabled]="running() || loadingResources() || !resourceId() || !enabled(kind(), setup)">
+          {{ running() ? 'Traitement en cours…' : 'Générer une proposition' }}
+        </button>
+      </div>
+      <p class="execution-help">{{ kindHelp(kind()) }}</p>
+      @if (!enabled(kind(), setup)) { <p class="inline-warning">Cet agent est désactivé par la configuration actuelle.</p> }
+      <p class="review-policy">Les propositions ne modifient pas automatiquement ton profil, tes documents ou tes candidatures. L’approbation sert à valider le résultat et, pour certaines étapes, à autoriser un agent suivant à s’appuyer dessus.</p>
+    </section>
+
+    <section class="history-section" aria-labelledby="history-title">
+      <div class="section-heading">
+        <div><span class="eyebrow">Exécutions récentes</span><h2 id="history-title">Historique et examen</h2></div>
+        <button class="button button--quiet" type="button" (click)="loadRuns()" [disabled]="loadingHistory()">Actualiser</button>
+      </div>
+      @if (historyError()) { <p class="inline-warning" role="alert">{{ historyError() }}</p> }
+      <div class="history-layout">
+        <div class="run-list" [attr.aria-busy]="loadingHistory()">
+          @if (loadingHistory() && !runs().length) { <div class="state-card" role="status">Chargement de l’historique…</div> }
+          @else if (runs().length) {
+            @for (run of runs(); track run.id) {
+              <button class="run-row" type="button" [class.run-row--selected]="selectedRun()?.id === run.id" (click)="openRun(run.id)">
+                <span class="run-row__copy"><strong>{{ kindLabel(run.kind) }}</strong><small>{{ run.createdAtUtc | date:'d MMM y, HH:mm':'':'fr' }}</small></span>
+                <span class="state-pill" [class.state-pill--active]="run.state === 'PendingReview' || run.state === 'Approved'">{{ stateLabel(run.state) }}</span>
+              </button>
+            }
+          } @else { <div class="state-card">Aucune exécution pour le moment.</div> }
+        </div>
+
+        <article class="run-detail" aria-label="Détail de l’exécution sélectionnée">
+          @if (selectedRun(); as run) {
+            <header class="run-detail__heading"><div><span class="eyebrow">{{ kindLabel(run.command.kind) }}</span><h3>{{ stateLabel(run.state) }}</h3></div><span class="state-pill" [class.state-pill--active]="run.state === 'PendingReview' || run.state === 'Approved'">{{ stateLabel(run.state) }}</span></header>
+            @if (run.proposal) {
+              <p class="run-meta">Modèle {{ run.proposal.modelId }} · Prompt {{ run.proposal.promptVersion }} · {{ run.accounting.chargedTokens | number }} tokens</p>
+              <pre class="proposal-output"><code>{{ prettyOutput(run.proposal.outputJson) }}</code></pre>
+            } @else if (run.failure) {
+              <p class="inline-warning" role="alert">{{ failureLabel(run.failure) }}</p>
+            }
+            @if (run.state === 'PendingReview' && run.proposal) {
+              <div class="review-controls">
+                <label class="review-confirm"><input type="checkbox" [checked]="reviewConfirmed()" (change)="setReviewConfirmed($any($event.target).checked)"> J’ai lu la proposition et confirme mon choix.</label>
+                <label>Note facultative<textarea rows="3" maxlength="1000" [value]="reviewNote()" (input)="setReviewNote($any($event.target).value)" placeholder="Commentaire de révision"></textarea></label>
+                <div class="review-actions"><button class="button button--primary" type="button" (click)="review(true)" [disabled]="reviewing()">Approuver</button><button class="button button--danger" type="button" (click)="review(false)" [disabled]="reviewing()">Rejeter</button></div>
+              </div>
+            } @else if (run.reviewNote) { <p class="run-meta">Note de révision : {{ run.reviewNote }}</p> }
+          } @else {
+            <div class="state-card state-card--detail"><strong>Choisis une exécution</strong><span>Sa proposition et son état seront affichés ici.</span></div>
+          }
+        </article>
+      </div>
+    </section>
+  }
+</main>

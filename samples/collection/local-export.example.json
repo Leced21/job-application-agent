@@ -1,0 +1,27 @@
+{
+  "offers": [
+    {
+      "title": "Data Engineer",
+      "companyName": "Example Analytics",
+      "location": "Paris",
+      "workMode": "Télétravail",
+      "contractType": "CDI",
+      "salaryMin": 50000,
+      "salaryMax": 65000,
+      "salaryCurrency": "EUR",
+      "description": "Offre fictive pour tester un export local. Aucune plateforme ne sera contactée.",
+      "skills": ["Python", "pyspark", "SQL"],
+      "sourceUrl": "https://example.invalid/jobs/data-engineer"
+    },
+    {
+      "title": "Backend Developer",
+      "companyName": "Example Software",
+      "location": "Lyon",
+      "workMode": "Hybride",
+      "contractType": "CDI",
+      "description": "Seconde offre fictive ; vérifier le contenu avant toute revue ou publication.",
+      "skills": ["C#", "PostgreSQL"],
+      "sourceUrl": "https://example.invalid/jobs/backend-developer"
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 import { Component, input } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 import { ContractType } from '../../models/contract-type.model';
 import { WorkMode } from '../../models/work-mode.model';
@@ -6,12 +7,13 @@ import { Job } from '../../models/job.model';
 
 @Component({
     selector: 'app-job-details',
-    imports: [],
+    imports: [RouterLink],
     templateUrl: './job-details.html',
     styleUrl: './job-details.scss'
 })
 export class JobDetails {
     readonly job = input.required<Job>();
+    readonly standalone = input(false);
 
 
     protected get companyInitial(): string {

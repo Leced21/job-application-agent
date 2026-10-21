@@ -26,6 +26,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\services\Job\JobApplicationAgent.Job.Api\JobApplicationAgent.Job.Api.csproj" />
     <ProjectReference Include="..\..\..\src\services\Job\JobApplicationAgent.Job.Infrastructure\JobApplicationAgent.Job.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\src\services\Matching\JobApplicationAgent.Matching.Infrastructure\JobApplicationAgent.Matching.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

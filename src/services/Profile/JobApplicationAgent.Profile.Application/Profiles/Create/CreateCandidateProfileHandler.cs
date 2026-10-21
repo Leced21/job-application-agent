@@ -5,7 +5,7 @@ using JobApplicationAgent.Profile.Domain.Entities;
 
 namespace JobApplicationAgent.Profile.Application.Profiles.Create;
 
-public sealed class CreateCandidateProfileHandler(ICandidateProfileRepository repository, IValidator<CreateCandidateProfileCommand> validator)
+public sealed class CreateCandidateProfileHandler(ICandidateProfileRepository repository, IValidator<CreateCandidateProfileCommand> validator, ICurrentProfileOwner owner)
 {
     public async Task<CandidateProfileDto> HandleAsync(CreateCandidateProfileCommand command, CancellationToken cancellationToken = default)
     {
@@ -23,7 +23,8 @@ public sealed class CreateCandidateProfileHandler(ICandidateProfileRepository re
             command.Email,
             command.PhoneNumber,
             command.JobTitle,
-            command.Summary
+            command.Summary,
+            owner.OwnerId
         );
 
         await repository.AddAsync(profile, cancellationToken);

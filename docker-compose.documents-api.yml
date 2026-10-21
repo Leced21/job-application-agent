@@ -1,0 +1,30 @@
+services:
+  documents-api:
+    build:
+      context: .
+      dockerfile: src/services/Documents/Dockerfile
+    container_name: job-application-agent-documents-api
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: 8080
+      ConnectionStrings__DocumentsDatabase: Host=documents-db;Port=5432;Database=${DOCUMENTS_DB_NAME:-documents_db};Username=${DOCUMENTS_DB_USER:?Set DOCUMENTS_DB_USER locally};Password=${DOCUMENTS_DB_PASSWORD:?Set DOCUMENTS_DB_PASSWORD locally}
+      Documents__LocalAuth__OwnerId: ${APPLICATIONS_OWNER_ID:?Set APPLICATIONS_OWNER_ID locally}
+      Documents__LocalAuth__Token: ${DOCUMENTS_LOCAL_TOKEN:?Set DOCUMENTS_LOCAL_TOKEN locally}
+      Documents__Applications__OwnerId: ${APPLICATIONS_OWNER_ID:?Set APPLICATIONS_OWNER_ID locally}
+      Documents__Applications__ProfileId: ${APPLICATIONS_PROFILE_ID:?Set APPLICATIONS_PROFILE_ID locally}
+      Documents__Applications__Token: ${APPLICATIONS_LOCAL_TOKEN:?Set APPLICATIONS_LOCAL_TOKEN locally}
+      Documents__Drafts__JobBaseUrl: http://job-api:8080
+    ports:
+      - "127.0.0.1:5005:8080"
+    depends_on:
+      documents-db:
+        condition: service_healthy
+      job-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:8080/health/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s

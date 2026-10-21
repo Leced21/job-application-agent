@@ -11,6 +11,10 @@
     <p>{{ error() }}</p>
   </div>
 
+} @else if (profileMissing()) {
+
+  <app-profile-setup (profileCreated)="profile.set($event); profileMissing.set(false)" />
+
 } @else if (profile(); as candidate) {
 
   <div class="profile-page">

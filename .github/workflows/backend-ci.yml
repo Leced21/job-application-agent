@@ -1,24 +1,198 @@
-name: Backend CI
+name: Repository CI
 
 on:
   push:
-    branches:
-      - main
-      - dev
-
+    branches: [main, dev]
   pull_request:
-    branches:
-      - main
-      - dev
+    branches: [main, dev]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
-jobs:
-  build:
-    name: Build Backend
-    runs-on: ubuntu-latest
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
+jobs:
+  windows-identity-migration:
+    name: Windows PowerShell 5.1 compatibility and certificate generation
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Parse local PowerShell scripts with Windows PowerShell 5.1
+        shell: powershell
+        run: |
+          if ($PSVersionTable.PSVersion -lt [version]'5.1') {
+            throw "Windows PowerShell 5.1 or newer is required; found $($PSVersionTable.PSVersion)."
+          }
+
+          $scriptPath = Join-Path $env:GITHUB_WORKSPACE 'tools/Update-LocalIdentityDatabase.ps1'
+          $tokens = $null
+          $parseErrors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile($scriptPath, [ref]$tokens, [ref]$parseErrors) | Out-Null
+          if ($parseErrors.Count -gt 0) {
+            throw ($parseErrors | Out-String)
+          }
+
+          $requiresLine = Get-Content -LiteralPath $scriptPath -TotalCount 1
+          if ($requiresLine -cne '#requires -Version 5.1') {
+            throw "Unexpected PowerShell requirement: $requiresLine"
+          }
+
+          $certificateScriptPath = Join-Path $env:GITHUB_WORKSPACE 'tools/New-OpenIddictCertificates.ps1'
+          $tokens = $null
+          $parseErrors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile($certificateScriptPath, [ref]$tokens, [ref]$parseErrors) | Out-Null
+          if ($parseErrors.Count -gt 0) {
+            throw ($parseErrors | Out-String)
+          }
+
+          $requiresLine = Get-Content -LiteralPath $certificateScriptPath -TotalCount 1
+          if ($requiresLine -cne '#requires -Version 5.1') {
+            throw "Unexpected PowerShell requirement: $requiresLine"
+          }
+
+          Write-Host 'Local Identity and certificate scripts parse under Windows PowerShell 5.1.'
+
+      - name: Verify local recovery-set safety guards
+        shell: pwsh
+        run: |
+          $scriptPath = Join-Path $env:GITHUB_WORKSPACE 'tools/Backup-LocalRecoverySet.ps1'
+          $restoreScriptPath = Join-Path $env:GITHUB_WORKSPACE 'tools/Restore-LocalRecoverySet.ps1'
+          $tokens = $null
+          $parseErrors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile($restoreScriptPath, [ref]$tokens, [ref]$parseErrors) | Out-Null
+          if ($parseErrors.Count -gt 0) { throw ($parseErrors | Out-String) }
+
+          $consentRejected = $false
+          try {
+            & $scriptPath -BackupDirectory (Join-Path $env:RUNNER_TEMP 'recovery-guard-no-consent') -EnvFile (Join-Path $env:GITHUB_WORKSPACE '.env.example')
+          }
+          catch {
+            $consentRejected = $_.Exception.Message -like '*-AllowServiceRestart*'
+          }
+          if (-not $consentRejected) { throw 'The recovery script did not require explicit service-restart consent.' }
+
+          $repositoryPathRejected = $false
+          try {
+            & $scriptPath -BackupDirectory (Join-Path $env:GITHUB_WORKSPACE 'recovery-guard-in-repository') -EnvFile (Join-Path $env:GITHUB_WORKSPACE '.env.example') -AllowServiceRestart
+          }
+          catch {
+            $repositoryPathRejected = $_.Exception.Message -like '*outside the repository*'
+          }
+          if (-not $repositoryPathRejected) { throw 'The recovery script allowed an archive destination inside the repository.' }
+
+          $restoreConsentRejected = $false
+          try {
+            & $restoreScriptPath -RecoveryDirectory (Join-Path $env:RUNNER_TEMP 'missing-recovery-set') -EnvFile (Join-Path $env:GITHUB_WORKSPACE '.env.example')
+          }
+          catch {
+            $restoreConsentRejected = $_.Exception.Message -like '*-AllowServiceRestart*'
+          }
+          if (-not $restoreConsentRejected) { throw 'The recovery restore script did not require explicit service-restart consent.' }
+
+          if (Test-Path -LiteralPath (Join-Path $env:GITHUB_WORKSPACE 'recovery-guard-in-repository')) {
+            throw 'A recovery path guard unexpectedly created a directory.'
+          }
+
+          & (Join-Path $env:GITHUB_WORKSPACE 'tests/scripts/Assign-LocalLegacyProfileOwner.Tests.ps1')
+          & (Join-Path $env:GITHUB_WORKSPACE 'tests/scripts/Get-LocalOwnerDataInventory.Tests.ps1')
+          Write-Host 'Recovery and owner-data safety tests passed.'
+
+      - name: Generate and verify local OpenIddict test certificates
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $outputDirectory = Join-Path $env:RUNNER_TEMP ('openid-certificates-' + [guid]::NewGuid().ToString('N'))
+          $whatIfDirectory = Join-Path $env:RUNNER_TEMP ('openid-certificates-whatif-' + [guid]::NewGuid().ToString('N'))
+          $signingPasswordText = [guid]::NewGuid().ToString('N') + [guid]::NewGuid().ToString('N')
+          $encryptionPasswordText = [guid]::NewGuid().ToString('N') + [guid]::NewGuid().ToString('N')
+          $signingPassword = ConvertTo-SecureString $signingPasswordText -AsPlainText -Force
+          $encryptionPassword = ConvertTo-SecureString $encryptionPasswordText -AsPlainText -Force
+          try {
+            & (Join-Path $env:GITHUB_WORKSPACE 'tools/New-OpenIddictCertificates.ps1') `
+              -OutputDirectory $outputDirectory `
+              -SigningPassword $signingPassword `
+              -EncryptionPassword $encryptionPassword
+
+            & (Join-Path $env:GITHUB_WORKSPACE 'tools/New-OpenIddictCertificates.ps1') `
+              -OutputDirectory $whatIfDirectory `
+              -SigningPassword $signingPassword `
+              -EncryptionPassword $encryptionPassword `
+              -WhatIf
+            if (Test-Path -LiteralPath $whatIfDirectory) {
+              throw 'WhatIf created a certificate output directory.'
+            }
+
+            $manifest = Get-Content -LiteralPath (Join-Path $outputDirectory 'manifest.json') -Raw | ConvertFrom-Json
+            if ($manifest.formatVersion -ne 1 -or $manifest.certificates.Count -ne 2) {
+              throw 'The certificate manifest does not contain the expected pair.'
+            }
+
+            $manifestJson = $manifest | ConvertTo-Json -Depth 5
+            if ($manifestJson.Contains($signingPasswordText) -or $manifestJson.Contains($encryptionPasswordText)) {
+              throw 'A PFX password was written to the manifest.'
+            }
+
+            $weakPasswordRejected = $false
+            $weakPassword = ConvertTo-SecureString 'too-short' -AsPlainText -Force
+            try {
+              & (Join-Path $env:GITHUB_WORKSPACE 'tools/New-OpenIddictCertificates.ps1') `
+                -OutputDirectory $whatIfDirectory `
+                -SigningPassword $weakPassword `
+                -EncryptionPassword $encryptionPassword
+            }
+            catch {
+              $weakPasswordRejected = $true
+            }
+            if (-not $weakPasswordRejected) {
+              throw 'A weak PFX password was accepted.'
+            }
+
+            $overwriteRejected = $false
+            try {
+              & (Join-Path $env:GITHUB_WORKSPACE 'tools/New-OpenIddictCertificates.ps1') `
+                -OutputDirectory $outputDirectory `
+                -SigningPassword $signingPassword `
+                -EncryptionPassword $encryptionPassword
+            }
+            catch {
+              $overwriteRejected = $true
+            }
+            if (-not $overwriteRejected) {
+              throw 'The certificate generator allowed overwriting existing files.'
+            }
+
+            foreach ($certificate in $manifest.certificates) {
+              $password = if ($certificate.purpose -eq 'signing') { $signingPassword } else { $encryptionPassword }
+              $pfx = Get-PfxData -FilePath (Join-Path $outputDirectory $certificate.file) -Password $password
+              if (-not ($pfx.EndEntityCertificates | Where-Object { $_.Thumbprint -eq $certificate.thumbprint })) {
+                throw "The $($certificate.purpose) PFX does not match its manifest."
+              }
+
+              if ((Get-FileHash -LiteralPath (Join-Path $outputDirectory $certificate.file) -Algorithm SHA256).Hash -ne $certificate.sha256) {
+                throw "The $($certificate.purpose) PFX hash does not match its manifest."
+              }
+            }
+
+            Write-Host 'Both PFX files and their non-secret manifest were verified.'
+          }
+          finally {
+            if (Test-Path -LiteralPath $outputDirectory) {
+              Remove-Item -LiteralPath $outputDirectory -Recurse -Force
+            }
+            if (Test-Path -LiteralPath $whatIfDirectory) {
+              Remove-Item -LiteralPath $whatIfDirectory -Recurse -Force
+            }
+            Remove-Variable signingPasswordText, encryptionPasswordText, signingPassword, encryptionPassword, weakPassword -ErrorAction SilentlyContinue
+          }
+
+  backend:
+    name: .NET restore, analysis, build and tests
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -26,79 +200,308 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: 10.0.x
 
-      - name: Display .NET version
-        run: dotnet --version
+      - name: Restore solution and audit vulnerable packages
+        run: dotnet restore JobApplicationAgent.slnx --property:WarningsAsErrors=NU1902%3BNU1903%3BNU1904
 
-      - name: Restore Profile API
-        run: >
-          dotnet restore
-          src/services/Profile/JobApplicationAgent.Profile.Api/JobApplicationAgent.Profile.Api.csproj
+      - name: Restore test projects and audit vulnerable packages
+        shell: bash
+        run: |
+          while IFS= read -r project; do
+            dotnet restore "$project" --property:WarningsAsErrors=NU1902%3BNU1903%3BNU1904
+          done < <(find tests -name '*.csproj' -print | sort)
 
-      - name: Restore Profile unit tests
-        run: >
-          dotnet restore
-          tests/Profile/JobApplicationAgent.Profile.UnitTests/JobApplicationAgent.Profile.UnitTests.csproj
+      - name: Build solution with .NET analyzers
+        run: dotnet build JobApplicationAgent.slnx --configuration Release --no-restore -p:RunAnalyzersDuringBuild=true
 
-      - name: Restore Profile integration tests
-        run: >
-          dotnet restore
-          tests/Profile/JobApplicationAgent.Profile.IntegrationTests/JobApplicationAgent.Profile.IntegrationTests.csproj
-      
-      - name: Build Profile API
-        run: >
-          dotnet build
-          src/services/Profile/JobApplicationAgent.Profile.Api/JobApplicationAgent.Profile.Api.csproj
-          --configuration Release
-          --no-restore
+      - name: Build every test project with .NET analyzers
+        shell: bash
+        run: |
+          while IFS= read -r project; do
+            dotnet build "$project" --configuration Release --no-restore -p:RunAnalyzersDuringBuild=true
+          done < <(find tests -name '*.csproj' -print | sort)
 
-      - name: Run Profile unit tests
-        run: >
-          dotnet test
-          tests/Profile/JobApplicationAgent.Profile.UnitTests/JobApplicationAgent.Profile.UnitTests.csproj
-          --configuration Release
-          --no-restore
-          --verbosity normal
+      - name: Run unit and integration tests
+        shell: bash
+        run: |
+          while IFS= read -r project; do
+            dotnet test "$project" --configuration Release --no-build --no-restore --logger trx --results-directory TestResults
+          done < <(find tests -name '*.csproj' -print | sort)
 
-      - name: Run Profile integration tests
-        run: >
-          dotnet test
-          tests/Profile/JobApplicationAgent.Profile.IntegrationTests/JobApplicationAgent.Profile.IntegrationTests.csproj
-          --configuration Release
-          --no-restore
-          --verbosity normal
-
-      - name: Run Profile unit tests
-        run: >
-          dotnet test
-          tests/Profile/JobApplicationAgent.Profile.UnitTests/JobApplicationAgent.Profile.UnitTests.csproj
-          --configuration Release
-          --no-restore
-          --collect:"XPlat Code Coverage"
-          --results-directory ./TestResults/Unit
-
-      - name: Run Profile integration tests
-        run: >
-          dotnet test
-          tests/Profile/JobApplicationAgent.Profile.IntegrationTests/JobApplicationAgent.Profile.IntegrationTests.csproj
-          --configuration Release
-          --no-restore
-          --collect:"XPlat Code Coverage"
-          --results-directory ./TestResults/Integration
-      - name: Upload code coverage
+      - name: Upload .NET test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: profile-code-coverage
-          path: |
-            TestResults/Unit/**/coverage.cobertura.xml
-            TestResults/Integration/**/coverage.cobertura.xml
-          if-no-files-found: error
-          
-      - name: Build Profile Docker image
-        run: >
-          docker build
-          --file src/services/Profile/Dockerfile
-          --tag job-application-agent/profile-api:${{ github.sha }}
-          .
+          name: dotnet-test-results
+          path: TestResults/**/*.trx
+          if-no-files-found: warn
+
+  frontend:
+    name: Angular audit, tests and production build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/frontend/job-application-agent-ui
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: src/frontend/job-application-agent-ui/package-lock.json
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Audit npm dependencies
+        run: npm audit --audit-level=high
+
+      - name: Run Angular unit tests
+        run: npm test -- --watch=false
+
+      - name: Install Chromium for browser tests
+        run: npx playwright install --with-deps chromium
+
+      - name: Run candidate journey browser tests
+        run: npm run test:e2e -- --grep-invert @compose
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: src/frontend/job-application-agent-ui/playwright-report/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Build Angular for production
+        run: npm run build
+
+  container-images:
+    name: Compose migrations, image builds and full-stack readiness smoke test
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate complete Compose configuration
+        run: >-
+          docker compose --env-file .env.example
+          -f docker-compose.yml
+          -f docker-compose.identity.yml
+          -f docker-compose.applications.yml
+          -f docker-compose.applications-api.yml
+          -f docker-compose.documents.yml
+          -f docker-compose.documents-api.yml
+          -f docker-compose.collection.yml
+          -f docker-compose.collection-api.yml
+          -f docker-compose.agents.yml
+          -f docker-compose.agents-api.yml
+          -f docker-compose.edge.yml
+          config --quiet
+
+      - name: Build every Compose image
+        run: >-
+          docker compose --env-file .env.example
+          -f docker-compose.yml
+          -f docker-compose.identity.yml
+          -f docker-compose.applications.yml
+          -f docker-compose.applications-api.yml
+          -f docker-compose.documents.yml
+          -f docker-compose.documents-api.yml
+          -f docker-compose.collection.yml
+          -f docker-compose.collection-api.yml
+          -f docker-compose.agents.yml
+          -f docker-compose.agents-api.yml
+          -f docker-compose.edge.yml
+          build
+
+      - name: Setup .NET for disposable Compose migrations
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore migration projects and install EF Core CLI
+        shell: bash
+        run: |
+          dotnet restore JobApplicationAgent.slnx --property:WarningsAsErrors=NU1902%3BNU1903%3BNU1904
+          dotnet tool install --tool-path "$RUNNER_TEMP/dotnet-tools" dotnet-ef --version 10.0.12
+          echo "$RUNNER_TEMP/dotnet-tools" >> "$GITHUB_PATH"
+
+      - name: Migrate the disposable Compose databases
+        shell: pwsh
+        run: ./tools/Update-LocalDatabases.ps1 -ComposeProjectName job-application-agent -EnvFile .env.example -Confirm:$false
+
+      - name: Start the complete Compose stack and wait for health
+        run: >-
+          docker compose --project-name job-application-agent --env-file .env.example
+          -f docker-compose.yml
+          -f docker-compose.identity.yml
+          -f docker-compose.applications.yml
+          -f docker-compose.applications-api.yml
+          -f docker-compose.documents.yml
+          -f docker-compose.documents-api.yml
+          -f docker-compose.collection.yml
+          -f docker-compose.collection-api.yml
+          -f docker-compose.agents.yml
+          -f docker-compose.agents-api.yml
+          -f docker-compose.edge.yml
+          up --detach --wait --wait-timeout 300
+
+      - name: Check published API readiness and frontend
+        id: compose-readiness
+        shell: bash
+        run: |
+          for port in 5000 5001 5002 5004 5005 5007 5008 5186; do
+            curl --fail --silent --show-error --retry 10 --retry-connrefused --retry-delay 2 \
+              "http://127.0.0.1:${port}/health/ready" --output /dev/null
+          done
+          curl --fail --silent --show-error --retry 10 --retry-connrefused --retry-delay 2 \
+            http://127.0.0.1:4200/ --output /dev/null
+          session_file="$RUNNER_TEMP/account-session.json"
+          session_status="$(curl --silent --show-error --retry 10 --retry-connrefused --retry-delay 2 \
+            --output "$session_file" --write-out '%{http_code}' http://127.0.0.1:4200/auth/session || true)"
+          echo "GET /auth/session returned HTTP ${session_status:-000}:"
+          cat "$session_file" 2>/dev/null || true
+          if [[ "$session_status" != '200' ]]; then
+            echo 'The account session endpoint is unavailable through the Compose frontend.' >&2
+            exit 1
+          fi
+          session_json="$(cat "$session_file")"
+          printf '%s' "$session_json" | python3 -c 'import json,sys; session=json.load(sys.stdin); print("Anonymous account session:", session); sys.exit(0 if session.get("registrationEnabled") is True else "Account registration is not enabled through the Compose Gateway.")'
+
+      - name: Setup Node.js for real Compose browser test
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: src/frontend/job-application-agent-ui/package-lock.json
+
+      - name: Install browser test dependencies
+        working-directory: src/frontend/job-application-agent-ui
+        run: npm ci
+
+      - name: Install Chromium for real Compose browser test
+        working-directory: src/frontend/job-application-agent-ui
+        run: npx playwright install --with-deps chromium
+
+      - name: Verify registration and account isolation through the real Compose stack
+        id: compose-browser-tests
+        working-directory: src/frontend/job-application-agent-ui
+        env:
+          PLAYWRIGHT_REUSE_EXISTING_SERVER: 'true'
+        run: npm run test:e2e -- --workers=1 e2e/compose-registration.spec.ts e2e/compose-multi-account-isolation.spec.ts
+
+      - name: Show account stack logs after browser test failure
+        if: failure() && (steps.compose-readiness.outcome == 'failure' || steps.compose-browser-tests.outcome == 'failure')
+        run: >-
+          docker compose --project-name job-application-agent --env-file .env.example
+          -f docker-compose.yml
+          -f docker-compose.identity.yml
+          -f docker-compose.applications.yml
+          -f docker-compose.applications-api.yml
+          -f docker-compose.documents.yml
+          -f docker-compose.documents-api.yml
+          -f docker-compose.collection.yml
+          -f docker-compose.collection-api.yml
+          -f docker-compose.agents.yml
+          -f docker-compose.agents-api.yml
+          -f docker-compose.edge.yml
+          logs --no-color --tail=200 gateway-api frontend identity-db
+
+      - name: Upload real Compose browser report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compose-browser-smoke-report
+          path: src/frontend/job-application-agent-ui/playwright-report/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Create and verify a coherent disposable recovery set
+        shell: pwsh
+        run: |
+          $recoveryDirectory = Join-Path $env:RUNNER_TEMP "job-application-agent-recovery-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
+          ./tools/Backup-LocalRecoverySet.ps1 -BackupDirectory $recoveryDirectory -ComposeProjectName job-application-agent -EnvFile .env.example -AllowServiceRestart -Confirm:$false
+
+          $recoveryManifest = Get-Content -LiteralPath (Join-Path $recoveryDirectory 'recovery-set.json') -Raw | ConvertFrom-Json
+          if ($recoveryManifest.FormatVersion -ne 1 -or $recoveryManifest.SecretsIncluded -or $recoveryManifest.EncryptionIncluded) {
+            throw 'The recovery-set manifest is invalid or claims to contain secrets/encryption.'
+          }
+
+          $postgresDirectory = Join-Path $recoveryDirectory $recoveryManifest.DatabaseBackupDirectory
+          $rabbitMqDirectory = Join-Path $recoveryDirectory $recoveryManifest.RabbitMqBackupDirectory
+          if ((Get-FileHash -LiteralPath (Join-Path $postgresDirectory 'manifest.json') -Algorithm SHA256).Hash -ne $recoveryManifest.DatabaseManifestSha256) {
+            throw 'The PostgreSQL manifest hash differs from the recovery-set index.'
+          }
+          if ((Get-FileHash -LiteralPath (Join-Path $rabbitMqDirectory 'manifest.json') -Algorithm SHA256).Hash -ne $recoveryManifest.RabbitMqManifestSha256) {
+            throw 'The RabbitMQ manifest hash differs from the recovery-set index.'
+          }
+
+      - name: Restore the complete recovery set on the disposable host
+        shell: pwsh
+        run: |
+          $recoveryDirectory = Join-Path $env:RUNNER_TEMP "job-application-agent-recovery-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
+          $recoveryManifest = Get-Content -LiteralPath (Join-Path $recoveryDirectory 'recovery-set.json') -Raw | ConvertFrom-Json
+          $rabbitManifestPath = Join-Path (Join-Path $recoveryDirectory $recoveryManifest.RabbitMqBackupDirectory) 'manifest.json'
+          $rabbitManifest = Get-Content -LiteralPath $rabbitManifestPath -Raw | ConvertFrom-Json
+          $compose = @('--project-name', 'job-application-agent', '--env-file', '.env.example')
+          $composeFiles = @(
+            'docker-compose.yml',
+            'docker-compose.identity.yml',
+            'docker-compose.applications.yml',
+            'docker-compose.applications-api.yml',
+            'docker-compose.documents.yml',
+            'docker-compose.documents-api.yml',
+            'docker-compose.collection.yml',
+            'docker-compose.collection-api.yml',
+            'docker-compose.agents.yml',
+            'docker-compose.agents-api.yml',
+            'docker-compose.edge.yml'
+          )
+          foreach ($composeFile in $composeFiles) { $compose += @('-f', $composeFile) }
+          & docker compose @compose stop --timeout 60 rabbitmq
+          if ($LASTEXITCODE -ne 0) { throw 'Could not stop the source RabbitMQ container before the host recovery test.' }
+          $rabbitContainer = @(& docker compose @compose ps --all -q rabbitmq)
+          if ($LASTEXITCODE -ne 0 -or $rabbitContainer.Count -ne 1) { throw 'Could not locate the source RabbitMQ container for the disposable host reset.' }
+          & docker rm $rabbitContainer[0]
+          if ($LASTEXITCODE -ne 0) { throw 'Could not remove the source RabbitMQ container for the disposable host reset.' }
+          & docker image rm --force $rabbitManifest.ImageId
+          if ($LASTEXITCODE -ne 0) { throw 'Could not remove the source RabbitMQ image before testing image recovery.' }
+          $remainingImage = @(& docker image inspect --format '{{.Id}}' $rabbitManifest.ImageId 2>$null)
+          if ($LASTEXITCODE -eq 0 -and ($remainingImage -join '').Trim() -ceq [string]$rabbitManifest.ImageId) {
+            throw 'The source RabbitMQ image is still present; the recovery test would not exercise its image archive.'
+          }
+          ./tools/Restore-LocalRecoverySet.ps1 -RecoveryDirectory $recoveryDirectory -ComposeProjectName job-application-agent -EnvFile .env.example -AllowServiceRestart -Confirm:$false
+
+      - name: Check readiness after database recovery
+        shell: bash
+        run: |
+          for port in 5000 5001 5002 5004 5005 5007 5008 5186; do
+            curl --fail --silent --show-error --retry 10 --retry-connrefused --retry-delay 2 \
+              "http://127.0.0.1:${port}/health/ready" --output /dev/null
+          done
+          curl --fail --silent --show-error --retry 10 --retry-connrefused --retry-delay 2 \
+            http://127.0.0.1:4200/ --output /dev/null
+
+      - name: Stop Compose services
+        if: always()
+        run: >-
+          docker compose --project-name job-application-agent --env-file .env.example
+          -f docker-compose.yml
+          -f docker-compose.identity.yml
+          -f docker-compose.applications.yml
+          -f docker-compose.applications-api.yml
+          -f docker-compose.documents.yml
+          -f docker-compose.documents-api.yml
+          -f docker-compose.collection.yml
+          -f docker-compose.collection-api.yml
+          -f docker-compose.agents.yml
+          -f docker-compose.agents-api.yml
+          -f docker-compose.edge.yml
+          down --remove-orphans

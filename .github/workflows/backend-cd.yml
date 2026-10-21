@@ -1,22 +1,60 @@
-name: Backend CD
+name: Publish development images
 
 on:
-  push:
-    branches:
-      - dev
+  workflow_run:
+    workflows: [Repository CI]
+    types: [completed]
+    branches: [dev]
 
 permissions:
   contents: read
   packages: write
 
-jobs:
-  publish-profile:
-    name: Publish Profile Docker Image
-    runs-on: ubuntu-latest
+concurrency:
+  group: publish-images-${{ github.ref }}
+  cancel-in-progress: false
 
+jobs:
+  publish:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' }}
+    name: Publish ${{ matrix.image }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: profile-api
+            context: .
+            file: src/services/Profile/Dockerfile
+          - image: job-api
+            context: .
+            file: src/services/Job/Dockerfile
+          - image: matching-api
+            context: .
+            file: src/services/Matching/Dockerfile
+          - image: applications-api
+            context: .
+            file: src/services/Applications/Dockerfile
+          - image: documents-api
+            context: .
+            file: src/services/Documents/Dockerfile
+          - image: collection-api
+            context: .
+            file: src/services/Collection/Dockerfile
+          - image: agents-api
+            context: .
+            file: src/services/Agents/Dockerfile
+          - image: gateway-api
+            context: .
+            file: src/gateway/JobApplicationAgent.Gateway/Dockerfile
+          - image: frontend
+            context: src/frontend/job-application-agent-ui
+            file: Dockerfile
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -32,16 +70,18 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository_owner }}/job-application-agent/profile-api
+          images: ghcr.io/${{ github.repository_owner }}/job-application-agent/${{ matrix.image }}
           tags: |
             type=raw,value=dev
             type=sha,prefix=sha-
 
-      - name: Build and push Profile Docker image
+      - name: Build and publish image
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: src/services/Profile/Dockerfile
+          context: ${{ matrix.context }}
+          file: ${{ matrix.file }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}

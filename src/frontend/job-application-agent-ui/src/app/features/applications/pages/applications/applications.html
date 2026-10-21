@@ -1,0 +1,911 @@
+<main
+  class="applications-page"
+  aria-labelledby="applications-title"
+  [attr.aria-busy]="loading() || detailLoading()"
+>
+  <header class="page-heading">
+    <div>
+      <span class="eyebrow">Votre parcours candidat</span>
+      <h1 id="applications-title">Suivi des candidatures</h1>
+      <p>Consultez les étapes enregistrées et organisez vos prochaines relances.</p>
+    </div>
+  </header>
+  @if (error()) {
+    <div class="error-banner" role="alert">
+      <span>{{ error() }}</span
+      ><button type="button" (click)="error.set(null)" aria-label="Fermer le message">×</button>
+    </div>
+  }
+
+  <section class="due-panel" aria-labelledby="due-title">
+    <div class="section-heading">
+      <div>
+        <span class="eyebrow">Échéances locales</span>
+        <h2 id="due-title">Relances à effectuer</h2>
+      </div>
+      <span class="count-pill">{{ dueItems().length }}</span>
+    </div>
+    @if (loading()) {
+      <p class="muted-state" role="status">Actualisation des échéances…</p>
+    } @else if (dueItems().length) {
+      <div class="due-list">
+        @for (due of dueItems(); track due.followUpId) {
+          <button class="due-item" type="button" (click)="onDueClick(due.candidacyId)">
+            <span class="due-date">{{ due.dueAtUtc | date: 'd MMM' : '' : 'fr' }}</span
+            ><span class="due-copy"
+              ><strong>{{ due.jobTitle }} · {{ due.companyName }}</strong
+              ><small>{{ due.note }} · Canal prévu : {{ channelLabel(due.channel) }}</small></span
+            ><span aria-hidden="true">→</span>
+          </button>
+        }
+      </div>
+    } @else {
+      <p class="muted-state">
+        Aucune relance échue pour le moment. Les échéances futures restent visibles dans le détail
+        de chaque dossier.
+      </p>
+    }
+  </section>
+
+  <div class="workspace">
+    <section class="list-panel" aria-labelledby="list-title">
+      <div class="panel-heading">
+        <div>
+          <span class="eyebrow">Historique</span>
+          <h2 id="list-title">Mes dossiers</h2>
+        </div>
+        <button
+          class="icon-button"
+          type="button"
+          (click)="load()"
+          aria-label="Actualiser les candidatures"
+        >
+          ↻
+        </button>
+      </div>
+      <label class="filter-label"
+        >Filtrer par statut<select
+          [value]="filter() ?? ''"
+          (change)="changeFilter($any($event.target).value)"
+        >
+          <option value="">Tous les statuts</option>
+          @for (status of statuses; track status) {
+            <option [value]="status">{{ statusLabel(status) }}</option>
+          }
+        </select></label
+      >
+      @if (loading()) {
+        <div class="empty-state" role="status">Chargement des candidatures…</div>
+      } @else if (applications().length) {
+        <div class="application-list">
+          @for (application of applications(); track application.id) {
+            <button
+              class="application-row"
+              type="button"
+              [class.application-row--active]="selected()?.id === application.id"
+              (click)="open(application.id)"
+            >
+              <span class="company-mark" aria-hidden="true">{{
+                application.companyName.slice(0, 1)
+              }}</span
+              ><span class="application-row__copy"
+                ><strong>{{ application.jobTitle }}</strong
+                ><small>{{ application.companyName }}</small></span
+              ><span
+                class="status-pill"
+                [class.status-pill--submitted]="
+                  application.status === 'Submitted' || application.status === 'Interview'
+                "
+                >{{ statusLabel(application.status) }}</span
+              >
+            </button>
+          }
+        </div>
+        <p class="list-limit">Affichage limité aux 100 dossiers les plus récents.</p>
+      } @else {
+        <div class="empty-state">
+          <strong>Aucune candidature trouvée</strong>
+          <p>Les dossiers suivis dans le service Applications apparaîtront ici.</p>
+        </div>
+      }
+    </section>
+
+    <section class="detail-panel" aria-label="Détail de la candidature sélectionnée">
+      @if (detailLoading()) {
+        <div class="empty-state empty-state--large" role="status">Ouverture du dossier…</div>
+      } @else if (selected(); as application) {
+        <header class="detail-heading">
+          <div>
+            <span class="eyebrow"
+              >{{ statusLabel(application.status) }} · Révision {{ application.revision }}</span
+            >
+            <h2>{{ application.jobTitle }}</h2>
+            <p>
+              {{ application.companyName }} · Créé le
+              {{ application.createdAtUtc | date: 'd MMMM y' : '' : 'fr' }}
+            </p>
+          </div>
+          <span
+            class="status-pill"
+            [class.status-pill--submitted]="
+              application.status === 'Submitted' || application.status === 'Interview'
+            "
+            >{{ statusLabel(application.status) }}</span
+          >
+        </header>
+        <section class="documents-card">
+          <h3>Documents associés</h3>
+          <div class="document-binding">
+            <span>CV</span><strong>{{ application.resume ? 'Associé' : 'Non associé' }}</strong>
+            @if (application.resume) {
+              <code>{{ application.resume.sha256 }}</code>
+              @if (exportById(application.resume.exportId); as resumeExport) {
+                <div class="document-actions">
+                  @if (isPdf(resumeExport)) {
+                    <button
+                      type="button"
+                      [disabled]="previewLoadingId() === resumeExport.id"
+                      (click)="previewExport(resumeExport)"
+                    >
+                      {{
+                        previewLoadingId() === resumeExport.id
+                          ? 'Chargement…'
+                          : 'Prévisualiser le CV'
+                      }}
+                    </button>
+                  }
+                  <button type="button" (click)="downloadExport(resumeExport)">
+                    Télécharger le CV
+                  </button>
+                </div>
+              }
+            }
+          </div>
+          <div class="document-binding">
+            <span>Lettre</span
+            ><strong>{{ application.coverLetter ? 'Associée' : 'Non associée' }}</strong>
+            @if (application.coverLetter) {
+              <code>{{ application.coverLetter.sha256 }}</code>
+              @if (exportById(application.coverLetter.exportId); as letterExport) {
+                <div class="document-actions">
+                  @if (isPdf(letterExport)) {
+                    <button
+                      type="button"
+                      [disabled]="previewLoadingId() === letterExport.id"
+                      (click)="previewExport(letterExport)"
+                    >
+                      {{
+                        previewLoadingId() === letterExport.id
+                          ? 'Chargement…'
+                          : 'Prévisualiser la lettre'
+                      }}
+                    </button>
+                  }
+                  <button type="button" (click)="downloadExport(letterExport)">
+                    Télécharger la lettre
+                  </button>
+                </div>
+              }
+            }
+          </div>
+        </section>
+
+        @if (previewFile(); as file) {
+          <section class="document-preview" aria-label="Prévisualisation de document">
+            <header>
+              <h3>Prévisualisation · {{ file.fileName }}</h3>
+              <button type="button" (click)="closePreview()">Fermer</button>
+            </header>
+            <iframe
+              [src]="previewUrl()"
+              [title]="'Prévisualisation du document ' + file.fileName"
+              width="100%"
+              height="600"
+            ></iframe>
+          </section>
+        }
+
+        @if (application.status === 'Draft') {
+          <form
+            class="action-card"
+            (submit)="attachExport(selectedExportId()); $event.preventDefault()"
+          >
+            <div>
+              <h3>Associer ou remplacer une pièce</h3>
+              <p>Seuls les exports approuvés pour cette offre sont proposés.</p>
+            </div>
+            @if (exportsLoading()) {
+              <p class="wide-label" role="status">Chargement des exports approuvés…</p>
+            } @else if (availableExports().length) {
+              <label class="wide-label"
+                >Export approuvé
+                <select
+                  required
+                  [value]="selectedExportId()"
+                  (change)="selectedExportId.set($any($event.target).value)"
+                >
+                  <option value="">Choisir un CV ou une lettre</option>
+                  @for (item of availableExports(); track item.file.id) {
+                    <option [value]="item.file.id" [disabled]="isExportAttached(item)">
+                      {{ exportLabel(item) }}
+                    </option>
+                  }
+                </select>
+              </label>
+              <button
+                class="button button--primary"
+                type="submit"
+                [disabled]="saving() || !selectedExportId()"
+              >
+                Associer l’export
+              </button>
+            } @else {
+              <p class="wide-label">
+                Aucun export approuvé n’est disponible pour cette offre. Préparez et approuvez une
+                pièce dans Documents.
+              </p>
+              <a class="button button--secondary" routerLink="/preparations"
+                >Ouvrir les préparations</a
+              >
+            }
+          </form>
+        }
+
+        @if (application.status === 'Draft' && application.resume && application.coverLetter) {
+          <section class="action-card">
+            <div>
+              <h3>Dossier complet</h3>
+              <p>
+                Les deux exports sont associés. Demandez une revue pour figer ce dossier avant
+                approbation.
+              </p>
+            </div>
+            <button
+              class="button button--primary"
+              type="button"
+              [disabled]="saving()"
+              (click)="requestReview()"
+            >
+              Demander la revue
+            </button>
+          </section>
+        }
+        @if (application.status === 'ReadyForReview') {
+          <form
+            class="action-card"
+            (submit)="approveApplication(approvalConfirmedValue()); $event.preventDefault()"
+          >
+            <div>
+              <h3>Revue du dossier</h3>
+              <p>Vérifiez le CV et la lettre associés avant d’approuver cette version.</p>
+              <label class="wide-label"
+                ><input
+                  #reviewConfirmation
+                  type="checkbox"
+                  (change)="approvalConfirmedValue.set(reviewConfirmation.checked)"
+                  required
+                />
+                Je confirme avoir relu et approuver les deux pièces.</label
+              >
+            </div>
+            <button
+              class="button button--primary"
+              type="submit"
+              [disabled]="saving() || !approvalConfirmedValue()"
+            >
+              Approuver le dossier
+            </button>
+          </form>
+        }
+
+        @if (
+          (application.status === 'Approved' || application.status === 'Submitted') &&
+          application.submissionAttempt
+        ) {
+          <section class="action-card controlled-submission" aria-labelledby="controlled-title">
+            <div>
+              <span class="eyebrow">Parcours contrôlé</span>
+              <h3 id="controlled-title">Tentative de candidature</h3>
+              <p>
+                L’application ne transmet aucun formulaire ni document à la plateforme. Vous
+                effectuez vous-même toute action externe, puis consignez son résultat ici.
+              </p>
+            </div>
+            @if (application.submissionAttemptResult; as attemptResult) {
+              <p class="controlled-status" role="status">
+                {{ controlledOutcomeLabel(attemptResult.outcome) }} ·
+                {{ attemptResult.occurredAtUtc | date: 'd MMM y, HH:mm' : '' : 'fr' }}
+                @if (attemptResult.reference) {
+                  · Référence : {{ attemptResult.reference }}
+                }
+                @if (attemptResult.outcome === 'Unknown') {
+                  · Aucune nouvelle tentative contrôlée ne sera réservée pour éviter un doublon.
+                }
+              </p>
+            } @else {
+              <p>
+                Plateforme autorisée : {{ application.submissionAttempt.platform.platformId }} ·
+                réservation {{ application.submissionAttempt.attemptId }}
+              </p>
+              <form
+                class="controlled-result-form"
+                (submit)="
+                  recordControlledSubmissionResult(
+                    attemptOutcome.value,
+                    attemptOccurredAt.value,
+                    attemptReference.value,
+                    attemptResultConfirmation.checked
+                  );
+                  $event.preventDefault()
+                "
+              >
+                <label>Résultat<select #attemptOutcome>
+                  <option value="Submitted">Envoi confirmé</option>
+                  <option value="DefinitelyNotSubmitted">Aucun envoi effectué</option>
+                  <option value="Unknown">Résultat incertain</option>
+                </select></label>
+                <label>Date et heure<input #attemptOccurredAt type="datetime-local" required [min]="localDateTime(application.submissionAttempt.preparedAtUtc)" /></label>
+                <label class="wide-label">Référence de confirmation, facultative<input #attemptReference maxlength="500" placeholder="Référence fournie par la plateforme" /></label>
+                <label class="wide-label"><input #attemptResultConfirmation type="checkbox" required /> Je confirme que ce résultat correspond à ce qui s’est réellement passé.</label>
+                <button class="button button--primary" type="submit" [disabled]="saving()">Enregistrer le résultat</button>
+              </form>
+              <p class="controlled-warning">
+                Si le résultat est incertain, la tentative restera bloquée et ne pourra pas être
+                relancée automatiquement.
+              </p>
+            }
+          </section>
+        }
+
+        @if (application.status === 'Approved' && !application.submission) {
+          @if (submissionPreview(); as controlledPreview) {
+            <section class="action-card controlled-submission" aria-labelledby="controlled-preview-title">
+              <div>
+                <span class="eyebrow">Soumission contrôlée</span>
+                <h3 id="controlled-preview-title">Relire l’aperçu immuable</h3>
+                <p>
+                  {{ controlledPreview.jobTitle }} · {{ controlledPreview.companyName }}. Les pièces
+                  et leur empreinte sont liées à cette révision du dossier.
+                </p>
+              </div>
+              <p class="controlled-hash">Empreinte de revue : {{ controlledPreview.reviewSha256 }}</p>
+              @if (
+                !application.submissionApproval ||
+                application.submissionApproval.revision !== controlledPreview.revision
+              ) {
+                <form
+                  class="controlled-result-form"
+                  (submit)="
+                    approveControlledSubmission(approvalConsent.checked);
+                    $event.preventDefault()
+                  "
+                >
+                  <label class="wide-label"><input #approvalConsent type="checkbox" required />
+                    Je confirme avoir relu le poste et les deux pièces pour cette révision.</label>
+                  <button class="button button--primary" type="submit" [disabled]="saving()">Enregistrer mon accord</button>
+                </form>
+              } @else {
+                <p class="controlled-status">Accord enregistré pour la révision {{ controlledPreview.revision }}.</p>
+                @if (submissionAutomationEnabled()) {
+                  @if (submissionPlatformIds().length) {
+                    <form
+                      class="controlled-result-form"
+                      (submit)="
+                        prepareControlledSubmissionAttempt(attemptConsent.checked);
+                        $event.preventDefault()
+                      "
+                    >
+                      <label>Plateforme<select [value]="submissionPlatformId()" (change)="submissionPlatformId.set($any($event.target).value)">
+                        @for (platformId of submissionPlatformIds(); track platformId) {
+                          <option [value]="platformId">{{ platformId }}</option>
+                        }
+                      </select></label>
+                      <label class="wide-label"><input #attemptConsent type="checkbox" required /> Je confirme réserver une seule tentative pour cette plateforme.</label>
+                      <button class="button button--primary" type="submit" [disabled]="saving()">Réserver la tentative</button>
+                    </form>
+                  } @else {
+                    <p class="controlled-warning">Aucune plateforme admissible n’est configurée côté serveur.</p>
+                  }
+                } @else {
+                  <p class="controlled-warning">La réservation est désactivée côté serveur. Configurez et activez explicitement le registre des plateformes avant de poursuivre.</p>
+                }
+              }
+            </section>
+          }
+        }
+
+        @if (
+          application.status === 'Approved' &&
+          !application.submission &&
+          (!application.submissionAttempt || application.submissionAttemptResult?.outcome === 'DefinitelyNotSubmitted')
+        ) {
+          <section
+            class="action-card submission-preflight"
+            aria-labelledby="submission-preflight-title"
+          >
+            <div>
+              <span class="eyebrow">Préparation manuelle</span>
+              <h3 id="submission-preflight-title">Vérifiez le dossier avant l’envoi</h3>
+              <p>
+                Aucun envoi n’est effectué depuis l’application. Consultez les informations du poste
+                et ouvrez les deux pièces approuvées avant de les transmettre vous-même.
+              </p>
+            </div>
+            <label class="wide-label"
+              ><input
+                type="checkbox"
+                [checked]="submissionDetailsReviewed()"
+                (change)="submissionDetailsReviewed.set($any($event.target).checked)"
+              />
+              J’ai vérifié le poste et l’entreprise affichés ci-dessus.</label
+            >
+            <label class="wide-label"
+              ><input
+                type="checkbox"
+                [checked]="submissionDocumentsReviewed()"
+                (change)="submissionDocumentsReviewed.set($any($event.target).checked)"
+              />
+              J’ai ouvert et vérifié le CV et la lettre associés à cette version approuvée.</label
+            >
+            @if (submissionDetailsReviewed() && submissionDocumentsReviewed()) {
+              <p class="preflight-ready" role="status">
+                Vérification terminée. Vous pouvez envoyer ces pièces manuellement sur le canal de
+                votre choix, puis enregistrer l’envoi ci-dessous.
+              </p>
+            }
+          </section>
+          <form
+            class="action-card"
+            (submit)="
+              declareSubmission(
+                submittedAt.value,
+                channel.value,
+                reference.value,
+                confirmation.checked
+              );
+              $event.preventDefault()
+            "
+          >
+            <div>
+              <h3>Enregistrer un envoi manuel</h3>
+              <p>
+                Après avoir envoyé les pièces vous-même, indiquez la date réelle et le canal. Cette
+                action enregistre uniquement votre déclaration et n’envoie aucun document.
+              </p>
+            </div>
+            <label
+              >Date et heure de l’envoi<input #submittedAt type="datetime-local" required
+            /></label>
+            <label
+              >Canal utilisé<select #channel>
+                <option value="Email">Courriel</option>
+                <option value="JobBoard">Site d’emploi</option>
+                <option value="CompanyWebsite">Site entreprise</option>
+                <option value="Phone">Téléphone</option>
+                <option value="InPerson">En personne</option>
+                <option value="Other">Autre</option>
+              </select></label
+            >
+            <label class="wide-label"
+              >Référence, facultative<input
+                #reference
+                maxlength="500"
+                placeholder="Référence de confirmation"
+            /></label>
+            <label class="wide-label"
+              ><input #confirmation type="checkbox" required /> Je confirme avoir envoyé cette
+              candidature manuellement.</label
+            >
+            <button class="button button--primary" type="submit" [disabled]="saving()">
+              Enregistrer l’envoi
+            </button>
+          </form>
+        }
+
+        @if (application.pendingFollowUp; as pending) {
+          <section class="pending-card">
+            <div>
+              <span class="eyebrow">Prochaine relance</span
+              ><strong>{{ pending.plan.dueAtUtc | date: 'd MMMM y à HH:mm' : '' : 'fr' }}</strong
+              ><small>{{ pending.plan.note }} · {{ channelLabel(pending.plan.channel) }}</small>
+            </div>
+            <span class="planned-pill">Planifiée</span>
+          </section>
+          <form
+            class="action-card"
+            (submit)="
+              rescheduleFollowUp(
+                rescheduledAt.value,
+                rescheduledChannel.value,
+                rescheduledNote.value
+              );
+              $event.preventDefault()
+            "
+          >
+            <div>
+              <h3>Modifier la relance</h3>
+              <p>La nouvelle échéance et son canal seront conservés dans l’historique.</p>
+            </div>
+            <label
+              >Nouvelle date et heure<input
+                #rescheduledAt
+                type="datetime-local"
+                required
+                [min]="followUpDateMin"
+                [max]="followUpDateMax"
+                [value]="localDateTime(pending.plan.dueAtUtc)"
+            /></label>
+            <label
+              >Canal prévu<select #rescheduledChannel [value]="pending.plan.channel">
+                @for (item of channels; track item) {
+                  <option [value]="item">{{ channelLabel(item) }}</option>
+                }
+              </select></label
+            >
+            <label class="wide-label"
+              >Note<input #rescheduledNote required maxlength="1000" [value]="pending.plan.note"
+            /></label>
+            <button class="button button--secondary" type="submit" [disabled]="saving()">
+              Enregistrer la nouvelle relance
+            </button>
+          </form>
+          <form
+            class="action-card"
+            (submit)="
+              completeFollowUp(
+                completedAt.value,
+                completedChannel.value,
+                outcome.value,
+                completionConfirmation.checked
+              );
+              $event.preventDefault()
+            "
+          >
+            <div>
+              <h3>Enregistrer la relance effectuée</h3>
+              <p>Ce rappel est local et n’envoie aucun message.</p>
+            </div>
+            <label
+              >Date et heure de la relance<input #completedAt type="datetime-local" required
+            /></label>
+            <label
+              >Canal utilisé<select #completedChannel>
+                @for (item of channels; track item) {
+                  <option [value]="item">{{ channelLabel(item) }}</option>
+                }
+              </select></label
+            >
+            <label class="wide-label"
+              >Résultat<input
+                #outcome
+                maxlength="2000"
+                required
+                placeholder="Ex. Réponse reçue, prochaine étape convenue"
+            /></label>
+            <label class="wide-label"
+              ><input #completionConfirmation type="checkbox" required /> Je confirme avoir effectué
+              cette relance.</label
+            >
+            <button class="button button--primary" type="submit" [disabled]="saving()">
+              Marquer comme effectuée
+            </button>
+          </form>
+          <form
+            class="action-card"
+            (submit)="
+              cancelFollowUp(cancelReason.value, cancellationConfirmation.checked);
+              $event.preventDefault()
+            "
+          >
+            <div>
+              <h3>Annuler le rappel</h3>
+              <p>L’annulation est conservée dans l’historique du dossier.</p>
+            </div>
+            <label class="wide-label"
+              >Motif<input
+                #cancelReason
+                maxlength="1000"
+                required
+                placeholder="Pourquoi ce rappel n’est plus nécessaire ?"
+            /></label>
+            <label class="wide-label"
+              ><input #cancellationConfirmation type="checkbox" required /> Je confirme l’annulation
+              de ce rappel.</label
+            >
+            <button class="button button--secondary" type="submit" [disabled]="saving()">
+              Annuler le rappel
+            </button>
+          </form>
+        }
+
+        <section class="timeline-section">
+          <div class="section-heading">
+            <h3>Historique</h3>
+            <span>{{ application.events.length }} événements</span>
+          </div>
+          <ol class="timeline">
+            @for (event of application.events; track event.sequence) {
+              <li>
+                <span class="timeline-dot" aria-hidden="true"></span>
+                <div class="timeline-copy">
+                  <strong>{{ eventLabel(event.kind) }}</strong
+                  ><time>{{ event.atUtc | date: 'd MMM y, HH:mm' : '' : 'fr' }}</time>
+                  <p>
+                    Après cet événement : {{ statusLabel(event.status) }} · Révision
+                    {{ event.revision }}
+                  </p>
+                  @if (event.note) {
+                    <p>Note ou motif : {{ event.note }}</p>
+                  }
+                  @if (event.submission) {
+                    <p>
+                      Déclaré le
+                      {{ event.submission.occurredAtUtc | date: 'd MMM y' : '' : 'fr' }} ·
+                      {{ channelLabel(event.submission.channel)
+                      }}{{ event.submission.reference ? ' · ' + event.submission.reference : '' }}
+                    </p>
+                  }
+                  @if (event.submissionApproval) {
+                    <p>Accord explicite enregistré pour la révision {{ event.submissionApproval.revision }}.</p>
+                  }
+                  @if (event.submissionAttempt) {
+                    <p>
+                      Tentative réservée sur {{ event.submissionAttempt.platform.platformId }} ·
+                      {{ event.submissionAttempt.preparedAtUtc | date: 'd MMM y, HH:mm' : '' : 'fr' }}
+                    </p>
+                  }
+                  @if (event.submissionResult) {
+                    <p>
+                      Résultat déclaré : {{ controlledOutcomeLabel(event.submissionResult.outcome) }}
+                      · {{ event.submissionResult.occurredAtUtc | date: 'd MMM y, HH:mm' : '' : 'fr' }}
+                      @if (event.submissionResult.reference) {
+                        · Référence : {{ event.submissionResult.reference }}
+                      }
+                    </p>
+                  }
+                  @if (event.recruiterUpdate) {
+                    <p>
+                      Retour reçu · {{ channelLabel(event.recruiterUpdate.channel) }} ·
+                      {{ event.recruiterUpdate.message }}
+                    </p>
+                  }
+                  @if (event.document) {
+                    <p>
+                      {{ event.document.kind === 'Resume' ? 'CV' : 'Lettre' }} associé · export
+                      {{ event.document.exportId }} · SHA-256 {{ event.document.sha256 }}
+                    </p>
+                  }
+                  @if (event.followUp) {
+                    @if (event.followUp.status === 'Planned') {
+                      <p>
+                        Relance prévue le
+                        {{ event.followUp.plan.dueAtUtc | date: 'd MMM y, HH:mm' : '' : 'fr' }} ·
+                        {{ channelLabel(event.followUp.plan.channel) }} ·
+                        {{ event.followUp.plan.note }}
+                      </p>
+                    } @else if (event.followUp.status === 'Completed') {
+                      <p>
+                        Relance effectuée le
+                        {{
+                          event.followUp.occurredAtUtc ?? event.atUtc
+                            | date: 'd MMM y, HH:mm' : '' : 'fr'
+                        }}
+                        @if (event.followUp.actualChannel) {
+                          · {{ channelLabel(event.followUp.actualChannel) }}
+                        }
+                        @if (event.followUp.outcome) {
+                          · Résultat : {{ event.followUp.outcome }}
+                        }
+                      </p>
+                    } @else {
+                      <p>
+                        Rappel annulé
+                        @if (event.followUp.occurredAtUtc) {
+                          le {{ event.followUp.occurredAtUtc | date: 'd MMM y, HH:mm' : '' : 'fr' }}
+                        }
+                        @if (event.followUp.outcome) {
+                          · Motif : {{ event.followUp.outcome }}
+                        }
+                      </p>
+                    }
+                  }
+                </div>
+              </li>
+            }
+          </ol>
+        </section>
+
+        @if (
+          application.status === 'Submitted' ||
+          application.status === 'InReview' ||
+          application.status === 'Interview'
+        ) {
+          <form
+            class="action-card"
+            (submit)="
+              recordRecruiterUpdate(
+                nextStatus.value,
+                updateAt.value,
+                updateChannel.value,
+                updateMessage.value,
+                updateConfirmation.checked
+              );
+              $event.preventDefault()
+            "
+          >
+            <div>
+              <h3>Enregistrer un retour recruteur</h3>
+              <p>Consignez un message déjà reçu. Cette action n’envoie aucun message.</p>
+            </div>
+            <label
+              >Nouveau statut<select #nextStatus>
+                @for (status of recruiterTargets(); track status) {
+                  <option [value]="status">{{ statusLabel(status) }}</option>
+                }
+              </select></label
+            >
+            <label>Date et heure du retour<input #updateAt type="datetime-local" required /></label>
+            <label
+              >Canal reçu<select #updateChannel>
+                @for (item of channels; track item) {
+                  <option [value]="item">{{ channelLabel(item) }}</option>
+                }
+              </select></label
+            >
+            <label class="wide-label"
+              >Message reçu<textarea
+                #updateMessage
+                maxlength="2000"
+                required
+                rows="3"
+                placeholder="Résumé fidèle du retour reçu"
+              ></textarea>
+            </label>
+            <label class="wide-label"
+              ><input #updateConfirmation type="checkbox" required /> Je confirme que ce retour a
+              été reçu.</label
+            >
+            <button class="button button--primary" type="submit" [disabled]="saving()">
+              Enregistrer le retour
+            </button>
+          </form>
+          @if (!application.pendingFollowUp) {
+            <form
+              class="action-card"
+              (submit)="
+                planFollowUp(dueAt.value, channel.value, followUpNote.value);
+                $event.preventDefault()
+              "
+            >
+              <div>
+                <h3>Planifier une relance</h3>
+                <p>Cette échéance est un rappel local ; elle n’envoie aucun message.</p>
+              </div>
+              <label
+                >Date et heure<input
+                  #dueAt
+                  type="datetime-local"
+                  required
+                  [min]="followUpDateMin"
+                  [max]="followUpDateMax" /></label
+              ><label
+                >Canal prévu<select #channel>
+                  <option value="Email">Courriel</option>
+                  <option value="JobBoard">Site d’emploi</option>
+                  <option value="CompanyWebsite">Site entreprise</option>
+                  <option value="Phone">Téléphone</option>
+                  <option value="InPerson">En personne</option>
+                  <option value="Other">Autre</option>
+                </select></label
+              ><label class="wide-label"
+                >Note<input
+                  #followUpNote
+                  maxlength="1000"
+                  required
+                  placeholder="Ex. Vérifier l’avancement après l’entretien" /></label
+              ><button class="button button--primary" type="submit" [disabled]="saving()">
+                Planifier
+              </button>
+            </form>
+          }
+        }
+
+        @if (application.status === 'ReadyForReview' || application.status === 'Approved') {
+          <form
+            class="action-card"
+            (submit)="returnToDraft(returnDraftConfirmedValue()); $event.preventDefault()"
+          >
+            <div>
+              <h3>Modifier les pièces</h3>
+              <p>
+                Renvoyez ce dossier au brouillon pour remplacer le CV ou la lettre associés. La
+                revue et l’approbation devront être refaites.
+              </p>
+            </div>
+            <label class="wide-label"
+              ><input
+                #returnConfirmation
+                type="checkbox"
+                (change)="returnDraftConfirmedValue.set(returnConfirmation.checked)"
+                required
+              />
+              Je confirme le retour au brouillon.</label
+            >
+            <button
+              class="button button--secondary"
+              type="submit"
+              [disabled]="saving() || !returnDraftConfirmedValue()"
+            >
+              Renvoyer au brouillon
+            </button>
+          </form>
+        }
+
+        @if (canWithdraw(application.status)) {
+          <form
+            class="action-card"
+            (submit)="
+              withdraw(withdrawReasonValue(), withdrawConfirmedValue()); $event.preventDefault()
+            "
+          >
+            <div>
+              <h3>Retirer cette candidature</h3>
+              <p>
+                Le suivi sera clôturé et tout rappel en attente annulé. Aucun message ne sera
+                envoyé.
+              </p>
+            </div>
+            <label class="wide-label"
+              >Motif du retrait
+              <input
+                #withdrawReason
+                maxlength="2000"
+                (input)="withdrawReasonValue.set(withdrawReason.value)"
+                required
+                placeholder="Ex. J’ai accepté une autre offre"
+              />
+            </label>
+            <label class="wide-label"
+              ><input
+                #withdrawConfirmation
+                type="checkbox"
+                (change)="withdrawConfirmedValue.set(withdrawConfirmation.checked)"
+                required
+              />
+              Je confirme le retrait de cette candidature.</label
+            >
+            <button
+              class="button button--secondary"
+              type="submit"
+              [disabled]="saving() || !withdrawReasonValue().trim() || !withdrawConfirmedValue()"
+            >
+              Retirer la candidature
+            </button>
+          </form>
+        }
+
+        <form class="note-form" (submit)="saveNote(note.value); $event.preventDefault()">
+          <label for="application-note">Ajouter une note privée</label>
+          <div>
+            <textarea
+              #note
+              id="application-note"
+              maxlength="2000"
+              required
+              rows="2"
+              placeholder="Note conservée dans votre historique local"
+            ></textarea
+            ><button class="button button--secondary" type="submit" [disabled]="saving()">
+              Ajouter la note
+            </button>
+          </div>
+        </form>
+      } @else {
+        <div class="empty-state empty-state--large">
+          <strong>Ouvrez un dossier</strong>
+          <p>Choisissez une candidature pour consulter ses pièces, événements et relances.</p>
+        </div>
+      }
+    </section>
+  </div>
+</main>

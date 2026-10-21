@@ -1,14 +1,20 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, LOCALE_ID, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+import { registerLocaleData } from '@angular/common';
+import localeFr from '@angular/common/locales/fr';
 import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { csrfInterceptor } from './core/auth/csrf.interceptor';
+
+registerLocaleData(localeFr);
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
+    { provide: LOCALE_ID, useValue: 'fr-FR' },
     provideZoneChangeDetection({eventCoalescing: true}),
     provideRouter(routes),
-    provideHttpClient(),
+    provideHttpClient(withInterceptors([csrfInterceptor])),
   ]
 };

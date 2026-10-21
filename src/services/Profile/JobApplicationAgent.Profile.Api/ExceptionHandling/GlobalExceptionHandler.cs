@@ -17,6 +17,8 @@ namespace JobApplicationAgent.Profile.Api.ExceptionHandling
             var problemDetails = exception switch
             {
                 ValidationException validationException => CreateValidationProblem(validationException),
+                JobApplicationAgent.Profile.Application.Profiles.DocumentFacts.DocumentFactImportConflictException =>
+                    new ProblemDetails { Status = 409, Title = "Document fact import conflict", Detail = exception.Message },
 
                 CandidateProfileAlreadyExistsException => new ProblemDetails
                 {

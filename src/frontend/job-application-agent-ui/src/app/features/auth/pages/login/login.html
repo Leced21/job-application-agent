@@ -1,0 +1,44 @@
+<main class="auth-page">
+  <section class="auth-card" aria-labelledby="auth-title">
+    <a class="brand" routerLink="/login" aria-label="Job Agent, accueil connexion">
+      <span class="brand-mark">J</span>
+      <span>job<span class="brand-accent">agent</span></span>
+    </a>
+
+    <div class="intro">
+      <p class="eyebrow">VOTRE ESPACE CANDIDAT</p>
+      <h1 id="auth-title">{{ isRegistering ? 'Créez votre compte' : 'Ravi de vous revoir' }}</h1>
+      <p class="subtitle">{{ isRegistering ? 'Centralisez votre recherche et vos candidatures.' : 'Retrouvez votre recherche d’emploi là où vous l’avez laissée.' }}</p>
+    </div>
+
+    <form (ngSubmit)="submit()" #authForm="ngForm">
+      <label for="email">Adresse e-mail</label>
+      <input id="email" name="email" type="email" [(ngModel)]="email" autocomplete="email" required maxlength="254" placeholder="vous@exemple.fr">
+
+      <div class="password-label">
+        <label for="password">Mot de passe</label>
+        @if (!isRegistering) { <span class="secure-note">Connexion sécurisée</span> }
+      </div>
+      <input id="password" name="password" type="password" [(ngModel)]="password" [autocomplete]="isRegistering ? 'new-password' : 'current-password'" required [attr.minlength]="isRegistering ? 12 : 1" maxlength="128" [placeholder]="isRegistering ? '12 caractères minimum' : 'Votre mot de passe'">
+
+      @if (!isRegistering) {
+        <label class="remember"><input type="checkbox" name="rememberMe" [(ngModel)]="rememberMe"> <span>Garder ma session ouverte</span></label>
+      }
+
+      @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
+
+      <button class="submit" type="submit" [disabled]="authForm.invalid || busy">
+        {{ busy ? 'Veuillez patienter…' : isRegistering ? 'Créer mon compte' : 'Se connecter' }}
+        <span aria-hidden="true">→</span>
+      </button>
+    </form>
+
+    @if (registrationEnabled()) {
+      <p class="switch-mode">
+        {{ isRegistering ? 'Vous avez déjà un compte ?' : 'Vous découvrez Job Agent ?' }}
+        <button type="button" (click)="toggleMode()">{{ isRegistering ? 'Se connecter' : 'Créer un compte' }}</button>
+      </p>
+    }
+    <p class="privacy">Vos données restent dans votre espace personnel.</p>
+  </section>
+</main>
